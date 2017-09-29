@@ -1,8 +1,0 @@
-<map id="lisys_solver8" name="lisys_solver8">
-<area shape="rect" id="node2" href="$multiple__scatter_8f90.html#a1369accc1269c7a9e612daad70493bc4" title="lw_multiple_scatter" alt="" coords="133,5,240,32"/>
-<area shape="rect" id="node5" href="$multiple__scatter_8f90.html#a6388f60b78ad37f8864f30cfd6a3cf62" title="sw_multiple_scatter" alt="" coords="132,56,241,83"/>
-<area shape="rect" id="node6" href="$twostream__rad_8f90.html#a0e7744abaa83ca4b220040d849e4d956" title="lw_two_stream" alt="" coords="142,107,231,133"/>
-<area shape="rect" id="node7" href="$twostream__rad_8f90.html#aafe0629c5d8ddcd6eb9a8bb208534489" title="sw_two_stream" alt="" coords="141,157,233,184"/>
-<area shape="rect" id="node3" href="$namespaceradiate__driver__module.html#af7561ae5fd5623b912a54a373ef9b801" title="radiate_driver_module\l::sfcrad_ed" alt="" coords="289,74,411,115"/>
-<area shape="rect" id="node4" href="$namespaceradiate__driver__module.html#a004efcf9e0a04145a85adfea8c23dd12" title="radiate_driver_module\l::radiate_driver" alt="" coords="459,74,580,115"/>
-</map>

@@ -1,9 +1,0 @@
-<map id="allometry::dbh2bd" name="allometry::dbh2bd">
-<area shape="rect" id="node2" href="$namespaceed__nbg__init.html#a9146f3e54e931abfb8c91e57df8958bc" title="ed_nbg_init::near_bare\l_ground_big_leaf_init" alt="" coords="164,5,289,47"/>
-<area shape="rect" id="node3" href="$namespacereproduction__module.html#ac201580dce4b65ddfe09b9e9cf32b91b" title="reproduction_module\l::reproduction" alt="" coords="357,60,473,101"/>
-<area shape="rect" id="node5" href="$namespacestructural__growth__module.html#aed4ecdb3660ea4e11c1413deea3bd88a" title="structural_growth_module\l::plant_structural_allocation" alt="" coords="155,125,299,167"/>
-<area shape="rect" id="node4" href="$vegetation__dynamics_8f90.html#ab9ef01736ecab74cd0da4df6c2b63c0f" title="Handles vegetation growth, phenology, reproduction, and disturbance. " alt="" coords="546,101,662,127"/>
-<area shape="rect" id="node6" href="$namespacestructural__growth__module.html#aa974ce442fda8686fd4d88a42b0f150c" title="structural_growth_module\l::structural_growth" alt="" coords="347,125,484,167"/>
-<area shape="rect" id="node7" href="$namespacestructural__growth__module.html#a931a1572c1755fe55035e52a1f902776" title="structural_growth_module\l::structural_growth_eq_0" alt="" coords="347,191,484,232"/>
-<area shape="rect" id="node8" href="$vegetation__dynamics_8f90.html#a275be9a740f6c74b8bf5e0a499cb6c49" title="vegetation_dynamics_eq_0" alt="" coords="532,198,676,225"/>
-</map>

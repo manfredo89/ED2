@@ -1,6 +1,0 @@
-<map id="phenology_startup::phenology_init" name="phenology_startup::phenology_init">
-<area shape="rect" id="node2" href="$namespacephenology__startup.html#aa83586e75a022d6fcb5816972361282d" title="phenology_startup::\lread_prescribed_phenology" alt="" coords="163,5,308,47"/>
-<area shape="rect" id="node4" href="$namespacephenology__startup.html#aca2b4422c059ad87aee0f7aa7f7c8964" title="phenology_startup::\lread_thermal_sums" alt="" coords="180,71,291,112"/>
-<area shape="rect" id="node3" href="$namespacephenology__aux.html#aac80b26fc41e788ad7669441222543ff" title="phenology_aux::prescribed\l_leaf_state" alt="" coords="356,5,499,47"/>
-<area shape="rect" id="node5" href="$namespacephenology__startup.html#a7e3ac783d1459d2f3ac41c2af6d761c9" title="phenology_startup::\lfill_thermal_sums" alt="" coords="373,71,482,112"/>
-</map>

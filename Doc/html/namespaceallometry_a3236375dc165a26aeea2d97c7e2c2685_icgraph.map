@@ -1,9 +1,0 @@
-<map id="allometry::bl2dbh" name="allometry::bl2dbh">
-<area shape="rect" id="node2" href="$namespaceallometry.html#a59a1fc10140498dee62fce8a641da254" title="allometry::bl2h" alt="" coords="152,56,239,83"/>
-<area shape="rect" id="node3" href="$events_8f90.html#ad9cbf1522be96cc9af2fbf80b1402d5c" title="event_harvest" alt="" coords="309,5,395,32"/>
-<area shape="rect" id="node6" href="$namespacegrowth__balive.html#aade95a53fd0d26aabf864afab17b1889" title="growth_balive::alloc\l_plant_c_balance_grass" alt="" coords="287,57,417,98"/>
-<area shape="rect" id="node4" href="$events_8f90.html#ad9f17e2da07d80a0734f81d8b2e27d25" title="prescribed_event" alt="" coords="483,7,582,33"/>
-<area shape="rect" id="node5" href="$vegetation__dynamics_8f90.html#ab9ef01736ecab74cd0da4df6c2b63c0f" title="Handles vegetation growth, phenology, reproduction, and disturbance. " alt="" coords="662,8,778,35"/>
-<area shape="rect" id="node7" href="$namespacegrowth__balive.html#a7781ae229b2399c90d50858382665ee8" title="Updates living biomass. " alt="" coords="465,60,600,87"/>
-<area shape="rect" id="node8" href="$vegetation__dynamics_8f90.html#a275be9a740f6c74b8bf5e0a499cb6c49" title="vegetation_dynamics_eq_0" alt="" coords="648,60,792,87"/>
-</map>

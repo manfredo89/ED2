@@ -1,6 +1,0 @@
-<map id="date_abs_secs2" name="date_abs_secs2">
-<area shape="rect" id="node2" href="$dateutils_8f90.html#a5f9be0094541c4d3ba8275a70f89db9d" title="date_2_seconds" alt="" coords="148,5,244,32"/>
-<area shape="rect" id="node4" href="$dateutils_8f90.html#a14143487767c309bad9fe0bef4365fda" title="date_add_to" alt="" coords="157,56,235,83"/>
-<area shape="rect" id="node3" href="$ed__load__namelist_8f90.html#a6c55a5dcbe1f908f9e2599d577e8a2d2" title="copy_nl" alt="" coords="299,5,355,32"/>
-<area shape="rect" id="node5" href="$utils__f_8f90.html#a8918adb41c1a9ae40d85373da53742db" title="makefnam" alt="" coords="292,56,361,83"/>
-</map>
