@@ -161,3 +161,7 @@ ED/build/allom_param.txt
 ED/build/pft_sizes.txt
 Doc/html
 Doc/latex
+ED/build/CodeCoverage
+ED/build/CODE_COVERAGE.HTML
+ED/build/codecov.txt
+ED/build/covered.txt
