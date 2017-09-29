@@ -296,8 +296,8 @@ $ED_NL
    ! FFILOUT -- Path and prefix for analysis files (all but history/restart).              !
    ! SFILOUT -- Path and prefix for history files.                                         !
    !---------------------------------------------------------------------------------------!
-   NL%FFILOUT = 'F_85mlghv0rapid/main_ton'
-   NL%SFILOUT = 'S_85mlghv0rapid/main_ton'
+   NL%FFILOUT = '/n/moorcroftfs2/mlongo/EDBRAMS/test_suites/2015-04-15/388a06b_mlo_aa7dc6b_v1_rapid/F_main_ton/main_ton'
+   NL%SFILOUT = '/n/moorcroftfs2/mlongo/EDBRAMS/test_suites/2015-04-15/388a06b_mlo_aa7dc6b_v1_rapid/S_main_ton/main_ton'
    !---------------------------------------------------------------------------------------!
 
    !---------------------------------------------------------------------------------------!
@@ -347,7 +347,7 @@ $ED_NL
    !
    !
    !---------------------------------------------------------------------------------------!
-   NL%IED_INIT_MODE = 4
+   NL%IED_INIT_MODE = 5
    !---------------------------------------------------------------------------------------!
 
 

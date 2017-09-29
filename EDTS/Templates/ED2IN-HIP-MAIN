@@ -252,7 +252,7 @@ $ED_NL
    ! f. And it will be entirely your fault.                                                !
    !                                                                                       !
    !     Either way, polygon-level averages are always included, and so are the instan-    !
-   ! taneous site-, patch-, and cohort-level variables needed for resuming the run.        ! 
+   ! taneous site-, patch-, and cohort-level variables needed for resuming the run.        !
    !                                                                                       !
    ! IADD_SITE_MEANS   --  Add site-level averages to the output   (0 = no; 1 = yes)       !
    ! IADD_PATCH_MEANS  --  Add patch-level averages to the output  (0 = no; 1 = yes)       !
@@ -363,7 +363,7 @@ $ED_NL
    !        (including a mix of regional and POI runs, each file ending at a different     !
    !        date).  This will not check date nor grid structure, it will simply read all   !
    !        polygons and match the nearest neighbour to each polygon of your run.  SFILIN  !
-   !        must have the directory common to all history files that are sought to be used,! 
+   !        must have the directory common to all history files that are sought to be used,!
    !        up to the last character the files have in common.  For example if your files  !
    !        are                                                                            !
    !        /mypath/P0001-S-2000-01-01-000000-g01.h5,                                      !
@@ -430,7 +430,7 @@ $ED_NL
    !  NZS    - maximum number of snow/water pounding layers.  This is used only for        !
    !           snow, if only liquid water is standing, the water will be all collapsed     !
    !           into a single layer, so if you are running for places where it doesn't snow !
-   !           a lot, leave this set to 1.  One value for all grids.                       ! 
+   !           a lot, leave this set to 1.  One value for all grids.                       !
    !---------------------------------------------------------------------------------------!
    NL%NZG = 16
    NL%NZS = 4
@@ -534,25 +534,25 @@ $ED_NL
    !---------------------------------------------------------------------------------------!
    NL%SLZ     =   -3.000,-2.670,-2.357,-2.061,-1.784,-1.524,-1.283,-1.061,-0.857,-0.673,
                   -0.510,-0.367,-0.245,-0.146,-0.070,-0.020
-                  
-                  
-                  
-                  
-                  
+
+
+
+
+
    NL%SLMSTR  =    1.000, 1.000, 1.000, 1.000, 1.000, 1.000, 1.000, 1.000, 1.000, 1.000,
                    1.000, 1.000, 1.000, 1.000, 1.000, 1.000
-                  
-                  
-                  
-                  
-                  
+
+
+
+
+
    NL%STGOFF  =    0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000,
                    0.000, 0.000, 0.000, 0.000, 0.000, 0.000
-                  
-                  
-                  
-                  
-                  
+
+
+
+
+
    !---------------------------------------------------------------------------------------!
 
 
@@ -802,7 +802,7 @@ $ED_NL
    !  New scheme: plants shed their leaves once a 10-day running average of available      !
    !              water becomes less than a critical value.                                !
    !---------------------------------------------------------------------------------------!
-   NL%IPHEN_SCHEME    = 2     
+   NL%IPHEN_SCHEME    = 2
    !---------------------------------------------------------------------------------------!
 
    !---------------------------------------------------------------------------------------!
@@ -961,7 +961,7 @@ $ED_NL
    !                1         DDMORT_CONST         1 - DDMORT_CONST                        !
    !           ------------ = ------------------ + ------------------                      !
    !           CBR - CBR_SS   CBR_LIGHT - CBR_SS   CBR_MOIST - CBR_SS                      !
-   !                                                                                       ! 
+   !                                                                                       !
    !---------------------------------------------------------------------------------------!
    NL%IDDMORT_SCHEME  = 1
    NL%DDMORT_CONST    = 0.8
@@ -1217,7 +1217,7 @@ $ED_NL
    !                  1.  Add the PFT in the INCLUDE_THESE_PFT list                        !
    !                  2.  Ignore the cohort                                                !
    !---------------------------------------------------------------------------------------!
-   NL%PFT_1ST_CHECK = 0 
+   NL%PFT_1ST_CHECK = 0
    !---------------------------------------------------------------------------------------!
 
 
@@ -1348,7 +1348,7 @@ $ED_NL
    !                3.  Gloomy -- All radiation goes to diffuse.                           !
    !                4.  Sesame street -- all radiation goes to direct, except at night.    !
    ! INITIAL_CO2 -- Initial value for CO2 in case no CO2 is provided at the meteorological !
-   !                driver dataset [Units: µmol/mol]                                       !
+   !                driver dataset [Units: ?mol/mol]                                       !
    !---------------------------------------------------------------------------------------!
    NL%IMETTYPE    = 1
    NL%ISHUFFLE    = 0
@@ -1451,7 +1451,7 @@ $ED_NL
    !                > 0.  Keep the patch with the provided index.  In case the index is    !
    !                      not valid, the model will crash.                                 !
    !---------------------------------------------------------------------------------------!
-   NL%IDETAILED  = 7
+   NL%IDETAILED  = 1
    NL%PATCH_KEEP = -1
    !---------------------------------------------------------------------------------------!
 

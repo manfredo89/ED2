@@ -1,6 +1,6 @@
 #!/bin/bash
 
-
+#set -x
 #===============================================================================
 #                    User control variables
 #===============================================================================
@@ -15,13 +15,13 @@ VERSION="r85v2ghub"
 
 # FILE PATHS TO YOUR THREE EXECUTABLES
 
-TEST_EXE_PATH=/global/u2/r/rgknox/Models/ghub_r85v2_rgknox/ED2/ED/build/ed_2.1-opt
-DBUG_EXE_PATH=/global/u2/r/rgknox/Models/ghub_r85v2_rgknox/ED2/ED/build/ed_2.1-dbg
-MAIN_EXE_PATH=/global/u2/r/rgknox/Models/ghub_r84_master/ED/build/ed_2.1-opt
+TEST_EXE_PATH=/user/scratch/gent/gvo000/gvo00074/manfredo/EDTSmine/binaries/ed_2.1-opt_raichu_TEST
+DBUG_EXE_PATH=/user/scratch/gent/gvo000/gvo00074/manfredo/EDTSmine/binaries/ed_2.1-dbg_raichu_DBUG
+MAIN_EXE_PATH=/user/scratch/gent/gvo000/gvo00074/manfredo/EDTSmine/binaries/ed_2.1-opt_raichu_MAIN
 
 # Provide the path where the test-suit driver archive is stored
 
-DATAPATH='/global/scratch2/sd/rgknox/edts_data'
+DATAPATH='/user/data/gent/gvo000/gvo00074/manfredo/edts_datasets'
 
 # Decide on a "rapid" (2 year) or "long" (300 year)
 # THE long tests will take a really really long time, beware
@@ -33,17 +33,18 @@ TESTTYPE="rapid"
 # sites give you problems after the first try
 # Y for Yes and N for No
 
-USE_M34=N     #Manaus km 34 SOI
-USE_S67=N     #Santarem km 67 SOI
-USE_HAR=N     #Harvard forest SOI
-USE_PDG=N     #Pe de Gigante SOI 
-USE_TON=N     #Tonzi SOI
-USE_CAX=N     #Caxuana SOI
-USE_TNF=N     #Tapajos National Forest SOI
-USE_ATA=N     #Atacama Desert SOI
-USE_PET=N     #Petrolina SOI
-USE_HIP=N     #Petrolina High Frequency Detailed Short SOI
-USE_HIM=N     #Manaus High Frequency Detailed Short SOI
+USE_M34=Y     #Manaus km 34 SOI
+USE_S67=Y     #Santarem km 67 SOI
+USE_HAR=Y     #Harvard forest SOI
+USE_PDG=Y     #Pe de Gigante SOI 
+USE_TON=Y     #Tonzi SOI
+USE_CAX=Y     #Caxuana SOI
+USE_TNF=Y     #Tapajos National Forest SOI
+USE_ATA=Y     #Atacama Desert SOI
+USE_GYF=Y     #Paracou
+USE_PET=Y     #Petrolina SOI
+USE_HIP=Y     #Petrolina High Frequency Detailed Short SOI
+USE_HIM=Y     #Manaus High Frequency Detailed Short SOI
 USE_RJG=Y     #Gridded 12x12 simulation centerd on Reserva Jaru
 
 # How many cores do you want to use for the gridded simulations
@@ -64,26 +65,25 @@ Q_TON=regular     #Tonzi SOI
 Q_CAX=regular     #Caxuana SOI
 Q_TNF=regular     #Tapajos National Forest SOI
 Q_ATA=regular     #Atacama Desert SOI
-Q_PET=regular     #Petrolina SOI
+Q_GYF=regular     #Paracou
 Q_HIP=regular     #Petrolina High Frequency Detailed Short SOI
 Q_HIM=regular     #Manaus High Frequency Detailed Short SOI
 Q_RJG=regular     #Gridded 12x12 simulation centerd on Reserva Jaru
 
 # Give an explanation of the tests.  Explain what the commits had involved.
 
-TEST_DESCRIPTION="This is a test of the final commits from Odyssey, which pretty much amounts
-to Marcos changes with a couple of minor tweaks from Ryan."
+TEST_DESCRIPTION="This is a test of the LIANAS + CLEANING pull request #200. Conducted by Manfredo"
 
 # The identifier may had indicated which version you branched from, but indicate it here
 # also
     
-VERSION_BRANCHED_FROM='r83'
+VERSION_BRANCHED_FROM='r84'
 
 # Who is running this test?
-TESTER_NAME='Ryan Knox'
+TESTER_NAME='Manfredo'
 
 # Who was the developer(s) that actually made the changes to the code that is being tested?
-COMMITTER_NAME='Marcos Longo'
+COMMITTER_NAME='Manfredo'
 
 
 
@@ -102,22 +102,22 @@ echo ""
 declare -a USE_SITE=( \
     $USE_M34 $USE_S67 $USE_HAR \
     $USE_PDG $USE_TON $USE_CAX \
-    $USE_TNF $USE_ATA $USE_PET)
-declare -a SITEID=(m34 s67 har pdg ton cax tnf ata pet)
-declare -a SITEPFX=(M34 S67 HAR PDG TON CAX TNF ATA PET)
+    $USE_TNF $USE_ATA $USE_PET $USE_GYF)
+declare -a SITEID=(m34 s67 har pdg ton cax tnf ata pet gyf)
+declare -a SITEPFX=(M34 S67 HAR PDG TON CAX TNF ATA PET GYF)
 declare -a SITEQ=( \
     $Q_M34 $Q_S67 $Q_HAR \
     $Q_PDG $Q_TON $Q_CAX \
-    $Q_TNF $Q_ATA $Q_PET)
+    $Q_TNF $Q_ATA $Q_PET $Q_GYF)
 
 # SOI DEBUG 
-declare -a D_IYEARAS=(1500 1500 2007 1500 2000 2000 2002 1500 2005)
-declare -a D_IYEARZS=(1501 1501 2008 1501 2001 2001 2002 1501 2006)
-declare -a D_INITMDS=(5    0    6    0    6    0    5    0    6   )
+declare -a D_IYEARAS=(1500 1500 2007 1500 2000 2000 2002 1500 2005 2005)
+declare -a D_IYEARZS=(1501 1501 2008 1501 2001 2001 2002 1501 2006 2006)
+declare -a D_INITMDS=(5    0    6    0    6    0    5    0    0    0)
 declare -a D_RUNTYPS=( \
     INITIAL INITIAL INITIAL \
     INITIAL INITIAL INITIAL \
-    INITIAL INITIAL INITIAL)
+    INITIAL INITIAL INITIAL INITIAL)
 
 # HI FREQUENCY DETAILED RUNS (HI-PET and HI-M34)
 declare -a USE_HIFR=($USE_HIP $USE_HIM)
@@ -149,13 +149,13 @@ if [ $TESTTYPE == "rapid" ]; then
 
     echo "PERFORMING 2 YEAR RAPID TESTS"
 
-    declare -a IYEARAS=(1500 1500 2007 1500 2000 2000 2002 1500 2005)
-    declare -a IYEARZS=(1502 1502 2009 1502 2002 2002 2004 1502 2007)
-    declare -a INITMDS=(5    0    6    0    6    0    5    0    6   )
+    declare -a IYEARAS=(1500 1500 2007 1500 2000 2000 2002 1500 2005 2005)
+    declare -a IYEARZS=(1502 1502 2009 1502 2002 2002 2004 1502 2007 2007)
+    declare -a INITMDS=(5    0    6    0    6    0    5    0    0    0   )
     declare -a RUNTYPS=( \
         INITIAL INITIAL INITIAL \
         INITIAL INITIAL INITIAL \
-        INITIAL INITIAL INITIAL)
+        INITIAL INITIAL INITIAL INITIAL)
 
     # The gridded runs will only be 1 year
     declare -a IYEARAG=(2008)
@@ -169,13 +169,13 @@ elif [ $TESTTYPE == "long" ]; then
 
     echo "PERFORMING 300 YEAR LONG TESTS"
 
-    declare -a IYEARAS=(1500 1500 1500 1500 1500 1500 1500 1500 1500)
-    declare -a IYEARZS=(1800 1800 1800 1800 1800 1800 1800 1800 1800)
-    declare -a INITMDS=(0    0    0    0    0    0    0    0    0   )
+    declare -a IYEARAS=(1500 1500 1500 1500 1500 1500 1500 1500 1500 1500)
+    declare -a IYEARZS=(1800 1800 1800 1800 1800 1800 1800 1800 1800 1800)
+    declare -a INITMDS=(0    0    0    0    0    0    0    0    0    0   )
     declare -a RUNTYPS=( \
         INITIAL INITIAL INITIAL \
         INITIAL INITIAL INITIAL \
-        INITIAL INITIAL INITIAL)
+        INITIAL INITIAL INITIAL INTIIAL)
 
     declare -a IYEARAG=(1500)
     declare -a IYEARZG=(1535)
@@ -242,7 +242,6 @@ VERSION=${VERSION}${TESTTYPE}
 MAIN_EXE="./ed_2.1-main"
 TEST_EXE="./ed_2.1-test"
 DBUG_EXE="./ed_2.1-dbug"
-
 
 
 # Create the working folder
@@ -392,8 +391,8 @@ do
 # Modify the ED2IN files to point to the desired output directories   
 # =================================================================   
   
-  sed -i '/NL%FFILOUT/c\   NL%FFILOUT = '\''F_main_'${SITEID[i]}'/main_'${SITEID[i]}''\' $FILEMAIN
-  sed -i '/NL%SFILOUT/c\   NL%SFILOUT = '\''S_main_'${SITEID[i]}'/main_'${SITEID[i]}''\' $FILEMAIN
+  sed -i '/NL%FFILOUT/c\   NL%FFILOUT = '\''F_MAIN_'${SITEID[i]}'/MAIN_'${SITEID[i]}''\' $FILEMAIN
+  sed -i '/NL%SFILOUT/c\   NL%SFILOUT = '\''S_MAIN_'${SITEID[i]}'/MAIN_'${SITEID[i]}''\' $FILEMAIN
   sed -i '/NL%FFILOUT/c\   NL%FFILOUT = '\''F_test_'${SITEID[i]}'/test_'${SITEID[i]}''\' $FILETEST
   sed -i '/NL%SFILOUT/c\   NL%SFILOUT = '\''S_test_'${SITEID[i]}'/test_'${SITEID[i]}''\' $FILETEST
   sed -i '/NL%FFILOUT/c\   NL%FFILOUT = '\''F_dbug_'${SITEID[i]}'/dbug_'${SITEID[i]}''\' $FILEDBUG
@@ -410,10 +409,10 @@ do
 # Reset and flush the output folders
 # ====================================
 
-mkdir -p ${VERSION}/F_main_${SITEID[i]}
+mkdir -p ${VERSION}/F_MAIN_${SITEID[i]}
 mkdir -p ${VERSION}/F_test_${SITEID[i]}
 mkdir -p ${VERSION}/F_dbug_${SITEID[i]}
-mkdir -p ${VERSION}/S_main_${SITEID[i]}
+mkdir -p ${VERSION}/S_MAIN_${SITEID[i]}
 mkdir -p ${VERSION}/S_test_${SITEID[i]}
 mkdir -p ${VERSION}/S_dbug_${SITEID[i]}
 
@@ -428,53 +427,56 @@ mkdir -p ${VERSION}/S_dbug_${SITEID[i]}
 
   # FOR MAIN
 
-  PBSFILE=${VERSION}/batch_main_${SITEID[i]}
-  echo "#PBS -q serial"                                         > $PBSFILE
-  echo "#PBS -l walltime=12:00:00"                             >> $PBSFILE
-  echo "#PBS -l pvmem=3GB"                                     >> $PBSFILE
-  echo "#PBS -N main_${SITEID[i]}"                             >> $PBSFILE
-  echo '#PBS -e main_'${SITEID[i]}.'$PBS_JOBID.err' >> $PBSFILE
-  echo '#PBS -o main_'${SITEID[i]}.'$PBS_JOBID.out' >> $PBSFILE
-  echo "#PBS -V"                                               >> $PBSFILE
-  echo ""                                                      >> $PBSFILE
-  echo 'cd $PBS_O_WORKDIR'                                     >> $PBSFILE
-  echo ""                                                      >> $PBSFILE
-  echo "${MAIN_EXE} -f ED2IN-${SITEPFX[i]}-MAIN"                            >> $PBSFILE
-  echo "" >> ${VERSION}/submit_batch.sh
-  echo "qsub batch_main_${SITEID[i]}" >> ${VERSION}/submit_batch.sh
+  PBSFILE=${VERSION}/batch_MAIN_${SITEID[i]}
+  echo "#PBS -l walltime=02:00:00"                       > $PBSFILE
+  echo "#PBS -l pvmem=3GB"                              >> $PBSFILE
+  echo "#PBS -N MAIN_${SITEID[i]}"                      >> $PBSFILE
+  echo '#PBS -e MAIN_'${SITEID[i]}.'$PBS_JOBID.err'     >> $PBSFILE
+  echo '#PBS -o MAIN_'${SITEID[i]}.'$PBS_JOBID.out'     >> $PBSFILE
+  echo "#PBS -V"                                        >> $PBSFILE
+  echo ""                                               >> $PBSFILE
+  echo "module load HDF5"                               >> $PBSFILE
+  echo ""                                               >> $PBSFILE
+  echo 'cd $PBS_O_WORKDIR'                              >> $PBSFILE
+  echo ""                                               >> $PBSFILE
+  echo "${MAIN_EXE} -f ED2IN-${SITEPFX[i]}-MAIN"        >> $PBSFILE
+  echo ""                             >> ${VERSION}/submit_batch.sh
+  echo "qsub batch_MAIN_${SITEID[i]}" >> ${VERSION}/submit_batch.sh
   
   # FOR TEST
 
   PBSFILE=${VERSION}/batch_test_${SITEID[i]}
-  echo "#PBS -q serial"                                  > $PBSFILE
-  echo "#PBS -l walltime=12:00:00"                      >> $PBSFILE
+  echo "#PBS -l walltime=02:00:00"                       > $PBSFILE
   echo "#PBS -l pvmem=3GB"                              >> $PBSFILE
   echo "#PBS -N test_${SITEID[i]}"                      >> $PBSFILE
-  echo '#PBS -e test_'${SITEID[i]}.'$PBS_JOBID.err' >> $PBSFILE
-  echo '#PBS -o test_'${SITEID[i]}.'$PBS_JOBID.out' >> $PBSFILE
+  echo '#PBS -e test_'${SITEID[i]}.'$PBS_JOBID.err'     >> $PBSFILE
+  echo '#PBS -o test_'${SITEID[i]}.'$PBS_JOBID.out'     >> $PBSFILE
   echo "#PBS -V"                                        >> $PBSFILE
+  echo ""                                               >> $PBSFILE
+  echo "module load HDF5"                               >> $PBSFILE
   echo ""                                               >> $PBSFILE
   echo 'cd $PBS_O_WORKDIR'                              >> $PBSFILE
   echo ""                                               >> $PBSFILE
-  echo "${TEST_EXE} -f ED2IN-${SITEPFX[i]}-TEST"                     >> $PBSFILE
-  echo "" >> ${VERSION}/submit_batch.sh
+  echo "${TEST_EXE} -f ED2IN-${SITEPFX[i]}-TEST"        >> $PBSFILE
+  echo ""                             >> ${VERSION}/submit_batch.sh
   echo "qsub batch_test_${SITEID[i]}" >> ${VERSION}/submit_batch.sh
 
   # FOR DBUG
 
   PBSFILE=${VERSION}/batch_dbug_${SITEID[i]}
-  echo "#PBS -q serial"                                  > $PBSFILE
-  echo "#PBS -l walltime=12:00:00"                      >> $PBSFILE
+  echo "#PBS -l walltime=02:00:00"                       > $PBSFILE
   echo "#PBS -l pvmem=3GB"                              >> $PBSFILE
   echo "#PBS -N dbug_${SITEID[i]}"                      >> $PBSFILE
-  echo '#PBS -e dbug_'${SITEID[i]}'.$PBS_JOBID.err' >> $PBSFILE
-  echo '#PBS -o dbug_'${SITEID[i]}'.$PBS_JOBID.out' >> $PBSFILE
+  echo '#PBS -e dbug_'${SITEID[i]}'.$PBS_JOBID.err'     >> $PBSFILE
+  echo '#PBS -o dbug_'${SITEID[i]}'.$PBS_JOBID.out'     >> $PBSFILE
   echo "#PBS -V"                                        >> $PBSFILE
+  echo ""                                               >> $PBSFILE
+  echo "module load HDF5"                               >> $PBSFILE
   echo ""                                               >> $PBSFILE
   echo 'cd $PBS_O_WORKDIR'                              >> $PBSFILE
   echo ""                                               >> $PBSFILE
-  echo "${DBUG_EXE} -f ED2IN-${SITEPFX[i]}-DBUG"                     >> $PBSFILE
-  echo "" >> ${VERSION}/submit_batch.sh
+  echo "${DBUG_EXE} -f ED2IN-${SITEPFX[i]}-DBUG"        >> $PBSFILE
+  echo ""                             >> ${VERSION}/submit_batch.sh
   echo "qsub batch_dbug_${SITEID[i]}" >> ${VERSION}/submit_batch.sh
 
 
@@ -543,8 +545,8 @@ do
 # Modify the ED2IN files to point to the desired output directories   
 # =================================================================   
   
-  sed -i '/NL%FFILOUT/c\   NL%FFILOUT = '\''F_main_'${HIFRID[i]}'/main_'${HIFRID[i]}''\' $FILEMAIN
-  sed -i '/NL%SFILOUT/c\   NL%SFILOUT = '\''S_main_'${HIFRID[i]}'/main_'${HIFRID[i]}''\' $FILEMAIN
+  sed -i '/NL%FFILOUT/c\   NL%FFILOUT = '\''F_MAIN_'${HIFRID[i]}'/MAIN_'${HIFRID[i]}''\' $FILEMAIN
+  sed -i '/NL%SFILOUT/c\   NL%SFILOUT = '\''S_MAIN_'${HIFRID[i]}'/MAIN_'${HIFRID[i]}''\' $FILEMAIN
   sed -i '/NL%FFILOUT/c\   NL%FFILOUT = '\''F_test_'${HIFRID[i]}'/test_'${HIFRID[i]}''\' $FILETEST
   sed -i '/NL%SFILOUT/c\   NL%SFILOUT = '\''S_test_'${HIFRID[i]}'/test_'${HIFRID[i]}''\' $FILETEST
   sed -i '/NL%FFILOUT/c\   NL%FFILOUT = '\''F_dbug_'${HIFRID[i]}'/dbug_'${HIFRID[i]}''\' $FILEDBUG
@@ -554,10 +556,10 @@ do
 # Reset and flush the output folders
 # ====================================
 
-mkdir -p ${VERSION}/F_main_${HIFRID[i]}
+mkdir -p ${VERSION}/F_MAIN_${HIFRID[i]}
 mkdir -p ${VERSION}/F_test_${HIFRID[i]}
 mkdir -p ${VERSION}/F_dbug_${HIFRID[i]}
-mkdir -p ${VERSION}/S_main_${HIFRID[i]}
+mkdir -p ${VERSION}/S_MAIN_${HIFRID[i]}
 mkdir -p ${VERSION}/S_test_${HIFRID[i]}
 mkdir -p ${VERSION}/S_dbug_${HIFRID[i]}
 
@@ -570,53 +572,56 @@ mkdir -p ${VERSION}/S_dbug_${HIFRID[i]}
 
   # FOR MAIN
 
-  PBSFILE=${VERSION}/batch_main_${HIFRID[i]}
-  echo "#PBS -q serial"                                         > $PBSFILE
-  echo "#PBS -l walltime=12:00:00"                             >> $PBSFILE
-  echo "#PBS -l pvmem=3GB"                                     >> $PBSFILE
-  echo "#PBS -N main_${HIFRID[i]}"                             >> $PBSFILE
-  echo '#PBS -e main_'${HIFRID[i]}.'$PBS_JOBID.err' >> $PBSFILE
-  echo '#PBS -o main_'${HIFRID[i]}.'$PBS_JOBID.out' >> $PBSFILE
-  echo "#PBS -V"                                               >> $PBSFILE
-  echo ""                                                      >> $PBSFILE
-  echo 'cd $PBS_O_WORKDIR'                                     >> $PBSFILE
-  echo ""                                                      >> $PBSFILE
-  echo "${MAIN_EXE} -f ED2IN-${HIFRPFX[i]}-MAIN"                            >> $PBSFILE
-  echo "" >> ${VERSION}/submit_batch.sh
-  echo "qsub batch_main_${HIFRID[i]}" >> ${VERSION}/submit_batch.sh
+  PBSFILE=${VERSION}/batch_MAIN_${HIFRID[i]}
+  echo "#PBS -l walltime=02:00:00"                       > $PBSFILE
+  echo "#PBS -l pvmem=3GB"                              >> $PBSFILE
+  echo "#PBS -N MAIN_${HIFRID[i]}"                      >> $PBSFILE
+  echo '#PBS -e MAIN_'${HIFRID[i]}.'$PBS_JOBID.err'     >> $PBSFILE
+  echo '#PBS -o MAIN_'${HIFRID[i]}.'$PBS_JOBID.out'     >> $PBSFILE
+  echo "#PBS -V"                                        >> $PBSFILE
+  echo ""                                               >> $PBSFILE
+  echo "module load HDF5"                               >> $PBSFILE
+  echo ""                                               >> $PBSFILE
+  echo 'cd $PBS_O_WORKDIR'                              >> $PBSFILE
+  echo ""                                               >> $PBSFILE
+  echo "${MAIN_EXE} -f ED2IN-${HIFRPFX[i]}-MAIN"        >> $PBSFILE
+  echo ""                             >> ${VERSION}/submit_batch.sh
+  echo "qsub batch_MAIN_${HIFRID[i]}" >> ${VERSION}/submit_batch.sh
 
   # FOR TEST
 
   PBSFILE=${VERSION}/batch_test_${HIFRID[i]}
-  echo "#PBS -q serial"                                  > $PBSFILE
-  echo "#PBS -l walltime=12:00:00"                      >> $PBSFILE
+  echo "#PBS -l walltime=02:00:00"                       > $PBSFILE
   echo "#PBS -l pvmem=3GB"                              >> $PBSFILE
   echo "#PBS -N test_${HIFRID[i]}"                      >> $PBSFILE
-  echo '#PBS -e test_'${HIFRID[i]}.'$PBS_JOBID.err' >> $PBSFILE
-  echo '#PBS -o test_'${HIFRID[i]}.'$PBS_JOBID.out' >> $PBSFILE
+  echo '#PBS -e test_'${HIFRID[i]}.'$PBS_JOBID.err'     >> $PBSFILE
+  echo '#PBS -o test_'${HIFRID[i]}.'$PBS_JOBID.out'     >> $PBSFILE
   echo "#PBS -V"                                        >> $PBSFILE
+  echo ""                                               >> $PBSFILE
+  echo "module load HDF5"                               >> $PBSFILE
   echo ""                                               >> $PBSFILE
   echo 'cd $PBS_O_WORKDIR'                              >> $PBSFILE
   echo ""                                               >> $PBSFILE
-  echo "${TEST_EXE} -f ED2IN-${HIFRPFX[i]}-TEST"                     >> $PBSFILE
-  echo "" >> ${VERSION}/submit_batch.sh
+  echo "${TEST_EXE} -f ED2IN-${HIFRPFX[i]}-TEST"        >> $PBSFILE
+  echo ""                             >> ${VERSION}/submit_batch.sh
   echo "qsub batch_test_${HIFRID[i]}" >> ${VERSION}/submit_batch.sh
 
   # FOR DBUG
 
   PBSFILE=${VERSION}/batch_dbug_${HIFRID[i]}
-  echo "#PBS -q serial"                                  > $PBSFILE
-  echo "#PBS -l walltime=12:00:00"                      >> $PBSFILE
+  echo "#PBS -l walltime=02:00:00"                       > $PBSFILE
   echo "#PBS -l pvmem=3GB"                              >> $PBSFILE
   echo "#PBS -N dbug_${SITEID[i]}"                      >> $PBSFILE
-  echo '#PBS -e dbug_'${HIFRID[i]}'.$PBS_JOBID.err' >> $PBSFILE
-  echo '#PBS -o dbug_'${HIFRID[i]}'.$PBS_JOBID.out' >> $PBSFILE
+  echo '#PBS -e dbug_'${HIFRID[i]}'.$PBS_JOBID.err'     >> $PBSFILE
+  echo '#PBS -o dbug_'${HIFRID[i]}'.$PBS_JOBID.out'     >> $PBSFILE
   echo "#PBS -V"                                        >> $PBSFILE
+  echo ""                                               >> $PBSFILE
+  echo "module load HDF5"                               >> $PBSFILE
   echo ""                                               >> $PBSFILE
   echo 'cd $PBS_O_WORKDIR'                              >> $PBSFILE
   echo ""                                               >> $PBSFILE
-  echo "${DBUG_EXE} -f ED2IN-${HIFRPFX[i]}-DBUG"                     >> $PBSFILE
-  echo "" >> ${VERSION}/submit_batch.sh
+  echo "${DBUG_EXE} -f ED2IN-${HIFRPFX[i]}-DBUG"        >> $PBSFILE
+  echo ""                             >> ${VERSION}/submit_batch.sh
   echo "qsub batch_dbug_${HIFRID[i]}" >> ${VERSION}/submit_batch.sh
 
   let tcount=tcount+3
@@ -689,8 +694,8 @@ do
 # Modify the ED2IN files to point to the desired output directories
 # =================================================================
 
-  sed -i '/NL%FFILOUT/c\   NL%FFILOUT = '\''F_main_'${GRIDID[i]}'/main_'${GRIDID[i]}''\' $FILEMAIN
-  sed -i '/NL%SFILOUT/c\   NL%SFILOUT = '\''S_main_'${GRIDID[i]}'/main_'${GRIDID[i]}''\' $FILEMAIN
+  sed -i '/NL%FFILOUT/c\   NL%FFILOUT = '\''F_MAIN_'${GRIDID[i]}'/MAIN_'${GRIDID[i]}''\' $FILEMAIN
+  sed -i '/NL%SFILOUT/c\   NL%SFILOUT = '\''S_MAIN_'${GRIDID[i]}'/MAIN_'${GRIDID[i]}''\' $FILEMAIN
   sed -i '/NL%FFILOUT/c\   NL%FFILOUT = '\''F_test_'${GRIDID[i]}'/test_'${GRIDID[i]}''\' $FILETEST
   sed -i '/NL%SFILOUT/c\   NL%SFILOUT = '\''S_test_'${GRIDID[i]}'/test_'${GRIDID[i]}''\' $FILETEST
   sed -i '/NL%FFILOUT/c\   NL%FFILOUT = '\''F_dbug_'${GRIDID[i]}'/dbug_'${GRIDID[i]}''\' $FILEDBUG
@@ -699,58 +704,61 @@ do
 # Reset and flush the output folders
 # ====================================
 
-mkdir -p ${VERSION}/F_main_${GRIDID[i]}
+mkdir -p ${VERSION}/F_MAIN_${GRIDID[i]}
 mkdir -p ${VERSION}/F_test_${GRIDID[i]}
 mkdir -p ${VERSION}/F_dbug_${GRIDID[i]}
-mkdir -p ${VERSION}/S_main_${GRIDID[i]}
+mkdir -p ${VERSION}/S_MAIN_${GRIDID[i]}
 mkdir -p ${VERSION}/S_test_${GRIDID[i]}
 mkdir -p ${VERSION}/S_dbug_${GRIDID[i]}
 
-PBSFILE=${VERSION}/batch_main_${GRIDID[i]}
+PBSFILE=${VERSION}/batch_MAIN_${GRIDID[i]}
 
 echo ""
-echo "#PBS -q regular"                                > $PBSFILE
-echo "#PBS -l nodes=${NNODES}:ppn=${PPN}"             >> $PBSFILE
-echo "#PBS -l walltime=12:00:00"                     >> $PBSFILE
-echo "#PBS -N main_${GRIDID[i]}"                      >> $PBSFILE
-echo '#PBS -e main_'${GRIDID[i]}'.$PBS_JOBID.err' >> $PBSFILE
-echo '#PBS -o main_'${GRIDID[i]}'.$PBS_JOBID.out' >> $PBSFILE
-echo ""                                              >> $PBSFILE
-echo 'cd $PBS_O_WORKDIR'                             >> $PBSFILE
-echo ""
+echo "#PBS -l nodes=${NNODES}:ppn=${PPN}"                          > $PBSFILE
+echo "#PBS -l walltime=02:00:00"                                  >> $PBSFILE
+echo "#PBS -N MAIN_${GRIDID[i]}"                                  >> $PBSFILE
+echo '#PBS -e MAIN_'${GRIDID[i]}'.$PBS_JOBID.err'                 >> $PBSFILE
+echo '#PBS -o MAIN_'${GRIDID[i]}'.$PBS_JOBID.out'                 >> $PBSFILE
+echo ""                                                           >> $PBSFILE
+echo "module load HDF5"                                           >> $PBSFILE
+echo ""                                                           >> $PBSFILE
+echo 'cd $PBS_O_WORKDIR'                                          >> $PBSFILE
+echo ""                                                           >> $PBSFILE
 echo "mpirun -n ${NPROC} ${MAIN_EXE} -f ED2IN-${GRIDPFX[i]}-MAIN" >> $PBSFILE
-echo "" >> ${VERSION}/submit_batch.sh
-echo "qsub batch_main_${GRIDID[i]}" >> ${VERSION}/submit_batch.sh
+echo ""                                         >> ${VERSION}/submit_batch.sh
+echo "qsub batch_MAIN_${GRIDID[i]}"             >> ${VERSION}/submit_batch.sh
 
 PBSFILE=${VERSION}/batch_test_${GRIDID[i]}
 echo ""
-echo "#PBS -q regular"                                > $PBSFILE
-echo "#PBS -l nodes=${NNODES}:ppn=${PPN}"             >> $PBSFILE
-echo "#PBS -l walltime=12:00:00"                     >> $PBSFILE
-echo "#PBS -N test_${GRIDID[i]}"                  >> $PBSFILE
-echo '#PBS -e test_'${GRIDID[i]}'.$PBS_JOBID.err' >> $PBSFILE
-echo '#PBS -o test_'${GRIDID[i]}'.$PBS_JOBID.out' >> $PBSFILE
-echo ""                                              >> $PBSFILE
-echo 'cd $PBS_O_WORKDIR'                             >> $PBSFILE
-echo ""
+echo "#PBS -l nodes=${NNODES}:ppn=${PPN}"                          > $PBSFILE
+echo "#PBS -l walltime=02:00:00"                                  >> $PBSFILE
+echo "#PBS -N test_${GRIDID[i]}"                                  >> $PBSFILE
+echo '#PBS -e test_'${GRIDID[i]}'.$PBS_JOBID.err'                 >> $PBSFILE
+echo '#PBS -o test_'${GRIDID[i]}'.$PBS_JOBID.out'                 >> $PBSFILE
+echo ""                                                           >> $PBSFILE
+echo "module load HDF5"                                           >> $PBSFILE
+echo ""                                                           >> $PBSFILE
+echo 'cd $PBS_O_WORKDIR'                                          >> $PBSFILE
+echo ""                                                           >> $PBSFILE
 echo "mpirun -n ${NPROC} ${TEST_EXE} -f ED2IN-${GRIDPFX[i]}-TEST" >> $PBSFILE
-echo "" >> ${VERSION}/submit_batch.sh
-echo "qsub batch_test_${GRIDID[i]}" >> ${VERSION}/submit_batch.sh
+echo ""                                         >> ${VERSION}/submit_batch.sh
+echo "qsub batch_test_${GRIDID[i]}"             >> ${VERSION}/submit_batch.sh
 
 PBSFILE=${VERSION}/batch_dbug_${GRIDID[i]}
 echo ""
-echo "#PBS -q regular"                                > $PBSFILE
-echo "#PBS -l nodes=${NNODES}:ppn=${PPN}"             >> $PBSFILE
-echo "#PBS -l walltime=12:00:00"                     >> $PBSFILE
-echo "#PBS -N dbug_${GRIDID[i]}"                     >> $PBSFILE
-echo '#PBS -e dbug_'${GRIDID[i]}'.$PBS_JOBID.err' >> $PBSFILE
-echo '#PBS -o dbug_'${GRIDID[i]}'.$PBS_JOBID.out' >> $PBSFILE
-echo ""                                              >> $PBSFILE
-echo 'cd $PBS_O_WORKDIR'                             >> $PBSFILE
-echo ""
+echo "#PBS -l nodes=${NNODES}:ppn=${PPN}"                          > $PBSFILE
+echo "#PBS -l walltime=02:00:00"                                  >> $PBSFILE
+echo "#PBS -N dbug_${GRIDID[i]}"                                  >> $PBSFILE
+echo '#PBS -e dbug_'${GRIDID[i]}'.$PBS_JOBID.err'                 >> $PBSFILE
+echo '#PBS -o dbug_'${GRIDID[i]}'.$PBS_JOBID.out'                 >> $PBSFILE
+echo ""                                                           >> $PBSFILE
+echo "module load HDF5"                                           >> $PBSFILE
+echo ""                                                           >> $PBSFILE
+echo 'cd $PBS_O_WORKDIR'                                          >> $PBSFILE
+echo ""                                                           >> $PBSFILE
 echo "mpirun -n ${NPROC} ${DBUG_EXE} -f ED2IN-${GRIDPFX[i]}-DBUG" >> $PBSFILE
-echo "" >> ${VERSION}/submit_batch.sh
-echo "qsub batch_dbug_${GRIDID[i]}" >> ${VERSION}/submit_batch.sh
+echo ""                                         >> ${VERSION}/submit_batch.sh
+echo "qsub batch_dbug_${GRIDID[i]}"             >> ${VERSION}/submit_batch.sh
 
 fi
 

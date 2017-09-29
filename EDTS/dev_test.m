@@ -16,7 +16,7 @@ close all;
 %     User defined variables
 %==========================================================================
 
-test_name = 'r85ghubrapid';
+test_name = 'r85v2ghubrapid';
 
 use_m34 = true;       % SOI Manaus km34
 use_ata = false;       % SOI Atacama
@@ -318,7 +318,7 @@ pause(2);
 
 
 % =========================================================================
-% Part 0 - Check if debug sites completed
+% Par completedt 0 - Check if debug sites
 % =========================================================================
 
 display(sprintf('\nChecking Simulations for Completion\n'));

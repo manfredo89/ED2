@@ -28,9 +28,9 @@ $ED_NL
    !---------------------------------------------------------------------------------------!
    !     Start of simulation. Information must be given in UTC time.                       !
    !---------------------------------------------------------------------------------------!
-   NL%IMONTHA  = 01
+   NL%IMONTHA  = 02
    NL%IDATEA   = 01
-   NL%IYEARA   = 1500
+   NL%IYEARA   = 2000
    NL%ITIMEA   = 0000
    !---------------------------------------------------------------------------------------!
 
@@ -40,8 +40,8 @@ $ED_NL
    !     End of simulation. Information must be given in UTC time.                         !
    !---------------------------------------------------------------------------------------!
    NL%IMONTHZ  = 01    ! Month
-   NL%IDATEZ   = 08
-   NL%IYEARZ   = 1500
+   NL%IDATEZ   = 01    ! Day
+   NL%IYEARZ   = 2002
    NL%ITIMEZ   = 0000  ! UTC
    !---------------------------------------------------------------------------------------!
 
@@ -56,8 +56,8 @@ $ED_NL
    ! RADFRQ -- Time step to integrate radiation, in seconds.  This must be an integer      !
    !            multiple of DTLSM, and we recommend it to be exactly the same as DTLSM.    !
    !---------------------------------------------------------------------------------------!
-   NL%DTLSM  =  180.
-   NL%RADFRQ  = 180.
+   NL%DTLSM  =  600.
+   NL%RADFRQ  = 600.
    !---------------------------------------------------------------------------------------!
 
 
@@ -153,9 +153,9 @@ $ED_NL
    ! POI_RES -- grid resolution of each POI (degrees).  This is used only to define the    !
    !            soil types                                                                 !
    !---------------------------------------------------------------------------------------!
-   NL%N_POI    =    1
-   NL%POI_LAT  =  -2.609075
-   NL%POI_LON  = -60.2093
+   NL%N_POI    =  1
+   NL%POI_LAT  =  38.432
+   NL%POI_LON  = -120.966
    NL%POI_RES  = 1.00
    !---------------------------------------------------------------------------------------!
 
@@ -202,6 +202,7 @@ $ED_NL
    NL%ISOUTPUT  =  3
    !---------------------------------------------------------------------------------------!
 
+
    !---------------------------------------------------------------------------------------!
    !     The following variables control whether site-, patch-, and cohort-level time      !
    ! means and mean sum of squares should be included in the output files or not.          !
@@ -232,8 +233,6 @@ $ED_NL
    NL%IADD_COHORT_MEANS = 0
    !---------------------------------------------------------------------------------------!
 
-
-
    !---------------------------------------------------------------------------------------!
    ! ATTACH_METADATA -- Flag for attaching metadata to HDF datasets.  Attaching metadata   !
    !                    will aid new users in quickly identifying dataset descriptions but !
@@ -259,7 +258,7 @@ $ED_NL
    !                                                                                       !
    !---------------------------------------------------------------------------------------!
    NL%UNITFAST   = 0
-   NL%UNITSTATE  = 3
+   NL%UNITSTATE  = 2
    !---------------------------------------------------------------------------------------!
 
 
@@ -297,8 +296,8 @@ $ED_NL
    ! FFILOUT -- Path and prefix for analysis files (all but history/restart).              !
    ! SFILOUT -- Path and prefix for history files.                                         !
    !---------------------------------------------------------------------------------------!
-   NL%FFILOUT = 'F_85mlghv0rapid/dbug_him'
-   NL%SFILOUT = 'S_85mlghv0rapid/dbug_him'
+   NL%FFILOUT = 'F_85mlghv0rapid/main_ton'
+   NL%SFILOUT = 'S_85mlghv0rapid/main_ton'
    !---------------------------------------------------------------------------------------!
 
    !---------------------------------------------------------------------------------------!
@@ -348,7 +347,7 @@ $ED_NL
    !
    !
    !---------------------------------------------------------------------------------------!
-   NL%IED_INIT_MODE = 5
+   NL%IED_INIT_MODE = 4
    !---------------------------------------------------------------------------------------!
 
 
@@ -375,7 +374,7 @@ $ED_NL
    !              path+prefix will be used, as the history for every grid must have come   !
    !              from the same simulation.                                                !
    !---------------------------------------------------------------------------------------!
-   NL%SFILIN   = 'edts_datasets/inits/sci_006_potveg_links/PVE'
+   NL%SFILIN   = 'edts_datasets/inits/kz_tonzi/test_ton-S-1912'
    !---------------------------------------------------------------------------------------!
 
    !---------------------------------------------------------------------------------------!
@@ -402,7 +401,7 @@ $ED_NL
    !           into a single layer, so if you are running for places where it doesn't snow !
    !           a lot, leave this set to 1.  One value for all grids.                       ! 
    !---------------------------------------------------------------------------------------!
-   NL%NZG = 16
+   NL%NZG = 9
    NL%NZS = 4
    !---------------------------------------------------------------------------------------!
 
@@ -434,7 +433,7 @@ $ED_NL
    !   5 -- loam                |  11 -- clay                |  17 -- clayey silt          !
    !   6 -- sandy clay loam     |  12 -- peat                                              !
    !---------------------------------------------------------------------------------------!
-   NL%NSLCON   = 17      ! Default soil type if ISOILFLG = 2 (choices below:)
+   NL%NSLCON   = 8      ! Default soil type if ISOILFLG = 2 (choices below:)
    !---------------------------------------------------------------------------------------!
 
 
@@ -466,7 +465,7 @@ $ED_NL
    !   Soil type 21 is a special case in which we use the albedo method that used to be    !
    ! the default in ED-2.1.                                                                !
    !---------------------------------------------------------------------------------------!
-   NL%ISOILCOL  = 2
+   NL%ISOILCOL  = 21
    !---------------------------------------------------------------------------------------!
 
 
@@ -482,8 +481,8 @@ $ED_NL
    !     They are used only when ISOILFLG is 2, both values are between 0. and 1., and     !
    ! theira sum doesn't exceed 1.  Otherwise standard ED values will be used instead.      !
    !---------------------------------------------------------------------------------------!
-   NL%SLXCLAY = 0.68
-   NL%SLXSAND = 0.20
+   NL%SLXCLAY = 0.4479
+   NL%SLXSAND = 0.2553
    !---------------------------------------------------------------------------------------!
 
 
@@ -503,14 +502,11 @@ $ED_NL
    !               2 = porosity (saturation)                                               !
    ! STGOFF  - initial temperature offset (soil temperature = air temperature + offset)    !
    !---------------------------------------------------------------------------------------!
-   NL%SLZ     =   -8.000,-6.959,-5.995,-5.108,-4.296,-3.560,-2.897,-2.307,-1.789,-1.340,
-                  -0.961,-0.648,-0.400,-0.215,-0.089,-0.020
-   NL%SLMSTR  =    1.000, 1.000, 1.000, 1.000, 1.000, 1.000, 1.000, 1.000, 1.000, 1.000,
-                   1.000, 1.000, 1.000, 1.000, 1.000, 1.000
-   NL%STGOFF  =    0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000,
-                   0.000, 0.000, 0.000, 0.000, 0.000, 0.000
-   !---------------------------------------------------------------------------------------!
 
+
+   NL%SLZ     =   -1.76,-1.35,-1.02,-0.69,-0.47,-0.28,-0.18,-0.08,-0.02
+   NL%SLMSTR  =    0.80, 0.80, 0.80, 0.80, 0.80, 0.80, 0.80, 0.80, 0.80
+   NL%STGOFF  =    0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00
 
 
 
@@ -540,10 +536,12 @@ $ED_NL
    NL%LU_DATABASE      = 'edts_datasets/land_use/glu+sa2/blend-'
    NL%PLANTATION_FILE  = ''
    NL%THSUMS_DATABASE  = 'edts_datasets/ed_inputs/'
-   NL%ED_MET_DRIVER_DB = 'edts_datasets/met/mod_ds314/SHEF_NCEP_DRIVER_DS314'
+   NL%ED_MET_DRIVER_DB = 'edts_datasets/met/tonzi_kz/tonzi_driver_co2'
    NL%SOILSTATE_DB     = ''
    NL%SOILDEPTH_DB     = ''
    !---------------------------------------------------------------------------------------!
+
+
 
 
    !---------------------------------------------------------------------------------------!
@@ -575,7 +573,7 @@ $ED_NL
    !            3.  Aquifer.  Soil moisture of the ficticious layer beneath the bottom is  !
    !                always at saturation.                                                  !
    !---------------------------------------------------------------------------------------!
-   NL%ISOILBC        = 1
+   NL%ISOILBC        = 0 !1
    !---------------------------------------------------------------------------------------!
 
 
@@ -588,7 +586,7 @@ $ED_NL
    !            then lateral drainage becomes free drainage.  SLDRAIN must be between 0    !
    !            and 90.                                                                    !
    !---------------------------------------------------------------------------------------!
-   NL%SLDRAIN        = 10.
+   NL%SLDRAIN        = 0.
    !---------------------------------------------------------------------------------------!
 
 
@@ -631,7 +629,7 @@ $ED_NL
    !                       3.  Hybrid Stepping (BDF2 implicit step for the canopy air and  !
    !                           leaf temp, forward Euler for else, under development).      !
    !---------------------------------------------------------------------------------------!
-   NL%INTEGRATION_SCHEME = 3
+   NL%INTEGRATION_SCHEME = 1
    !---------------------------------------------------------------------------------------!
 
 
@@ -644,7 +642,7 @@ $ED_NL
    !                  between 1.e-7 and 1.e-1, but recommended values are between 1.e-4    !
    !                  and 1.e-2.                                                           !
    !---------------------------------------------------------------------------------------!
-   NL%RK4_TOLERANCE  = 0.01
+   NL%RK4_TOLERANCE  = 0.001
    !---------------------------------------------------------------------------------------!
 
 
@@ -660,7 +658,7 @@ $ED_NL
    !                   2.  Similar to 1, but branches are treated as separate pools in the !
    !                       biophysics (thus doubling the number of prognostic variables).  !
    !---------------------------------------------------------------------------------------!
-   NL%IBRANCH_THERMO = 1
+   NL%IBRANCH_THERMO = 0
    !---------------------------------------------------------------------------------------!
 
 
@@ -706,7 +704,7 @@ $ED_NL
    !                  a few genuses in Costa Rica.  References:                            !
    !                  Cole and Ewel (2006), and Calvo Alvarado et al. (2008).              !
    !---------------------------------------------------------------------------------------!
-   NL%IALLOM          = 2
+   NL%IALLOM          = 0
    !---------------------------------------------------------------------------------------!
 
 
@@ -719,7 +717,7 @@ $ED_NL
    !                                                                                       !
    ! 1: new grass scheme as described above                                                !
    !---------------------------------------------------------------------------------------!
-   NL%IGRASS          = 1
+   NL%IGRASS          = 0
    !---------------------------------------------------------------------------------------!
 
 
@@ -767,8 +765,8 @@ $ED_NL
    ! RADINT -- Intercept                                                                   !
    ! RADSLP -- Slope.                                                                      !
    !---------------------------------------------------------------------------------------!
-   NL%RADINT          = -10.3868
-   NL%RADSLP          = 0.0724
+   NL%RADINT          = -11.3868
+   NL%RADSLP          = 0.0824
    !---------------------------------------------------------------------------------------!
 
 
@@ -816,30 +814,30 @@ $ED_NL
    NL%CROWN_MOD       = 0
    !---------------------------------------------------------------------------------------!
 
-    NL%VMFACT_C3       = 1.00
+    NL%VMFACT_C3       = 2.00
     NL%VMFACT_C4       = 1.00
     NL%MPHOTO_TRC3     = 9.0
-    NL%MPHOTO_TEC3     = 7.2
-    NL%MPHOTO_C4       = 5.2
-    NL%BPHOTO_BLC3     = 10000.
+    NL%MPHOTO_TEC3     = 7.19
+    NL%MPHOTO_C4       = 5.0
+    NL%BPHOTO_BLC3     = 20000.
     NL%BPHOTO_NLC3     = 1000.
-    NL%BPHOTO_C4       = 10000.
-    NL%KW_GRASS        = 900.
-    NL%KW_TREE         = 600.
+    NL%BPHOTO_C4       = 8000.
+    NL%KW_GRASS        = 300.
+    NL%KW_TREE         = 300.
     NL%GAMMA_C3        = 0.015
-    NL%GAMMA_C4        = 0.040
-    NL%D0_GRASS        = 0.016
-    NL%D0_TREE         = 0.016
-    NL%ALPHA_C3        = 0.080
-    NL%ALPHA_C4        = 0.055
+    NL%GAMMA_C4        = 0.036
+    NL%D0_GRASS        = 0.01
+    NL%D0_TREE         = 0.01
+    NL%ALPHA_C3        = 0.08
+    NL%ALPHA_C4        = 0.053
     NL%KLOWCO2IN       = 4000.
     NL%RRFFACT         = 1.000
     NL%GROWTHRESP      = 0.333
     NL%LWIDTH_GRASS    = 0.05
-    NL%LWIDTH_BLTREE   = 0.10
+    NL%LWIDTH_BLTREE   = 0.05
     NL%LWIDTH_NLTREE   = 0.05
-    NL%Q10_C3          = 2.4
-    NL%Q10_C4          = 2.4
+    NL%Q10_C3          = 2.2
+    NL%Q10_C4          = 2.2
 
 
    !---------------------------------------------------------------------------------------!
@@ -854,7 +852,7 @@ $ED_NL
    ! LTRANS_VIS   -- Leaf transmittance for tropical plants - Visible/PAR                  !
    ! LTRANS_NIR   -- Leaf transmittance for tropical plants - Near Infrared                !
    ! LREFLECT_VIS -- Leaf reflectance for tropical plants - Visible/PAR                    !
-  ! LREFLECT_NIR -- Leaf reflectance for tropical plants - Near Infrared                  !
+   ! LREFLECT_NIR -- Leaf reflectance for tropical plants - Near Infrared                  !
    ! ORIENT_TREE  -- Leaf orientation factor for tropical trees.  Extremes are:            !
    !                 -1.  All leaves are oriented in the vertical                          !
    !                  0.  Leaf orientation is perfectly random                             !
@@ -873,14 +871,14 @@ $ED_NL
    !                        1.  Homogeneously spread over the layer (i.e., no clumping)    !
    !---------------------------------------------------------------------------------------!
    NL%ICANRAD        =  2
-   NL%LTRANS_VIS     =  0.060
-   NL%LTRANS_NIR     =  0.200
-   NL%LREFLECT_VIS   =  0.120
-   NL%LREFLECT_NIR   =  0.300
-   NL%ORIENT_TREE    =  0.050
-   NL%ORIENT_GRASS   = -0.200
+   NL%LTRANS_VIS     =  0.050
+   NL%LTRANS_NIR     =  0.230
+   NL%LREFLECT_VIS   =  0.100
+   NL%LREFLECT_NIR   =  0.460
+   NL%ORIENT_TREE    =  0.100
+   NL%ORIENT_GRASS   =  0.000
    NL%CLUMP_TREE     =  0.800
-   NL%CLUMP_GRASS    =  0.900
+   NL%CLUMP_GRASS    =  1.000
    !---------------------------------------------------------------------------------------!
 
 
@@ -922,7 +920,7 @@ $ED_NL
    !                      depth, H it the crown height and psi_fc and psi_wp are the       !
    !                      matric potentials at wilting point and field capacity.           !
    !---------------------------------------------------------------------------------------!
-   NL%H2O_PLANT_LIM   = 2
+   NL%H2O_PLANT_LIM   = 1
    !---------------------------------------------------------------------------------------!
 
 
@@ -962,8 +960,8 @@ $ED_NL
    !           CBR - CBR_SS   CBR_LIGHT - CBR_SS   CBR_MOIST - CBR_SS                      !
    !                                                                                       ! 
    !---------------------------------------------------------------------------------------!
-   NL%IDDMORT_SCHEME  = 0
-   NL%DDMORT_CONST    = 1.0
+   NL%IDDMORT_SCHEME  = 1
+   NL%DDMORT_CONST    = 0.8
    NL%CBR_SCHEME      = 0
    !---------------------------------------------------------------------------------------!
 
@@ -1043,7 +1041,7 @@ $ED_NL
    !                   the minimum water deficit relative to the total rainfall, over the  !
    !                   past 12 months, to trigger fires.                                   !
    !---------------------------------------------------------------------------------------!
-   NL%INCLUDE_FIRE    = 2
+   NL%INCLUDE_FIRE    = 0
    NL%FIRE_PARAMETER  = 0.5
    NL%SM_FIRE         = -1.40
    !---------------------------------------------------------------------------------------!
@@ -1056,7 +1054,7 @@ $ED_NL
    !                   0.  no anthropogenic disturbance.                                   !
    !                   1.  use anthropogenic disturbance dataset.                          !
    !---------------------------------------------------------------------------------------!
-   NL%IANTH_DISTURB   = 1
+   NL%IANTH_DISTURB   = 0
    !---------------------------------------------------------------------------------------!
 
 
@@ -1078,7 +1076,7 @@ $ED_NL
    !             4.  Same as 0, but if finds the ground conductance following CLM          !
    !                 technical note (equations 5.98-5.100).                                !
    !---------------------------------------------------------------------------------------!
-   NL%ICANTURB        = 3
+   NL%ICANTURB        = 2
    !---------------------------------------------------------------------------------------!
 
 
@@ -1156,7 +1154,7 @@ $ED_NL
    !            2.  Soil conductivity decreases with depth even for constant soil moisture !
    !                , otherwise it is the same as 1.                                       !
    !---------------------------------------------------------------------------------------!
-   NL%IPERCOL         = 0
+   NL%IPERCOL         = 1
    !---------------------------------------------------------------------------------------!
 
 
@@ -1182,9 +1180,9 @@ $ED_NL
    ! 7 - southern pines                   | 17 - "Araucaria" (non-optimised                !
    ! 8 - late conifers                    |      Southern Pines).                          !
    !---------------------------------------------------------------------------------------!
-   NL%INCLUDE_THESE_PFT = 1,2,3,4,16
-   NL%AGRI_STOCK        = 1
-   NL%PLANTATION_STOCK  = 3
+   NL%INCLUDE_THESE_PFT = 5,6,7,8,9,10,11
+   NL%AGRI_STOCK        = 5
+   NL%PLANTATION_STOCK  = 8
    !---------------------------------------------------------------------------------------!
 
 
@@ -1227,9 +1225,9 @@ $ED_NL
    !                   a site to be created (ignored if IED_INIT_MODE is set to 3).        !
    !---------------------------------------------------------------------------------------!
    NL%MAXSITE        =     1
-   NL%MAXPATCH       =    20
-   NL%MAXCOHORT      =    80
-   NL%MIN_SITE_AREA  = 0.005
+   NL%MAXPATCH       =     8
+   NL%MAXCOHORT      =    40
+   NL%MIN_SITE_AREA  =  0.01
    NL%MIN_PATCH_AREA = 0.005
    !---------------------------------------------------------------------------------------!
 
@@ -1258,8 +1256,8 @@ $ED_NL
    !                              TREEFALL_DISTURBANCE_RATE is internally adjusted so the  !
    !                              average patch age is still 1/TREEFALL_DISTURBANCE_RATE   !
    !---------------------------------------------------------------------------------------!
-   NL%TREEFALL_DISTURBANCE_RATE  = 0.014
-   NL%TIME2CANOPY                = 0.
+   NL%TREEFALL_DISTURBANCE_RATE  = 0.0
+   NL%TIME2CANOPY                = 0.0
    !---------------------------------------------------------------------------------------!
 
 
@@ -1270,7 +1268,7 @@ $ED_NL
    !                -folding lifetime" of the TSW in seconds due to runoff.  If you don't  !
    !                want runoff to happen, set this to 0.                                  !
    !---------------------------------------------------------------------------------------!
-   NL%RUNOFF_TIME    = 3600.
+   NL%RUNOFF_TIME    = 1800.
    !---------------------------------------------------------------------------------------!
 
 
@@ -1358,11 +1356,11 @@ $ED_NL
    !---------------------------------------------------------------------------------------!
    NL%IMETTYPE    = 1
    NL%ISHUFFLE    = 0
-   NL%METCYC1     = 1969
-   NL%METCYCF     = 2008
-   NL%IMETAVG     = 2
-   NL%IMETRAD     = 2
-   NL%INITIAL_CO2 = 378.
+   NL%METCYC1     = 2000
+   NL%METCYCF     = 2012
+   NL%IMETAVG     = 0
+   NL%IMETRAD     = 0
+   NL%INITIAL_CO2 = 360.
    !---------------------------------------------------------------------------------------!
 
 
@@ -1378,11 +1376,11 @@ $ED_NL
    !                                                                                       !
    ! If the years don't cover the entire simulation period, they will be recycled.         !
    !---------------------------------------------------------------------------------------!
-   NL%IPHENYS1 = 1992
-   NL%IPHENYSF = 2003
-   NL%IPHENYF1 = 1992
-   NL%IPHENYFF = 2003
-   NL%PHENPATH   = 'edts_datasets/phenology/phenology'
+   NL%IPHENYS1 = 2009
+   NL%IPHENYSF = 2011
+   NL%IPHENYF1 = 2009
+   NL%IPHENYFF = 2011
+   NL%PHENPATH   = 'edts_datasets/phenology/Tonzi_30asc/Tonzi_30asc_'
    !---------------------------------------------------------------------------------------!
 
 
@@ -1415,7 +1413,7 @@ $ED_NL
    ! MIN_RECRUIT_DBH -- Minimum DBH that is measured in the census, in cm.                 !
    !---------------------------------------------------------------------------------------!
    NL%DT_CENSUS       = 1
-   NL%YR1ST_CENSUS    = 1901
+   NL%YR1ST_CENSUS    = 2005
    NL%MON1ST_CENSUS   = 1
    NL%MIN_RECRUIT_DBH = 10
    !---------------------------------------------------------------------------------------!
@@ -1459,8 +1457,8 @@ $ED_NL
    !                > 0.  Keep the patch with the provided index.  In case the index is    !
    !                      not valid, the model will crash.                                 !
    !---------------------------------------------------------------------------------------!
-   NL%IDETAILED  = 1
-   NL%PATCH_KEEP = -1
+   NL%IDETAILED  = 0
+   NL%PATCH_KEEP = 0
    !---------------------------------------------------------------------------------------!
 
 
