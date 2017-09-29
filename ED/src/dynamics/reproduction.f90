@@ -9,7 +9,6 @@ module reproduction_module
 !------------------------------------------------------------------------------------------!
 subroutine reproduction(cgrid,month)
    use stable_cohorts
-   use stable_cohorts
    use update_derived_props_module
    use ed_state_vars      , only : edtype                   & ! structure
                                  , polygontype              & ! structure
@@ -51,7 +50,6 @@ subroutine reproduction(cgrid,month)
                                  , area_indices             & ! subroutine
                                  , dbh2krdepth              ! ! function
    use grid_coms          , only : nzg                      ! ! intent(in)
-   use ed_misc_coms       , only : ibigleaf                 ! ! intent(in)
    use phenology_aux      , only : pheninit_balive_bstorage ! ! intent(in)
    use budget_utils       , only : update_budget            ! ! sub-routine
    use therm_lib          , only : cmtl2uext                ! ! function
@@ -103,11 +101,6 @@ subroutine reproduction(cgrid,month)
 
 
 
-   !---------------------------------------------------------------------------------------!
-   !     Decide which vegetation structure to use.                                         !
-   !---------------------------------------------------------------------------------------!
-   select case (ibigleaf)
-   case (0)
       !------------------------------------------------------------------------------------!
       !                        Size- and age_structure reproduction                        !
       !------------------------------------------------------------------------------------!
@@ -507,221 +500,6 @@ subroutine reproduction(cgrid,month)
       end do polyloop
       !------------------------------------------------------------------------------------!
 
-
-
-   case (1)
-      !------------------------------------------------------------------------------------!
-      !                                    'big leaf' ED                                   !
-      !  Growth and reproduction are done together as there is no vertical structure in    !
-      ! big leaf ED so the cohorts cannot grow vertically.  Therefore daily NPP is         !
-      ! is accumulated and monthly the nplant of each cohort is increased (1 cohort per    !
-      ! patch and 1 patch per pft and disturbance type).
-      !------------------------------------------------------------------------------------!
-
-
-      !----- The big loops start here. ----------------------------------------------------!
-      polyloop_big: do ipy = 1,cgrid%npolygons
-         cpoly => cgrid%polygon(ipy)
-         late_spring = (cgrid%lat(ipy) >= 0.0 .and. month == 6) .or.                       &
-                       (cgrid%lat(ipy) < 0.0 .and. month == 12)
-
-         !------- Update the repro arrays. ------------------------------------------------!
-         call seed_dispersal(cpoly,late_spring)
-         !---------------------------------------------------------------------------------!
-
-         siteloop_big: do isi = 1,cpoly%nsites
-            csite => cpoly%site(isi)
-
-            patchloop_big: do ipa = 1,csite%npatches
-               cpatch => csite%patch(ipa)
-
-               !---------------------------------------------------------------------------!
-               !    There should only be ONE cohort... if there are more, crash            !
-               !---------------------------------------------------------------------------!
-               if (cpatch%ncohorts > 1) then
-                 write (unit=*,fmt='(a,1x,es12.5)') ' + PATCH   : ',ipa
-                 write (unit=*,fmt='(a,1x,es12.5)') ' + NCOHORTS: ',cpatch%ncohorts
-                 call fatal_error('NCOHORTS can never be greater than 1 for big-leaf runs' &
-                                  ,'reproduction' ,'reproduction.f90')
-               end if
-               !---------------------------------------------------------------------------!
-
-
-
-               !---------------------------------------------------------------------------!
-               !      "Loop" over cohorts.  Reproduction does not create new patches,      !
-               ! instead it will add population to the existing cohort.                    !
-               !---------------------------------------------------------------------------!
-               cohortloop_big: do ico = 1, cpatch%ncohorts
-
-
-                  !------ Current PFT. ----------------------------------------------------!
-                  ipft = cpatch%pft(ico)
-                  !------------------------------------------------------------------------!
-
-
-                  !------------------------------------------------------------------------!
-                  !     Check whether to include this PFT or not.  The decision depends    !
-                  ! on the following decisions.                                            !
-                  ! 1.  In case of agriculture or forest plantation, it must also be       !
-                  ! allowed in such patches.                                               !
-                  ! 2.  The temperature is not limiting reproduction.                      !
-                  ! 3.  The user wants reproduction to occur.                              !
-                  !------------------------------------------------------------------------!
-                  select case (csite%dist_type(ipa))
-                  case (1)
-                     !----- Agriculture (cropland or pasture). ----------------------------!
-                     allow_pft =                                                           &
-                           include_pft_ag(ipft)                                      .and. &
-                           cpoly%min_monthly_temp(isi) >= plant_min_temp(ipft) - 5.0 .and. &
-                           repro_scheme                /= 0
-                     !---------------------------------------------------------------------!
-
-                  case (2)
-                     !----- Forest plantation. --------------------------------------------!
-                     allow_pft =                                                           &
-                           include_pft_fp(ipft)                                      .and. &
-                           cpoly%min_monthly_temp(isi) >= plant_min_temp(ipft) - 5.0 .and. &
-                           repro_scheme                /= 0
-                     !---------------------------------------------------------------------!
-
-                  case default
-                     !----- Primary or secondary vegetation. ------------------------------!
-                     allow_pft =                                                           &
-                           cpoly%min_monthly_temp(isi) >= plant_min_temp(ipft) - 5.0 .and. &
-                           repro_scheme                /= 0
-                     !---------------------------------------------------------------------!
-                  end select
-                  !------------------------------------------------------------------------!
-
-
-
-                  !------------------------------------------------------------------------!
-                  !     Update cohort properties in case reproduction is allowed.          !
-                  !------------------------------------------------------------------------!
-                  if (allow_pft) then
-
-                     !---------------------------------------------------------------------!
-                     !    Plants don't have size distribution, so use the standard value   !
-                     ! of one plant to find a population increase that is consistent with  !
-                     ! the expected average biomass.                                       !
-                     !---------------------------------------------------------------------!
-                     nplant_inc         = csite%repro(ipft,ipa) / one_plant_c(ipft)
-                     cpatch%nplant(ico) = cpatch%nplant(ico) + nplant_inc
-                     !---------------------------------------------------------------------!
-
-
-                     !----- Reset the carbon available for reproduction. ------------------!
-                     csite%repro(ipft,ipa) = 0.0
-                     !---------------------------------------------------------------------!
-
-
-
-                     !---------------------------------------------------------------------!
-                     !    Will only reproduce/grow if on-allometry so dont' have to worry  !
-                     ! about elongation factor.                                            !
-                     !---------------------------------------------------------------------!
-                     bleaf_plant     = size2bl(cpatch%dbh(ico),cpatch%hite(ico),ipft)
-                     broot_plant     = bleaf_plant * q(ipft)
-                     bsapwood_plant  = bleaf_plant * qsw(ipft) * cpatch%hite(ico)
-                     balive_plant    = bleaf_plant + broot_plant + bsapwood_plant
-                     bdead_plant     = dbh2bd(cpatch%dbh(ico),ipft)
-                     !---------------------------------------------------------------------!
-
-
-
-                     !---------------------------------------------------------------------!
-                     !      Update the productivity terms.                                 !
-                     !---------------------------------------------------------------------!
-                     cpatch%today_nppleaf(ico)   =  nplant_inc * bleaf_plant
-                     cpatch%today_nppfroot(ico)  =  nplant_inc * broot_plant
-                     cpatch%today_nppsapwood(ico)=  nplant_inc * bsapwood_plant
-                     cpatch%today_nppwood(ico)   = agf_bs(ipft) * nplant_inc * bdead_plant
-                     cpatch%today_nppcroot(ico)  = (1. - agf_bs(ipft)) * nplant_inc        &
-                                                 * bdead_plant
-                     !---------------------------------------------------------------------!
-
-
-                     !---------------------------------------------------------------------!
-                     !     Update the derived properties since the population may have     !
-                     ! changed.                                                            !
-                     !---------------------------------------------------------------------!
-                     !----- Find LAI, WAI, and CAI. ---------------------------------------!
-                     call area_indices(cpatch, ico)
-                     !----- Find heat capacity and vegetation internal energy. ------------!
-                     call calc_veg_hcap(cpatch%bleaf(ico),cpatch%bdead(ico)                &
-                                       ,cpatch%bsapwooda(ico),cpatch%nplant(ico)           &
-                                       ,cpatch%pft(ico)                                    &
-                                       ,cpatch%leaf_hcap(ico),cpatch%wood_hcap(ico))
-                     cpatch%leaf_energy(ico) = cmtl2uext(cpatch%leaf_hcap (ico)            &
-                                                        ,cpatch%leaf_water(ico)            &
-                                                        ,cpatch%leaf_temp (ico)            &
-                                                        ,cpatch%leaf_fliq (ico))
-                     cpatch%wood_energy(ico) = cmtl2uext(cpatch%wood_hcap (ico)            &
-                                                        ,cpatch%wood_water(ico)            &
-                                                        ,cpatch%wood_temp (ico)            &
-                                                        ,cpatch%wood_fliq (ico))
-                     !----- Update flags for the biophysical integrator. ------------------!
-                     call is_resolvable(csite,ipa,ico)
-                     !---------------------------------------------------------------------!
-                  else
-                     !---------------------------------------------------------------------!
-                     !     This PFT shouldn't exist... at least not on this patch.   Send  !
-                     ! the seed litter to the soil pools for decomposition.                !
-                     !                                                                     !
-                     !     ALS: dont send all seeds to litter!  Keep it for harvesting?    !
-                     !     MLO: not here because these are the PFTs that are not allowed   !
-                     !          on this patch (for example, trees on agriculture patch).   !
-                     !          Perhaps when we convert bseeds to repro, we should ask     !
-                     !          how much of the seed pool should be lost to harvest.       !
-                     !---------------------------------------------------------------------!
-                     csite%fast_soil_N(ipa) = csite%fast_soil_N(ipa)                       &
-                                            + csite%repro(ipft,ipa) / c2n_recruit(ipft)
-                     csite%fast_soil_C(ipa) = csite%fast_soil_C(ipa)                       &
-                                            + csite%repro(ipft,ipa)
-                     csite%repro(ipft,ipa)  = 0.0
-                     !---------------------------------------------------------------------!
-                  end if
-                  !------------------------------------------------------------------------!
-               end do cohortloop_big
-               !---------------------------------------------------------------------------!
-            end do patchloop_big
-            !------------------------------------------------------------------------------!
-
-
-
-
-            !------------------------------------------------------------------------------!
-            !     Update derived properties.                                               !
-            !------------------------------------------------------------------------------!
-            update_patch_loop_big: do ipa = 1,csite%npatches
-               cpatch => csite%patch(ipa)
-
-               !----- Update the number of cohorts (this is redundant...). ----------------!
-               csite%cohort_count(ipa) = cpatch%ncohorts
-               !---------------------------------------------------------------------------!
-
-               !----- Since cohorts may have changed, update patch properties... ----------!
-               call update_patch_derived_props(csite,ipa)
-               call update_budget(csite,cpoly%lsl(isi),ipa)
-               !---------------------------------------------------------------------------!
-            end do update_patch_loop_big
-            !------------------------------------------------------------------------------!
-
-            !----- Since patch properties may have changed, update site properties... -----!
-            call update_site_derived_props(cpoly,0,isi)
-            !------------------------------------------------------------------------------!
-
-            !----- Reset minimum monthly temperature. -------------------------------------!
-            cpoly%min_monthly_temp(isi) = huge(1.)
-            !------------------------------------------------------------------------------!
-         end do siteloop_big
-         !---------------------------------------------------------------------------------!
-      end do polyloop_big
-      !------------------------------------------------------------------------------------!
-   end select
-   !---------------------------------------------------------------------------------------!
-
    return
 end subroutine reproduction
 !==========================================================================================!
@@ -822,7 +600,6 @@ subroutine seed_dispersal(cpoly,late_spring)
                                  , nonlocal_dispersal    & ! intent(in)
                                  , seedling_mortality    & ! intent(in)
                                  , phenology             ! ! intent(in)
-   use ed_misc_coms       , only : ibigleaf              ! ! intent(in)
 
    implicit none
    !----- Arguments. ----------------------------------------------------------------------!
@@ -879,15 +656,8 @@ subroutine seed_dispersal(cpoly,late_spring)
                if (phenology(donpft) /= 2 .or. late_spring) then
                   bseedling   = donpatch%nplant(donco) * donpatch%bseeds(donco)            &
                               * (1.0 - seedling_mortality(donpft))
-                  select case (ibigleaf)
-                  case (0)
-                     bseed_stays = bseedling * (1.0 - nonlocal_dispersal(donpft))
-                     bseed_maygo = bseedling * nonlocal_dispersal(donpft)
-                  case (1)
-                     !---- if bigleaf cannot disperse seedlings to other patches ----------!
-                     bseed_stays = bseedling
-                     bseed_maygo = 0.
-                  end select
+                  bseed_stays = bseedling * (1.0 - nonlocal_dispersal(donpft))
+                  bseed_maygo = bseedling * nonlocal_dispersal(donpft)
 
                else
                   !----- Not a good time for reproduction.  No seedlings. -----------------!
@@ -960,15 +730,8 @@ subroutine seed_dispersal(cpoly,late_spring)
                   bseedling   = donpatch%nplant(donco) * donpatch%bseeds(donco)            &
                               * (1.0 - seedling_mortality(donpft))
 
-                  select case (ibigleaf)
-                  case (0)
-                     bseed_stays = bseedling * (1.0 - nonlocal_dispersal(donpft))
-                     bseed_maygo = bseedling * nonlocal_dispersal(donpft)
-                  case (1)
-                     !---- if bigleaf cannot disperse seedlings to other patches ----------!
-                     bseed_stays = bseedling
-                     bseed_maygo = 0.
-                  end select
+                  bseed_stays = bseedling * (1.0 - nonlocal_dispersal(donpft))
+                  bseed_maygo = bseedling * nonlocal_dispersal(donpft)
                else
                   !----- Not a good time for reproduction.  No seedlings. -----------------!
                   bseedling   = 0.

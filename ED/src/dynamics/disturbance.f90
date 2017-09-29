@@ -43,8 +43,7 @@ module disturbance_utils
                               , polygontype               & ! structure
                               , sitetype                  & ! structure
                               , patchtype                 ! ! structure
-      use ed_misc_coms , only : current_time              & ! intent(in)
-                              , ibigleaf                  ! ! intent(in)
+      use ed_misc_coms , only : current_time              ! ! intent(in)
       use disturb_coms , only : min_patch_area            & ! intent(in)
                               , mature_harvest_age        & ! intent(in)
                               , plantation_year           & ! intent(in)
@@ -232,9 +231,7 @@ module disturbance_utils
             ! step is done differently depending on whether this is a big leaf or a SAS    !
             ! simulation.                                                                  !
             !------------------------------------------------------------------------------!
-            select case (ibigleaf)
-            case (0)
-               !---------------------------------------------------------------------------!
+              !---------------------------------------------------------------------------!
                !     Size-and-age structure.                                               !
                !---------------------------------------------------------------------------!
 
@@ -270,52 +267,6 @@ module disturbance_utils
                                                  ,cpoly%lsl(isi))
                end do init_dist_sas
                !---------------------------------------------------------------------------!
-
-            case (1)
-               !---------------------------------------------------------------------------!
-               !     Big-leaf ED.                                                          !
-               !---------------------------------------------------------------------------!
-
-
-               !---------------------------------------------------------------------------!
-               !     Transfer the original patch values to a temporary patch.  Then re-    !
-               ! -allocate csite with room for new PFT/patches, and transfer the original  !
-               ! patches back.                                                             !
-               !---------------------------------------------------------------------------!
-               call allocate_sitetype  (tsite,onsp)
-               call copy_sitetype      (csite,tsite,1,onsp,1,onsp)
-               call deallocate_sitetype(csite)
-               call allocate_sitetype  (csite,onsp + nnsp_ble)
-               call copy_sitetype      (tsite,csite,1,onsp,1,onsp)
-               call deallocate_sitetype(tsite)
-               !---------------------------------------------------------------------------!
-
-
-
-               !---------------------------------------------------------------------------!
-               !     Allocate the mask to decide which patches will remain by the end.     !
-               !---------------------------------------------------------------------------!
-               allocate(disturb_mask(onsp + nnsp_ble))
-               disturb_mask         = .false.
-               disturb_mask(1:onsp) = .true.
-               !---------------------------------------------------------------------------!
-
-
-               !---------------------------------------------------------------------------!
-               !      Initialize all the potential as well as implemented disturbance      !
-               ! patches.  n_dist_types new patches will be created, each one containing a !
-               ! different patch type.  In case no conversion to that kind of patch has    !
-               ! happened, or if the newly created patch is tiny, it will be removed soon. !
-               !---------------------------------------------------------------------------!
-               init_distpatch_ble: do ipa = onsp+1, onsp+nnsp_ble
-                  call initialize_disturbed_patch(csite,cpoly%met(isi)%atm_tmp,ipa         &
-                                                 ,cpoly%lsl(isi))
-               end do init_distpatch_ble
-               !---------------------------------------------------------------------------!
-            end select
-            !------------------------------------------------------------------------------!
-
-
 
 
             !------------------------------------------------------------------------------!
@@ -533,8 +484,6 @@ module disturbance_utils
                   !    Fix flags for new patches.  Here it matters whether this simulation !
                   ! is big-leaf or SAS.                                                    !
                   !------------------------------------------------------------------------!
-                  select case (ibigleaf)
-                  case (0)
                      !---------------------------------------------------------------------!
                      !     Size-and-age structure.                                         !
                      !---------------------------------------------------------------------!
@@ -556,67 +505,6 @@ module disturbance_utils
                      call initialize_disturbed_patch(csite,cpoly%met(isi)%atm_tmp          &
                                                     ,onsp+new_lu,cpoly%lsl(isi))
                      !---------------------------------------------------------------------!
-
-                  case (1)
-                     !---------------------------------------------------------------------!
-                     !     Big leaf.                                                       !
-                     !---------------------------------------------------------------------!
-                     !---------------------------------------------------------------------!
-                     !     Set the flag that this patch should be kept as a newly created  !
-                     ! transition patch.                                                   !
-                     !---------------------------------------------------------------------!
-                     select case (new_lu)
-                     case (1,2)
-                        !------------------------------------------------------------------!
-                        !     Cropland, pasture, and forest plantation.  Only one PFT is   !
-                        ! allowed in such patches.                                         !
-                        !------------------------------------------------------------------!
-
-
-                        !------------------------------------------------------------------!
-                        !     Set the flag that this patch should be kept as a newly       !
-                        ! created transition patch.                                        !
-                        !------------------------------------------------------------------!
-                        disturb_mask    (onsp+new_lu)  = .true.
-                        csite%dist_type (onsp+new_lu)  = new_lu
-                        csite%area      (onsp+new_lu)  = act_area_gain(new_lu)
-                        !------------------------------------------------------------------!
-
-
-
-                        !----- Initialize to zero the new trasitioned patches. ------------!
-                        call initialize_disturbed_patch(csite,cpoly%met(isi)%atm_tmp       &
-                                                       ,onsp+new_lu,cpoly%lsl(isi))
-                        !------------------------------------------------------------------!
-
-                     case default
-                        !------------------------------------------------------------------!
-                        !     Non-cultivated lands.  Create one patch for each PFT that    !
-                        ! may be present.                                                  !
-                        !------------------------------------------------------------------!
-                        pft_add_loop: do ipft=1,mypfts
-                           !---------------------------------------------------------------!
-                           !     Set the flag that this patch should be kept as a newly    !
-                           ! created transition patch.                                     !
-                           !---------------------------------------------------------------!
-                           npa                   = onsp + 2 + (new_lu - 3) * mypfts + ipft
-                           disturb_mask    (npa) = .true.
-                           csite%dist_type (npa) = new_lu
-                           csite%area      (npa) = act_area_gain(new_lu) / real(mypfts)
-                           !---------------------------------------------------------------!
-
-
-                           !----- Initialize to zero the new trasitioned patches. ---------!
-                           call initialize_disturbed_patch(csite,cpoly%met(isi)%atm_tmp    &
-                                                          ,npa,cpoly%lsl(isi))
-                           !---------------------------------------------------------------!
-                        end do pft_add_loop
-                        !------------------------------------------------------------------!
-                     end select
-                     !---------------------------------------------------------------------!
-                  end select
-                  !------------------------------------------------------------------------!
-
 
 
                   !------------------------------------------------------------------------!
@@ -735,8 +623,6 @@ module disturbance_utils
                         ! must check whether this is a conventional or a  big leaf         !
                         ! simulation.                                                      !
                         !------------------------------------------------------------------!
-                        select case (ibigleaf)
-                        case (0)
                            !---------------------------------------------------------------!
                            !     Size-and-age structure.                                   !
                            !---------------------------------------------------------------!
@@ -747,81 +633,6 @@ module disturbance_utils
                            call accum_dist_litt(csite,onsp+new_lu,ipa,new_lu,area_fac      &
                                                ,dist_path,mindbh_harvest)
                            !---------------------------------------------------------------!
-                        case (1)
-                           !---------------------------------------------------------------!
-                           !     Big leaf ED.  Here we must also check the type of patch   !
-                           ! we are creating.                                              !
-                           !---------------------------------------------------------------!
-                           select case (new_lu)
-                           case (1,2)
-                              !------------------------------------------------------------!
-                              !     Cropland, pasture, or forest plantation.               !
-                              !------------------------------------------------------------!
-                              area_fac = act_area_loss(ipa,new_lu)/csite%area(onsp+new_lu)
-                              call increment_patch_vars(csite,onsp+new_lu,ipa,area_fac)
-                              call insert_survivors(csite,onsp+new_lu,ipa,new_lu,area_fac  &
-                                                   ,dist_path,mindbh_harvest)
-                              call accum_dist_litt(csite,onsp+new_lu,ipa,new_lu,area_fac   &
-                                                  ,dist_path,mindbh_harvest)
-                              !------------------------------------------------------------!
-                           case default
-                              !------------------------------------------------------------!
-                              !     Non-cultivated lands.  We must check that the donor    !
-                              ! patch and receptor patch have the same PFT, or the donor   !
-                              ! is empty.                                                  !
-                              !------------------------------------------------------------!
-                              do ipft=1,mypfts
-                                 npa = onsp + 2 + (new_lu - 3) * mypfts + ipft
-
-                                 if (cpatch%ncohorts == 0) then
-                                    !------------------------------------------------------!
-                                    !    Donor cohort is empty, split disturbed area       !
-                                    ! evenly amongst receptor cohorts.                     !
-                                    !------------------------------------------------------!
-                                    same_pft = ipft == 1
-                                    area_fac = act_area_loss(ipa,new_lu)                   &
-                                             / ( real(mypfts) * csite%area(npa) )
-                                    !------------------------------------------------------!
-                                 else
-                                    if (ipft == cpatch%pft(1)) then
-                                       !---------------------------------------------------!
-                                       !    PFTs match, send all disturbed area to this    !
-                                       ! patch.                                            !
-                                       !---------------------------------------------------!
-                                       same_pft = .true.
-                                       area_fac = act_area_loss(ipa,new_lu)/csite%area(npa)
-                                       !---------------------------------------------------!
-                                    else
-                                       !---------------------------------------------------!
-                                       !    PFTs do not match, don't send anything to the  !
-                                       ! new patch.                                        !
-                                       !---------------------------------------------------!
-                                       same_pft = .false.
-                                       area_fac = 0.
-                                       !---------------------------------------------------!
-                                    end if
-                                    !------------------------------------------------------!
-                                 end if
-                                 !---------------------------------------------------------!
-
-
-                                 !---------------------------------------------------------!
-                                 !     Accumulate survivors to the new patch.              !
-                                 !---------------------------------------------------------!
-                                 if (same_pft) then
-                                    call increment_patch_vars(csite,npa,ipa,area_fac)
-                                    call insert_survivors(csite,npa,ipa,new_lu,area_fac    &
-                                                         ,dist_path,mindbh_harvest)
-                                    call accum_dist_litt(csite,npa,ipa,new_lu,area_fac     &
-                                                        ,dist_path,mindbh_harvest)
-                                 end if
-                                 !---------------------------------------------------------!
-                              end do
-                              !------------------------------------------------------------!
-                           end select
-                           !---------------------------------------------------------------!
-                        end select
-                        !------------------------------------------------------------------!
                      end if
                      !---------------------------------------------------------------------!
                   end do old_lu_l3rd
@@ -870,7 +681,7 @@ module disturbance_utils
                   ! -and-age structure.                                                    !
                   !------------------------------------------------------------------------!
                   qpatch => csite%patch(onsp+new_lu)
-                  if (ibigleaf == 0 .and. qpatch%ncohorts > 0 .and. maxcohort >= 0) then
+                  if (qpatch%ncohorts > 0 .and. maxcohort >= 0) then
                      call fuse_cohorts(csite,onsp+new_lu                                   &
                                       ,cpoly%lsl(isi),.false.)
                      call terminate_cohorts(csite,onsp+new_lu,elim_nplant,elim_lai)
@@ -989,128 +800,6 @@ module disturbance_utils
             !------------------------------------------------------------------------------!
             end do prune_loop
             end if
-
-
-            !------------------------------------------------------------------------------!
-            !     Big-leaf only.  In BigLeaf-ED, we do not track age since last            !
-            ! disturbance; instead, each land use type has one patch for each PFT or one   !
-            ! patch and one PFT only in case the patch is cultivated.  Here, we search for !
-            ! duplicated patches that have the same PFT and same LU, and fuse them.        !
-            !------------------------------------------------------------------------------!
-            select case (ibigleaf)
-            case (1)
-               merge_lu_loop: do new_lu = 1, n_dist_types
-                  !----- Define search limits for this LU. --------------------------------!
-                  select case (new_lu)
-                  case (1)
-                     apa = onsp + 1
-                     zpa = onsp + 1
-                  case (2)
-                     apa = onsp + 2
-                     zpa = onsp + 2
-                  case default
-                     apa = onsp + 2 + ( new_lu - 3 ) * mypfts + 1
-                     zpa = onsp + 2 + ( new_lu - 3 ) * mypfts + mypfts
-                  end select
-                  !------------------------------------------------------------------------!
-
-
-
-
-                  !------------------------------------------------------------------------!
-                  !     Loop over the old patches and seek land use matches.               !
-                  !------------------------------------------------------------------------!
-                  merge_patch_loop: do npa=apa,zpa
-
-                     !----- Check whether the patch has been created. ---------------------!
-                     if (disturb_mask(npa)) then
-
-                        !------------------------------------------------------------------!
-                        !     Loop over old patches.                                       !
-                        !------------------------------------------------------------------!
-                        old_lu_search: do ipa = 1,onsp
-                           old_lu = csite%dist_type(ipa)
-
-                           !---------------------------------------------------------------!
-                           !    If this is a good receptor, merge the patches.             !
-                           !                                                               !
-                           !    Requirements for a good receptor:                          !
-                           ! 1. Same land use                                              !
-                           ! 2. Receptor is not slated to be purged.                       !
-                           ! 3. Receptor has the same PFT as the donor (or both patches    !
-                           !    are empty).                                                !
-                           !---------------------------------------------------------------!
-                           if     ( csite%patch(ipa)%ncohorts == 0 .and.                   &
-                                    csite%patch(npa)%ncohorts == 0 ) then
-                              same_pft = .true.
-                           elseif ( csite%patch(ipa)%ncohorts == 0 .or.                    &
-                                    csite%patch(npa)%ncohorts == 0 ) then
-                              same_pft = .false.
-                           else
-                              same_pft = csite%patch(ipa)%pft(1) == csite%patch(npa)%pft(1)
-                           end if
-
-                           if ( old_lu == new_lu .and. disturb_mask(ipa) .and. same_pft)   &
-                           then
-                              !----- Fuse both patches. -----------------------------------!
-                              call fuse_2_patches(csite,npa,ipa,nzg,nzs                    &
-                                                 ,cpoly%lsl(isi)                           &
-                                                 ,cpoly%ntext_soil(:,isi)                  &
-                                                 ,cpoly%green_leaf_factor(:,isi)           &
-                                                 ,.false.,elim_nplant,elim_lai)
-                              !------------------------------------------------------------!
-
-
-
-                              !------------------------------------------------------------!
-                              !    Make sure that all cohorts are fused.                   !
-                              !------------------------------------------------------------!
-                              cpatch => csite%patch(ipa)
-                              do ico=2,cpatch%ncohorts
-                                 new_nplant = cpatch%nplant(ico) + cpatch%nplant(1)
-                                 ipft       = cpatch%pft(1)
-                                 call fuse_2_cohorts(cpatch,ico,1, csite%can_prss(ipa)     &
-                                                    ,csite%can_shv (ipa),cpoly%lsl(isi)    &
-                                                    ,.false.)
-
-                                 !---------------------------------------------------------!
-                                 !     Set nplant to a tiny number, we will delete this    !
-                                 ! cohort soon.                                            !
-                                 !---------------------------------------------------------!
-                                 cpatch%nplant(ico) = tiny_num
-                                 !---------------------------------------------------------!
-                              end do
-                              !------------------------------------------------------------!
-
-
-                              !------ Remove emptied cohorts. -----------------------------!
-                              call terminate_cohorts(csite,ipa,elim_nplant,elim_lai)
-                              !------------------------------------------------------------!
-
-
-                              !------ Remove the patch. -----------------------------------!
-                              disturb_mask(npa) = .false.
-                              !------------------------------------------------------------!
-
-
-                              !------ Patch is gone, stop searching old patches. ----------!
-                              exit old_lu_search
-                              !------------------------------------------------------------!
-                           end if
-                           !---------------------------------------------------------------!
-                        end do old_lu_search
-                        !------------------------------------------------------------------!
-                     end if
-                     !---------------------------------------------------------------------!
-                  end do merge_patch_loop
-                  !------------------------------------------------------------------------!
-               end do merge_lu_loop
-               !---------------------------------------------------------------------------!
-            end select
-            !------------------------------------------------------------------------------!
-
-
-
 
             !------------------------------------------------------------------------------!
             !      Reallocate the current site to fit the original patches, except         !
@@ -2946,9 +2635,7 @@ module disturbance_utils
       use ed_state_vars , only  : sitetype                 & ! structure
                                 , patchtype                ! ! structure
       use pft_coms       , only : hgt_min                  & ! intent(in)
-                                , hgt_max                  & ! intent(in)
-                                , dbh_bigleaf              ! ! intent(in)
-      use ed_misc_coms   , only : ibigleaf                 ! ! intent(in)
+                                , hgt_max                  ! ! intent(in)
       use fuse_fiss_utils, only : sort_cohorts             ! ! sub-routine
       use ed_therm_lib   , only : calc_veg_hcap            ! ! function
       use consts_coms    , only : t3ple                    & ! intent(in)
@@ -3011,8 +2698,7 @@ module disturbance_utils
       !------------------------------------------------------------------------------------!
       cpatch%pft(nc)    = pft
       cpatch%nplant(nc) = density
-      select case (ibigleaf)
-      case (0)
+
          !---------------------------------------------------------------------------------!
          !    SAS approximation, assign height and use it to find DBH and the structural   !
          ! (dead) biomass.                                                                 !
@@ -3021,19 +2707,6 @@ module disturbance_utils
          cpatch%dbh  (nc) = h2dbh(cpatch%hite(nc),cpatch%pft(nc))
          cpatch%bdead(nc) = dbh2bd(cpatch%dbh(nc),cpatch%pft(nc))
          !---------------------------------------------------------------------------------!
-
-      case (1)
-         !---------------------------------------------------------------------------------!
-         !    Big leaf approximation, assign the typical DBH and height and use them to    !
-         ! find height and the structural (dead) biomass.                                  !
-         !---------------------------------------------------------------------------------!
-         cpatch%hite (nc) = hgt_max(cpatch%pft(nc))
-         cpatch%dbh  (nc) = dbh_bigleaf(cpatch%pft(nc))
-         cpatch%bdead(nc) = dbh2bd(cpatch%dbh(nc),cpatch%pft(nc))
-         !---------------------------------------------------------------------------------!
-      end select
-      !------------------------------------------------------------------------------------!
-
 
 
 

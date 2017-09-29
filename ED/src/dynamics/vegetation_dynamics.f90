@@ -16,8 +16,7 @@ subroutine vegetation_dynamics(new_month,new_year)
    use update_derived_props_module
    use grid_coms        , only : ngrids
    use ed_misc_coms     , only : current_time               & ! intent(in)
-                               , dtlsm                      & ! intent(in)
-                               , ibigleaf                   ! ! intent(in)
+                               , dtlsm                      ! ! intent(in)
    use disturbance_utils, only : apply_disturbances         & ! subroutine
                                , site_disturbance_rates     ! ! subroutine
    use fuse_fiss_utils  , only : fuse_patches               & ! subroutine
@@ -126,8 +125,6 @@ subroutine vegetation_dynamics(new_month,new_year)
       !      Patch dynamics.                                                               !
       !------------------------------------------------------------------------------------!
       if (new_year) then
-         select case(ibigleaf)
-         case (0)
             !------------------------------------------------------------------------------!
             !    Size and age structure.  Fuse patches last, after all updates have been   !
             ! applied.  This reduces the number of patch variables that actually need to   !
@@ -143,21 +140,6 @@ subroutine vegetation_dynamics(new_month,new_year)
                end do
             end do
             !------------------------------------------------------------------------------!
-
-         case (1)
-            !------------------------------------------------------------------------------!
-            !    Big leaf.  All that we do is rescale the patches.                         !
-            !------------------------------------------------------------------------------!
-            do ipy = 1,cgrid%npolygons
-               cpoly => cgrid%polygon(ipy)
-                 
-               do isi = 1, cpoly%nsites
-                  call rescale_patches(cpoly%site(isi))
-               end do
-            end do
-            !------------------------------------------------------------------------------!
-         end select
-         !---------------------------------------------------------------------------------!
       end if
       !------------------------------------------------------------------------------------!
 

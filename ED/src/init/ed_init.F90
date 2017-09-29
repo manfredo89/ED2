@@ -305,8 +305,7 @@ end subroutine soil_default_fill
 subroutine load_ecosystem_state()
    use landuse_init_module
    use ed_nbg_init
-   use ed_misc_coms      , only : ied_init_mode   & ! intent(in)
-                                , ibigleaf        ! ! intent(in)
+   use ed_misc_coms      , only : ied_init_mode   ! ! intent(in)
    use phenology_startup , only : phenology_init  ! ! intent(in)
    use ed_node_coms      , only : mynum           ! ! intent(in)
    use grid_coms         , only : ngrids          ! ! intent(in)
@@ -368,8 +367,6 @@ subroutine load_ecosystem_state()
    select case (ied_init_mode)
    case (-8,-1,0)
    
-      select case (ibigleaf)
-      case (0)
          !----- Initialize everything with near-bare ground -------------------------------!
          if (mynum /= 1) then
             write (unit=*,fmt='(a)') ' + Doing near bare ground initialization...'
@@ -377,16 +374,6 @@ subroutine load_ecosystem_state()
          do igr=1,ngrids
               call near_bare_ground_init(edgrid_g(igr))
          end do
-
-      case (1)
-         !----- Initialize everything with near-bare ground -------------------------------!
-         if (mynum /= 1) then
-            write(unit=*,fmt='(a)') ' + Doing near-bare-ground big-leaf initialization...'
-         end if
-         do igr=1,ngrids
-            call near_bare_ground_big_leaf_init(edgrid_g(igr))
-         end do
-      end select
 
    case (1,2,3,6)
       !----- Initialize with ED1-type restart information. --------------------------------!

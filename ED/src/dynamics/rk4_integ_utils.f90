@@ -1212,8 +1212,7 @@ subroutine initialize_rk4patches(init)
 
    use canopy_layer_coms,only : alloc_canopy_layer_mbs &
                               , tai_lyr_max          ! ! intent(in)
-   use ed_misc_coms  , only : integration_scheme,    & ! intent(in)
-                              ibigleaf
+   use ed_misc_coms  , only : integration_scheme
    use grid_coms     , only : ngrids                ! ! intent(in)
    use c34constants  , only : thispft,              &
                               met,                  &
@@ -1502,26 +1501,7 @@ subroutine initialize_rk4patches(init)
    !------------------------------------------------------------------------------------!
    ! Initialize radiation scratch space                                                 !
    !------------------------------------------------------------------------------------!
-   select case (ibigleaf)
-   case (1)
-      !---- Big leaf.  Use the maximum LAI. -----------------------------------------------!
-      maxcohort = 0
-      do igr = 1,ngrids
-         cgrid => edgrid_g(igr)
-         do ipy = 1,cgrid%npolygons
-            cpoly => cgrid%polygon(ipy)
-            do isi = 1,cpoly%nsites
-               csite => cpoly%site(isi)
-               do ipa = 1,csite%npatches
-                  cpatch => csite%patch(ipa)
-                  cohort_count = ceiling( (cpatch%lai(1) + cpatch%wai(1)) / tai_lyr_max )
-                  maxcohort = max(maxcohort, cohort_count)
-               end do
-            end do
-         end do
-      end do
-   end select
- 
+
    do ibuff=1,nbuff
       call dealloc_radscratch(radscr(ibuff))
    end do

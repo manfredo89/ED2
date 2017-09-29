@@ -394,8 +394,7 @@ module growth_balive
       use physiology_coms , only : N_plant_lim            ! ! intent(in)
       use ed_therm_lib    , only : calc_veg_hcap          & ! function
                                  , update_veg_energy_cweh ! ! function
-      use ed_misc_coms    , only : ibigleaf               & ! intent(in)
-                                 , growth_resp_scheme     & ! intent(in)
+      use ed_misc_coms    , only : growth_resp_scheme     & ! intent(in)
                                  , storage_resp_scheme    ! ! intent(in)
       use mortality       , only : mortality_rates        ! ! subroutine
       implicit none
@@ -605,14 +604,8 @@ module growth_balive
                   !      Do mortality --- note that only frost mortality changes daily.    !
                   !------------------------------------------------------------------------!
                   call mortality_rates(cpatch,ico,csite%avg_daily_temp(ipa),csite%age(ipa))
-                  select case (ibigleaf)
-                  case (0)
-                     dlnndt   = - sum(cpatch%mort_rate(1:4,ico))
-                     dndt     = dlnndt * cpatch%nplant(ico)
-                  case (1)
-                     dlnndt   = - sum(cpatch%mort_rate(1:5,ico))
-                     dndt     = dlnndt * cpatch%nplant(ico)
-                  end select
+                  dlnndt   = - sum(cpatch%mort_rate(1:4,ico))
+                  dndt     = dlnndt * cpatch%nplant(ico)
                   !------------------------------------------------------------------------!
 
 

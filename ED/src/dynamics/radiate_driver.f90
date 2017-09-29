@@ -236,7 +236,6 @@ subroutine sfcrad_ed(cosaoi,csite,mzg,mzs,ntext_soil,ncol_soil,tuco,rlong,twilig
    use ed_max_dims          , only : n_pft                & ! intent(in)
                                    , n_radprof            ! ! intent(in)
    use allometry            , only : h2crownbh            ! ! intent(in)
-   use ed_misc_coms         , only : ibigleaf             ! ! intent(in)
    !$ use omp_lib
 
    implicit none
@@ -464,9 +463,6 @@ subroutine sfcrad_ed(cosaoi,csite,mzg,mzs,ntext_soil,ncol_soil,tuco,rlong,twilig
       !     Transfer information from linked lists to arrays.  Here we must check          !
       ! whether is running as a true size-and-age structure model, or as big leaf.         !
       !------------------------------------------------------------------------------------!
-      select case (ibigleaf)
-      case (0)
-
          !---------------------------------------------------------------------------------!
          !     Size- and age-structure.  Each layer in the radiation will correspond to    !
          ! one cohort.  Unusually, here we go from shortest to tallest, as required by the !
@@ -558,94 +554,6 @@ subroutine sfcrad_ed(cosaoi,csite,mzg,mzs,ntext_soil,ncol_soil,tuco,rlong,twilig
             !------------------------------------------------------------------------------!
          end do
          !---------------------------------------------------------------------------------!
-      case (1)
-         !---------------------------------------------------------------------------------!
-         !     Big-leaf solver.  We have either 0 (desert) or 1 cohort.  In case of zero,  !
-         ! we bypass the entire cohort loop, otherwise we check how many layers we will    !
-         ! create.                                                                         !
-         !---------------------------------------------------------------------------------!
-         if (cpatch%ncohorts > 0) then
-            !----- Initialize values. -----------------------------------------------------!
-            cpatch%par_l(1)                 = 0.0
-            cpatch%par_l_beam(1)            = 0.0
-            cpatch%par_l_diffuse(1)         = 0.0
-            cpatch%rshort_l(1)              = 0.0
-            cpatch%rshort_l_beam(1)         = 0.0
-            cpatch%rshort_l_diffuse(1)      = 0.0
-            cpatch%rlong_l(1)               = 0.0
-            cpatch%rshort_w(1)              = 0.0
-            cpatch%rshort_w_beam(1)         = 0.0
-            cpatch%rshort_w_diffuse(1)      = 0.0
-            cpatch%rlong_w(1)               = 0.0
-            cpatch%rad_profile     (:,1)    = 0.0
-            cpatch%light_level     (1)      = 0.0
-            cpatch%light_level_beam(1)      = 0.0
-            cpatch%light_level_diff(1)      = 0.0
-
-            !------------------------------------------------------------------------------!
-            !     Check whether the cohort is resolvable or not.                           !
-            !------------------------------------------------------------------------------!
-           if (cpatch%leaf_resolvable(1) .or. cpatch%wood_resolvable(1)) then
-               tuco = 1 !---- Dummy variable. ---------------------------------------------!
-
-               !---------------------------------------------------------------------------!
-               !     Here we only tell the true LAI if the leaf is resolvable, and the     !
-               ! true WAI if the wood is resolvable.  Also, for photosynthesis, we must    !
-               ! keep track of the tallest cohort that has leaves (we track the array      !
-               ! counters because we will extract the information directly from the        !
-               ! arrays.                                                                   !
-               !---------------------------------------------------------------------------!
-               if (cpatch%leaf_resolvable(1) .and. cpatch%wood_resolvable(1)) then
-                  cohort_count = ceiling( (cpatch%lai(1) + cpatch%wai(1)) / tai_lyr_max )
-                  bl_lai_each  = cpatch%lai(1) / real(cohort_count)
-                  bl_wai_each  = cpatch%wai(1) / real(cohort_count)
-                  tuco_leaf    = cohort_count
-               elseif (cpatch%leaf_resolvable(1)) then
-                  cohort_count = ceiling( cpatch%lai(1) / tai_lyr_max )
-                  bl_lai_each  = cpatch%lai(1) / real(cohort_count)
-                  bl_wai_each  = 0.0
-                  tuco_leaf    = cohort_count
-               elseif (cpatch%wood_resolvable(1)) then
-                  cohort_count = ceiling( cpatch%wai(1) / tai_lyr_max )
-                  bl_lai_each  = 0.0
-                  bl_wai_each  = cpatch%wai(1) / real(cohort_count)
-               end if
-               !---------------------------------------------------------------------------!
-
-
-
-               !---------------------------------------------------------------------------!
-               !     Loop over all layers, and assign equal amounts of LAI and WAI such    !
-               ! that they add back to the total amount.  We impose crown model off for    !
-               ! big leaf, so CA_array must be always set to 1.                            !
-               !---------------------------------------------------------------------------!
-               do ico = 1, cohort_count
-                  radscr(ibuff)%pft_array                (ico) = cpatch%pft(1)
-                  radscr(ibuff)%lai_array                (ico) = dble(bl_lai_each)
-                  radscr(ibuff)%wai_array                (ico) = dble(bl_wai_each)
-                  radscr(ibuff)%CA_array                 (ico) = 1.d0
-                  radscr(ibuff)%leaf_temp_array          (ico) = dble(cpatch%leaf_temp(1))
-                  radscr(ibuff)%wood_temp_array          (ico) = dble(cpatch%wood_temp(1))
-                  radscr(ibuff)%rshort_v_beam_array      (ico) = 0.0
-                  radscr(ibuff)%par_v_beam_array         (ico) = 0.0
-                  radscr(ibuff)%rshort_v_diffuse_array   (ico) = 0.0
-                  radscr(ibuff)%lw_v_array             (  ico) = 0.0
-                  radscr(ibuff)%radprof_array          (:,ico) = 0.0
-                  radscr(ibuff)%par_v_diffuse_array      (ico) = 0.0
-                  radscr(ibuff)%par_level_beam           (ico) = 0.d0
-                  radscr(ibuff)%par_level_diffu          (ico) = 0.d0
-                  radscr(ibuff)%par_level_diffd          (ico) = 0.d0
-                  radscr(ibuff)%light_level_array        (ico) = 0.d0
-                  radscr(ibuff)%light_beam_level_array   (ico) = 0.d0
-                  radscr(ibuff)%light_diff_level_array   (ico) = 0.d0
-               end do
-               !---------------------------------------------------------------------------!
-            end if
-            !------------------------------------------------------------------------------!
-         end if
-         !---------------------------------------------------------------------------------!
-      end select
-      !------------------------------------------------------------------------------------!
 
 
       !------------------------------------------------------------------------------------!
@@ -977,8 +885,6 @@ subroutine sfcrad_ed(cosaoi,csite,mzg,mzs,ntext_soil,ncol_soil,tuco,rlong,twilig
          !     Absorption rates of PAR, rshort, and rlong of the vegetation.  Here we      !
          ! check again whether we are solving big leaf or size- and age-structure.         !
          !---------------------------------------------------------------------------------!
-         select case (ibigleaf)
-         case (0)
             !------------------------------------------------------------------------------!
             !    Size- and age-structure.  We copy the results back to each cohort that is !
             ! resolvable.                                                                  !
@@ -1073,123 +979,6 @@ subroutine sfcrad_ed(cosaoi,csite,mzg,mzs,ntext_soil,ncol_soil,tuco,rlong,twilig
                !---------------------------------------------------------------------------!
             end do
             !------------------------------------------------------------------------------!
-
-
-         case (1)
-            !------------------------------------------------------------------------------!
-            !     Big leaf solver.  Radiation flux is an extensive variable since its      !
-            ! units are J/m2/s.  Therefore we just need to add the fluxes back.  For the   !
-            ! light levels, we cheat and assign the value in the middle.                   !
-            !------------------------------------------------------------------------------!
-            if (cpatch%leaf_resolvable(1) .or. cpatch%wood_resolvable(1)) then
-
-
-
-               !---------------------------------------------------------------------------!
-               !    Light profile: we do not split into leaves and branches.  Since this   !
-               ! is a big leaf, we only save the values beneath the stack.                 !
-               !---------------------------------------------------------------------------!
-               cpatch%rad_profile       (:,1) = radscr(ibuff)%radprof_array(:,1)
-               !---------------------------------------------------------------------------!
-
-
-               do il=1,cohort_count
-                  ipft = radscr(ibuff)%pft_array(il)
-
-                  !------------------------------------------------------------------------!
-                  !      Find the weight for leaves and branchwood.  This is a weighted    !
-                  ! average between the area and absorptance.  We must treat the           !
-                  ! visible and near infrared separately.                                  !
-                  !------------------------------------------------------------------------!
-                  wleaf_vis = sngloff ( ( clumping_factor(ipft)                            &
-                                        * (1.d0 - leaf_scatter_vis(ipft))                  &
-                                        * radscr(ibuff)%LAI_array(il) )                    &
-                                      / ( clumping_factor(ipft)                            &
-                                        * (1.d0 - leaf_scatter_vis(ipft))                  &
-                                        * radscr(ibuff)%LAI_array(il)                      &
-                                        + (1.d0 - wood_scatter_vis(ipft))                  &
-                                        * radscr(ibuff)%WAI_array(il) ), tiny_offset )
-                  wleaf_nir = sngloff ( ( clumping_factor(ipft)                            &
-                                        * (1.d0 - leaf_scatter_nir(ipft))                  &
-                                        * radscr(ibuff)%LAI_array(il) )                    &
-                                      / ( clumping_factor(ipft)                            &
-                                        * (1.d0 - leaf_scatter_nir(ipft))                  &
-                                        * radscr(ibuff)%LAI_array(il)                      &
-                                        + (1.d0 - wood_scatter_nir(ipft))                  &
-                                        * radscr(ibuff)%WAI_array(il) ), tiny_offset  )
-                  wleaf_tir = sngloff( ( leaf_emiss_tir(ipft) * radscr(ibuff)%LAI_array(il) ) &
-                                     / ( leaf_emiss_tir(ipft) * radscr(ibuff)%LAI_array(il)   &
-                                       + wood_emiss_tir(ipft) * radscr(ibuff)%WAI_array(il) ) &
-                                     , tiny_offset    )
-                  wwood_vis = 1. - wleaf_vis
-                  wwood_nir = 1. - wleaf_nir
-                  wwood_tir = 1. - wleaf_tir
-                  !------------------------------------------------------------------------!
-
-
-
-                  !------------------------------------------------------------------------!
-                  !     Find the near infrared absorption, so we average things            !
-                  ! properly.                                                              !
-                  !------------------------------------------------------------------------!
-                  nir_v_beam    = radscr(ibuff)%rshort_v_beam_array(il) -                  &
-                                  radscr(ibuff)%par_v_beam_array(il)
-                  nir_v_diffuse = radscr(ibuff)%rshort_v_diffuse_array(il) -               &
-                                  radscr(ibuff)%par_v_diffuse_array(il)
-                  !------------------------------------------------------------------------!
-
-                  !------------------------------------------------------------------------!
-                  !    Split the layer radiation between leaf and branchwood.              !
-                  !------------------------------------------------------------------------!
-                  !------ Visible (PAR), only leaves need this (photsynthesis model). -----!
-                  cpatch%par_l_beam       (1) = cpatch%par_l_beam(1)                       &
-                                              + radscr(ibuff)%par_v_beam_array(il)*wleaf_vis
-                  cpatch%par_l_diffuse    (1) = cpatch%par_l_diffuse(1)                    &
-                                              + radscr(ibuff)%par_v_diffuse_array(il)*wleaf_vis
-                  !------ Total short wave radiation (PAR+NIR). ---------------------------!
-                  cpatch%rshort_l_beam    (1) = cpatch%rshort_l_beam(1)                &
-                                              + radscr(ibuff)%par_v_beam_array(il)*wleaf_vis &
-                                              + nir_v_beam                  * wleaf_nir
-                  cpatch%rshort_l_diffuse (1) = cpatch%rshort_l_diffuse (1)                &
-                                              + radscr(ibuff)%par_v_diffuse_array    (il) * wleaf_vis    &
-                                              + nir_v_diffuse               * wleaf_nir
-                  cpatch%rshort_w_beam    (1) = cpatch%rshort_w_beam    (1)                &
-                                              + radscr(ibuff)%par_v_beam_array       (il) * wwood_vis    &
-                                              + nir_v_beam                  * wwood_nir
-                  cpatch%rshort_w_diffuse (1) = cpatch%rshort_w_diffuse (1)                &
-                                              + radscr(ibuff)%par_v_diffuse_array    (il) * wwood_vis    &
-                                              + nir_v_diffuse               * wwood_nir
-                  !----- Thermal infra-red (long wave). -----------------------------------!
-                  cpatch%rlong_l          (1) = cpatch%rlong_l (1)                         &
-                                              + radscr(ibuff)%lw_v_array    (il) * wleaf_tir
-                  cpatch%rlong_w          (1) = cpatch%rlong_w (1)                         &
-                                              + radscr(ibuff)%lw_v_array    (il) * wwood_tir
-                  !------------------------------------------------------------------------!
-               end do
-               !---------------------------------------------------------------------------!
-
-
-
-               !----- Save the light levels as the median level. --------------------------!
-               il = ceiling(real(cohort_count)/2.0)
-               cpatch%light_level      (1) = sngloff(radscr(ibuff)%light_level_array     (il)            &
-                                                      ,tiny_offset )
-               cpatch%light_level_beam (1) = sngloff(radscr(ibuff)%light_beam_level_array(il)            &
-                                                      ,tiny_offset )
-               cpatch%light_level_diff (1) = sngloff(radscr(ibuff)%light_diff_level_array(il)            &
-                                                      ,tiny_offset )
-
-               cpatch%par_level_beam(1)  = sngloff(radscr(ibuff)%par_level_beam(il),tiny_offset)
-               cpatch%par_level_diffu(1) = sngloff(radscr(ibuff)%par_level_diffu(il),tiny_offset)
-               cpatch%par_level_diffd(1) = sngloff(radscr(ibuff)%par_level_diffd(il),tiny_offset)
-
-
-
-               !---------------------------------------------------------------------------!
-            end if
-            !------------------------------------------------------------------------------!
-         end select
-         !---------------------------------------------------------------------------------!
 
       else
 

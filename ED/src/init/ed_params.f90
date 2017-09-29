@@ -1435,7 +1435,6 @@ end subroutine init_can_lyr_params
 subroutine init_pft_photo_params()
 
    use ed_max_dims    , only : n_pft                   ! ! intent(in)
-   use ed_misc_coms   , only : ibigleaf                ! ! intent(in)
    use pft_coms       , only : D0                      & ! intent(out)
       , Vm_low_temp             & ! intent(out)
       , Vm_high_temp            & ! intent(out)
@@ -1528,13 +1527,8 @@ subroutine init_pft_photo_params()
    ! on the size structure (SAS or Big Leaf), there is an addition factor multiplied.      !
    !---------------------------------------------------------------------------------------!
    !----- Find the additional factor to multiply Vm0. -------------------------------------!
-   select case (ibigleaf)
-      case (0)
-         !----- SAS, use only the modification from the namelist. ----------------------------!
-         ssfact = 1.0
-      case (1)
-         ssfact = 3.0
-   end select
+   ssfact = 1.0
+
    !---- Define Vm0 for all PFTs. ---------------------------------------------------------!
    Vm0(1)                    = 12.500000 * ssfact * vmfact_c4
    Vm0(2)                    = 18.750000 * ssfact * vmfact_c3
@@ -2021,8 +2015,7 @@ subroutine init_pft_mort_params()
       , lnexp_max                  & ! intent(in)
       , onethird                   & ! intent(in)
       , twothirds                  ! ! intent(in)
-   use ed_misc_coms, only : ibigleaf                   & ! intent(in)
-      , iallom                     ! ! intent(in)
+   use ed_misc_coms, only : iallom                     ! ! intent(in)
    use disturb_coms, only : treefall_disturbance_rate  & ! intent(inout)
       , time2canopy                ! ! intent(in)
 
@@ -2228,34 +2221,12 @@ subroutine init_pft_mort_params()
    !     Seedling mortality must be redefined for big leaf runs: this is necessary because !
    ! big leaf plants don't grow in diameter, but in "population".                          !
    !---------------------------------------------------------------------------------------!
-   select case (ibigleaf)
-      case (0)
-         seedling_mortality(1)    = 0.95
-         seedling_mortality(2:4)  = 0.95
-         seedling_mortality(5)    = 0.95
-         seedling_mortality(6:15) = 0.95
-         seedling_mortality(16)   = 0.95
-         seedling_mortality(17)   = 0.95
-      case (1)
-         select case (iallom)
-            case (0,1)
-               seedling_mortality(1)     = 0.9500
-               seedling_mortality(2:4)   = onethird
-               seedling_mortality(5)     = 0.9500
-               seedling_mortality(6:8)   = onethird
-               seedling_mortality(9:11)  = onethird
-               seedling_mortality(12:16) = 0.9500
-               seedling_mortality(17)    = onethird
-            case default
-               seedling_mortality(1)     = 0.9500
-               seedling_mortality(2:4)   = 0.4000
-               seedling_mortality(5)     = 0.9500
-               seedling_mortality(6:8)   = 0.4000
-               seedling_mortality(9:11)  = 0.4000
-               seedling_mortality(12:16) = 0.9500
-               seedling_mortality(17)    = 0.4000
-         end select
-   end select
+   seedling_mortality(1)    = 0.95
+   seedling_mortality(2:4)  = 0.95
+   seedling_mortality(5)    = 0.95
+   seedling_mortality(6:15) = 0.95
+   seedling_mortality(16)   = 0.95
+   seedling_mortality(17)   = 0.95
    !---------------------------------------------------------------------------------------!
 
 
@@ -2367,8 +2338,7 @@ subroutine init_pft_alloc_params()
    use ed_max_dims  , only : n_pft                 & ! intent(in)
       , str_len               ! ! intent(in)
    use ed_misc_coms , only : iallom                & ! intent(in)
-      , igrass                & ! intent(in)
-      , ibigleaf              ! ! intent(in)
+      , igrass                ! ! intent(in)
    use detailed_coms, only : idetailed             ! ! intent(in)
    implicit none
    !----- Local variables. ----------------------------------------------------------------!
@@ -2705,7 +2675,6 @@ subroutine init_pft_alloc_params()
    !---------------------------------------------------------------------------------------!
    dbh_adult(17) = 1.81
 
-
    !---------------------------------------------------------------------------------------!
    !    This is the typical DBH that all big leaf plants will have.  Because the big-leaf  !
    ! ED doesn't really solve individuals, the typical DBH should be one that makes a good  !
@@ -2735,8 +2704,6 @@ subroutine init_pft_alloc_params()
          dbh_bigleaf(17) = 30.0
    end select
    !---------------------------------------------------------------------------------------!
-
-
 
    !---------------------------------------------------------------------------------------!
    !     DBH-leaf and dead biomass allometries.  We first define them for the default,     !
@@ -2932,45 +2899,6 @@ subroutine init_pft_alloc_params()
 
 
 
-   !---------------------------------------------------------------------------------------!
-   !     In case we run big leaf model with IALLOM set to 0 or 1, we must change some of   !
-   ! the allometric parameters.                                                            !
-   !---------------------------------------------------------------------------------------!
-   if (ibigleaf == 1 .and. (iallom == 0 .or. iallom == 1)) then
-      b1Bl_small(    1)  = 0.04538826
-      b1Bl_small(    2)  = 0.07322115
-      b1Bl_small(    3)  = 0.07583497
-      b1Bl_small(    4)  = 0.08915847
-      b1Bl_small(14:16)  = 0.04538826
-      b1Bl_small(   17)  = 0.07322115
-
-      b2Bl_small(    1)  = 1.316338
-      b2Bl_small(    2)  = 1.509083
-      b2Bl_small(    3)  = 1.646576
-      b2Bl_small(    4)  = 1.663773
-      b2Bl_small(14:16)  = 1.316338
-      b2Bl_small(   17)  = 1.509083
-
-      b1Bs_small(    1)  = 0.05291854
-      b1Bs_small(    2)  = 0.15940854
-      b1Bs_small(    3)  = 0.21445616
-      b1Bs_small(    4)  = 0.26890751
-      b1Bs_small(14:16)  = 0.05291854
-      b1Bs_small(   17)  = 0.15940854
-
-      b2Bs_small(    1)  = 3.706955
-      b2Bs_small(    2)  = 2.342587
-      b2Bs_small(    3)  = 2.370640
-      b2Bs_small(    4)  = 2.254336
-      b2Bs_small(14:16)  = 3.706955
-      b2Bs_small(   17)  = 2.342587
-
-      b1Bl_large    (:)  = b1Bl_small(:)
-      b2Bl_large    (:)  = b2Bl_small(:)
-      b1Bs_large    (:)  = b1Bs_small(:)
-      b2Bs_large    (:)  = b2Bs_small(:)
-   end if
-   !---------------------------------------------------------------------------------------!
 
    !------------------------- Liana leaf Biomass (Putz, 1983) -----------------------------!
    b1Bl_small(17) = b1Bl_small(2)
@@ -3131,9 +3059,7 @@ subroutine init_pft_alloc_params()
    !---------------------------------------------------------------------------------------!
    !    Initial density of plants, for near-bare-ground simulations [# of individuals/m2]  !
    !---------------------------------------------------------------------------------------!
-   select case (ibigleaf)
-      case (0)
-         !----- Size and age structure. ------------------------------------------------------!
+   !----- Size and age structure. ------------------------------------------------------!
          select case (iallom)
             case (0,1)
                init_density(1)     = 1.0
@@ -3160,18 +3086,6 @@ subroutine init_pft_alloc_params()
          !----- Define a non-sense number. ---------------------------------------------------!
          init_laimax(1:17)   = huge_num
 
-      case(1)
-         !----- Big leaf. 1st we set the maximum initial LAI for each PFT. -------------------!
-         init_laimax(1:17)   = 0.1
-         do ipft=1,n_pft
-            init_bleaf = size2bl(dbh_bigleaf(ipft),hgt_max(ipft),ipft)
-            init_density(ipft) = init_laimax(ipft) / (init_bleaf * SLA(ipft))
-         end do
-      !------------------------------------------------------------------------------------!
-   end select
-   !---------------------------------------------------------------------------------------!
-
-
    if (write_allom) then
       open (unit=18,file=trim(allom_file),status='replace',action='write')
       write(unit=18,fmt='(312a)') ('-',n=1,312)
@@ -3182,9 +3096,8 @@ subroutine init_pft_alloc_params()
          ,'  b2Bs_Small','  b1Bs_Large','  b2Bs_Large'         &
          ,'        b1Ca','        b2Ca','     Hgt_min'         &
          ,'     Hgt_max','     Min_DBH','   DBH_Adult'         &
-         ,'    DBH_Crit',' DBH_BigLeaf',' Bleaf_Adult'         &
-         ,'  Bdead_Crit','   Init_dens',' Init_LAImax'         &
-         ,'         SLA'
+         ,'    DBH_Crit',' Bleaf_Adult','  Bdead_Crit'         &
+         ,'   Init_dens',' Init_LAImax','         SLA'
 
       write(unit=18,fmt='(312a)') ('-',n=1,312)
       do ipft=1,n_pft
@@ -3194,9 +3107,8 @@ subroutine init_pft_alloc_params()
             ,b1Bl_large(ipft),b2Bl_large(ipft),b1Bs_small(ipft)                 &
             ,b2Bs_small(ipft),b1Bs_large(ipft),b2Bs_large(ipft),b1Ca(ipft)      &
             ,b2Ca(ipft),hgt_min(ipft),hgt_max(ipft),min_dbh(ipft)               &
-            ,dbh_adult(ipft),dbh_crit(ipft),dbh_bigleaf(ipft)                   &
-            ,bleaf_adult(ipft),bdead_crit(ipft),init_density(ipft)              &
-            ,init_laimax(ipft),sla(ipft)
+            ,dbh_adult(ipft),dbh_crit(ipft),bleaf_adult(ipft),bdead_crit(ipft)  &
+            ,init_density(ipft),init_laimax(ipft),sla(ipft)
       end do
       write(unit=18,fmt='(312a)') ('-',n=1,312)
       close(unit=18,status='keep')
@@ -3504,7 +3416,6 @@ end subroutine init_pft_repro_params
 subroutine init_pft_derived_params()
    use decomp_coms          , only : f_labile             ! ! intent(in)
    use detailed_coms        , only : idetailed            ! ! intent(in)
-   use ed_misc_coms         , only : ibigleaf             ! ! intent(in)
    use ed_max_dims          , only : n_pft                & ! intent(in)
       , str_len              ! ! intent(in)
    use consts_coms          , only : onesixth             & ! intent(in)
@@ -3518,8 +3429,8 @@ subroutine init_pft_derived_params()
       , sla                  & ! intent(in)
       , pft_name16           & ! intent(in)
       , hgt_max              & ! intent(in)
-      , dbh_crit             & ! intent(in)
       , dbh_bigleaf          & ! intent(in)
+      , dbh_crit             & ! intent(in)
       , one_plant_c          & ! intent(out)
       , min_recruit_size     & ! intent(out)
       , min_cohort_size      & ! intent(out)
@@ -3634,12 +3545,7 @@ subroutine init_pft_derived_params()
       ! the carbon of a seedling, and for the big leaf case we assume the typical big leaf !
       ! plant size.                                                                        !
       !------------------------------------------------------------------------------------!
-      select case (ibigleaf)
-         case (0)
-            one_plant_c(ipft) = bdead_min + balive_min
-         case (1)
-            one_plant_c(ipft) = bdead_bl  + balive_bl
-      end select
+      one_plant_c(ipft) = bdead_min + balive_min
       !------------------------------------------------------------------------------------!
 
 

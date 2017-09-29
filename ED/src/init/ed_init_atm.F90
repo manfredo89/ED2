@@ -7,7 +7,6 @@ subroutine ed_init_atm()
    use stable_cohorts
    use update_derived_props_module
    use ed_misc_coms          , only : runtype                & ! intent(in)
-                                    , ibigleaf               & ! intent(in)
                                     , ied_init_mode          ! ! intent(in)
    use ed_state_vars         , only : edtype                 & ! structure
                                     , polygontype            & ! structure
@@ -381,8 +380,6 @@ subroutine ed_init_atm()
       call update_polygon_derived_props(cgrid)
 
       !----- Fuse similar patches to speed up the run. ------------------------------------!
-      select case(ibigleaf)
-      case (0)
          !---------------------------------------------------------------------------------!
          !    Size and age structure.  Start by fusing similar patches.                    !
          !---------------------------------------------------------------------------------!
@@ -435,50 +432,6 @@ subroutine ed_init_atm()
                     ,'NPatches:',npatches,'NCohorts:',ncohorts
          end do polyloop3
          !---------------------------------------------------------------------------------!
-
-
-      case (1)
-         !---------------------------------------------------------------------------------!
-         !     Big leaf.  No need to do anything, just print the banner.                   !
-         !---------------------------------------------------------------------------------!
-         polyloop4: do ipy = 1,cgrid%npolygons
-            ncohorts     = 0
-            npatches     = 0
-            poly_lai     = 0.0
-            poly_nplant  = 0.0
-            
-            cpoly => cgrid%polygon(ipy)
-            poly_area_i = 1./sum(cpoly%area(:))
-            
-            siteloop4: do isi = 1,cpoly%nsites
-               csite => cpoly%site(isi)
-               site_area_i = 1./sum(csite%area(:))
-               
-               !call rescale_patches(csite)
-               
-               patchloop4: do ipa = 1,csite%npatches
-                  npatches = npatches + 1
-                  cpatch => csite%patch(ipa)
-               
-                  cohortloop4: do ico = 1,cpatch%ncohorts
-                     ncohorts=ncohorts+1
-                     poly_lai    = poly_lai + cpatch%lai(ico) * csite%area(ipa)            &
-                                         * cpoly%area(isi) * site_area_i * poly_area_i
-                     poly_nplant = poly_nplant + cpatch%nplant(ico) * csite%area(ipa)      &
-                                           * cpoly%area(isi) * site_area_i * poly_area_i
-                  end do cohortloop4
-               end do patchloop4
-            end do siteloop4
-            
-            write( unit = *                                                                &
-                 , fmt  = '(2(a,1x,i6,1x),2(a,1x,f9.4,1x),2(a,1x,f7.2,1x),2(a,1x,i4,1x))') &
-                'Grid:',igr,'Poly:',ipy,'Lon:',cgrid%lon(ipy),'Lat: ',cgrid%lat(ipy)       &
-               ,'Nplants:',poly_nplant,'Avg. LAI:',poly_lai                                &
-               ,'NPatches:',npatches,'NCohorts:',ncohorts
-            end do polyloop4
-         !---------------------------------------------------------------------------------!
-         end select
-      !------------------------------------------------------------------------------------!
    end do gridloop
    !---------------------------------------------------------------------------------------!
 

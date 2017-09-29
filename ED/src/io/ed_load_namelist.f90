@@ -172,7 +172,6 @@ subroutine copy_nl(copy_type)
                                    , end_time                  & ! intent(out)
                                    , radfrq                    & ! intent(out)
                                    , ivegt_dynamics            & ! intent(out)
-                                   , ibigleaf                  & ! intent(out)
                                    , integration_scheme        & ! intent(out)
                                    , ffilout                   & ! intent(out)
                                    , idoutput                  & ! intent(out)
@@ -364,7 +363,6 @@ subroutine copy_nl(copy_type)
       ed_reg_lonmax             = nl%ed_reg_lonmax
 
       ivegt_dynamics            = nl%ivegt_dynamics
-      ibigleaf                  = nl%ibigleaf
       integration_scheme        = nl%integration_scheme
       rk4_tolerance             = nl%rk4_tolerance
       ibranch_thermo            = nl%ibranch_thermo

@@ -135,7 +135,6 @@ module ename_coms
 
       !----- Options for model dynamics. --------------------------------------------------!
       integer                                           :: ivegt_dynamics
-      integer                                           :: ibigleaf
       integer                                           :: integration_scheme
       integer                                           :: growth_resp_scheme
       integer                                           :: storage_resp_scheme
@@ -401,7 +400,6 @@ module ename_coms
  
 
       enl%ivegt_dynamics            = undef_integer
-      enl%ibigleaf                  = undef_integer
       enl%integration_scheme        = undef_integer
       enl%growth_resp_scheme        = undef_integer
       enl%storage_resp_scheme       = undef_integer

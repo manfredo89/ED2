@@ -60,8 +60,7 @@ contains
          , b2Ht        & ! intent(in)
          , hgt_ref     & ! intent(in)
          , hgt_max     ! ! intent(in)
-      use ed_misc_coms, only : iallom      & ! intent(in)
-         , ibigleaf    ! ! intent(in)
+      use ed_misc_coms, only : iallom
       use ed_state_vars, only:  patchtype  ! ! structure
 
       !----- Arguments --------------------------------------------------------------------!
@@ -71,11 +70,6 @@ contains
       real                :: mdbh
       !------------------------------------------------------------------------------------!
 
-      !------------------------------------------------------------------------------------!
-      !      Select which type of model we are running.                                    !
-      !------------------------------------------------------------------------------------!
-      select case (ibigleaf)
-         case (0)
             !----- Size- and age-structure (typical ED model). ----------------------------!
             if (is_tropical(ipft)) then
                mdbh = min(dbh,dbh_crit(ipft))
@@ -90,18 +84,6 @@ contains
             else !----- Temperate PFT allometry. ------------------------------------------!
                dbh2h = hgt_ref(ipft) + b1Ht(ipft) * (1.0 - exp(b2Ht(ipft) * dbh))
             end if
-
-         case (1)
-            !------------------------------------------------------------------------------!
-            !     Big-leaf version of ED. DBH is not really meaningful, but in the big-leaf!
-            ! model the typical allometry doesn't really make sense so we impose maximum   !
-            ! height.                                                                      !
-            !------------------------------------------------------------------------------!
-            dbh2h = hgt_max(ipft)
-         !---------------------------------------------------------------------------------!
-      end select
-      !------------------------------------------------------------------------------------!
-
       return
    end function dbh2h
    !=======================================================================================!

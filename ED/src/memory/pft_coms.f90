@@ -61,7 +61,7 @@ module pft_coms
    ! plantation stock should go. They are currently a single PFT, but they should become:  !
    ! vectors eventually (so multiple PFTs can be used...).                                 !
    !---------------------------------------------------------------------------------------!
-   integer :: agri_stock 
+   integer :: agri_stock
    integer :: plantation_stock
    !=======================================================================================!
    !=======================================================================================!
@@ -81,7 +81,7 @@ module pft_coms
    !----- Parameters used by the model that predicts SLA based on leaf life span. ---------!
    real :: sla_scale
    real :: sla_inter
-   real :: sla_slope 
+   real :: sla_slope
    !=======================================================================================!
    !=======================================================================================!
 
@@ -95,8 +95,8 @@ module pft_coms
    !    The following variables are flags that control which PFTs mare used in general,    !
    ! for agriculture and grasses.                                                          !
    !---------------------------------------------------------------------------------------!
-   
-   
+
+
    !---------------------------------------------------------------------------------------!
    !    This is the list of PFTs that are included.  0 means off, 1 means on.              !
    !---------------------------------------------------------------------------------------!
@@ -155,19 +155,19 @@ module pft_coms
    !---------------------------------------------------------------------------------------!
 
    !----- Temperature [�C] below which leaf metabolic activity begins to rapidly decline. -!
-   real, dimension(n_pft) :: Vm_low_temp 
+   real, dimension(n_pft) :: Vm_low_temp
 
    !----- Temperature [�C] above which leaf metabolic activity begins to rapidly decline. -!
-   real, dimension(n_pft) :: Vm_high_temp 
+   real, dimension(n_pft) :: Vm_high_temp
 
    !----- Decay factor for the exponential correction. ------------------------------------!
-   real, dimension(n_pft) :: Vm_decay_e 
+   real, dimension(n_pft) :: Vm_decay_e
 
    !----- Maximum photosynthetic capacity at a reference temperature [�mol/m2/s]. ---------!
-   real, dimension(n_pft) :: Vm0 
+   real, dimension(n_pft) :: Vm0
 
    !----- Exponent for Vm in the Arrhenius equation [K]. ----------------------------------!
-   real, dimension(n_pft) :: Vm_hor 
+   real, dimension(n_pft) :: Vm_hor
 
    !----- Base (Q10 term) for Vm in Collatz equation. -------------------------------------!
    real, dimension(n_pft) :: Vm_q10
@@ -179,19 +179,19 @@ module pft_coms
    real, dimension(n_pft) :: Vm_decay_b
 
    !----- Temperature [�C] below which leaf metabolic activity begins to rapidly decline. -!
-   real, dimension(n_pft) :: Rd_low_temp 
+   real, dimension(n_pft) :: Rd_low_temp
 
    !----- Temperature [�C] above which leaf metabolic activity begins to rapidly decline. -!
-   real, dimension(n_pft) :: Rd_high_temp 
+   real, dimension(n_pft) :: Rd_high_temp
 
    !----- Decay factor for the exponential correction. ------------------------------------!
-   real, dimension(n_pft) :: Rd_decay_e 
+   real, dimension(n_pft) :: Rd_decay_e
 
    !----- Maximum respiration factor at the reference temperature [�mol/m2/s]. ------------!
    real, dimension(n_pft) :: Rd0
 
    !----- Exponent for Rd in the Arrhenius equation [K]. ----------------------------------!
-   real, dimension(n_pft) :: Rd_hor 
+   real, dimension(n_pft) :: Rd_hor
 
    !----- Base (Q10 term) for respiration in Collatz equation. ----------------------------!
    real, dimension(n_pft) :: Rd_q10
@@ -219,7 +219,7 @@ module pft_coms
    !=======================================================================================!
    !     Respiration and turnover properties.                                              !
    !---------------------------------------------------------------------------------------!
-  
+
    !---------------------------------------------------------------------------------------!
    !   This variable determines level of growth respiration.  Starting with accumulated    !
    ! photosynthesis (P), leaf (Rl) and root respiration (Rr) are first subtracted.  Then,  !
@@ -240,40 +240,40 @@ module pft_coms
    real, dimension(n_pft) :: dark_respiration_factor
 
    !----- Turnover rate of plant storage pools [1/year]. ----------------------------------!
-   real, dimension(n_pft) :: storage_turnover_rate 
+   real, dimension(n_pft) :: storage_turnover_rate
 
    !---------------------------------------------------------------------------------------!
    !    This variable sets the contribution of roots to respiration at the reference       !
    ! temperature of 15C.  Its units is �mol_CO2/kg_fine_roots/s.                           !
    !---------------------------------------------------------------------------------------!
-   real, dimension(n_pft) :: root_respiration_factor 
+   real, dimension(n_pft) :: root_respiration_factor
 
    !----- Temperature [�C] below which root metabolic activity begins to rapidly decline. -!
-   real, dimension(n_pft) :: rrf_low_temp 
+   real, dimension(n_pft) :: rrf_low_temp
 
    !----- Temperature [�C] above which root metabolic activity begins to rapidly decline. -!
-   real, dimension(n_pft) :: rrf_high_temp 
+   real, dimension(n_pft) :: rrf_high_temp
 
    !----- Decay factor for the exponential correction. ------------------------------------!
-   real, dimension(n_pft) :: rrf_decay_e 
+   real, dimension(n_pft) :: rrf_decay_e
 
    !----- Exponent for Rr in the Arrhenius equation [K]. ----------------------------------!
-   real, dimension(n_pft) :: rrf_hor 
+   real, dimension(n_pft) :: rrf_hor
 
    !----- Base (Q10 term) for respiration in Collatz equation. ----------------------------!
    real, dimension(n_pft) :: rrf_q10
 
    !----- Temperature [�C] below which storage respiration begins to rapidly decline. -----!
-   real, dimension(n_pft) :: strf_low_temp 
+   real, dimension(n_pft) :: strf_low_temp
 
    !----- Temperature [�C] above which storage respiration begins to rapidly decline. -----!
-   real, dimension(n_pft) :: strf_high_temp 
+   real, dimension(n_pft) :: strf_high_temp
 
    !----- Decay factor for the exponential correction. ------------------------------------!
-   real, dimension(n_pft) :: strf_decay_e 
+   real, dimension(n_pft) :: strf_decay_e
 
    !----- Exponent for Rr in the Arrhenius equation [K]. ----------------------------------!
-   real, dimension(n_pft) :: strf_hor 
+   real, dimension(n_pft) :: strf_hor
 
    !----- Base (Q10 term) for respiration in Collatz equation. ----------------------------!
    real, dimension(n_pft) :: strf_q10
@@ -311,7 +311,7 @@ module pft_coms
    !     This variable controls the density-independent mortality rate due to ageing       !
    ! [1/years].                                                                            !
    !---------------------------------------------------------------------------------------!
-   real, dimension(n_pft) :: mort3 
+   real, dimension(n_pft) :: mort3
 
    !---------------------------------------------------------------------------------------!
    ! This is the way to initialize mort3 through hard parameterization (ie. non dependent) !
@@ -334,7 +334,7 @@ module pft_coms
    !     This variable determines how rapidly trees die if it is too cold for them         !
    ! [1/years].                                                                            !
    !---------------------------------------------------------------------------------------!
-   real, dimension(n_pft) :: frost_mort  
+   real, dimension(n_pft) :: frost_mort
 
    !----- Fraction of seedlings that suffer mortality without becoming a recruit. ---------!
    real, dimension(n_pft) :: seedling_mortality
@@ -390,7 +390,7 @@ module pft_coms
    !----- Leaf carbon to nitrogen ratio. --------------------------------------------------!
    real, dimension(n_pft) :: c2n_leaf
    !----- Recruit carbon to nitrogen ratio. -----------------------------------------------!
-   real, dimension(n_pft) :: c2n_recruit 
+   real, dimension(n_pft) :: c2n_recruit
    !----- Fraction of structural stem that is assumed to be above ground. -----------------!
    real, dimension(n_pft) :: agf_bs
    !----- Fraction of above-ground wood biomass that is in the branches and twigs. --------!
@@ -400,7 +400,7 @@ module pft_coms
    !---------------------------------------------------------------------------------------!
    !    Supply coefficient for plant water uptake [m2_ground/kgC_root/sec].                !
    !---------------------------------------------------------------------------------------!
-   real, dimension(n_pft) :: water_conductance  
+   real, dimension(n_pft) :: water_conductance
    !=======================================================================================!
    !=======================================================================================!
 
@@ -498,7 +498,7 @@ module pft_coms
    ! 3. Light controlled;                                                                  !
    ! 4. Drought deciduous - based on 10day average.                                        !
    !---------------------------------------------------------------------------------------!
-   integer, dimension(n_pft) :: phenology 
+   integer, dimension(n_pft) :: phenology
 
    !----- Leaf width [m], which is used to compute the leaf boundary layer conductance. ---!
    real, dimension(n_pft) :: leaf_width
@@ -582,7 +582,7 @@ module pft_coms
    !----- External input of seeds [kgC/m�/year]. ------------------------------------------!
    real   , dimension(n_pft) :: seed_rain
    !----- Fraction of seed dispersal that is gridcell-wide. -------------------------------!
-   real   , dimension(n_pft) :: nonlocal_dispersal !  
+   real   , dimension(n_pft) :: nonlocal_dispersal !
    !----- Minimum height plants need to attain before allocating to reproduction. ---------!
    real   , dimension(n_pft) :: repro_min_h
    !=======================================================================================!
@@ -596,18 +596,18 @@ module pft_coms
    !=======================================================================================!
    !=======================================================================================!
    !     The following variables control the cohort existence/termination.                 !
-   !---------------------------------------------------------------------------------------! 
-   !---------------------------------------------------------------------------------------! 
+   !---------------------------------------------------------------------------------------!
+   !---------------------------------------------------------------------------------------!
    !    Minimum size (measured as biomass of living and structural tissues) allowed in a   !
    ! cohort.  Cohorts with less biomass than this are going to be terminated.              !
-   !---------------------------------------------------------------------------------------! 
+   !---------------------------------------------------------------------------------------!
    real, dimension(n_pft) :: min_cohort_size
-   !---------------------------------------------------------------------------------------! 
+   !---------------------------------------------------------------------------------------!
    !    The following variable is the absolute minimum cohort population that a cohort can !
    ! have.  This should be used only to avoid nplant=0, but IMPORTANT: this will lead to a !
    ! ridiculously small cohort almost guaranteed to be extinct and SHOULD BE USED ONLY IF  !
    ! THE AIM IS TO ELIMINATE THE COHORT.                                                   !
-   !---------------------------------------------------------------------------------------! 
+   !---------------------------------------------------------------------------------------!
    real, dimension(n_pft) :: negligible_nplant
    !=======================================================================================!
    !=======================================================================================!
@@ -678,8 +678,8 @@ module pft_coms
    end type recruittype
    !=======================================================================================!
    !=======================================================================================!
-   
-   
+
+
    contains
 
 

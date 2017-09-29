@@ -142,8 +142,6 @@ recursive subroutine read_ed_xml_config(filename)
          if(texist) sfilout = trim(cval)
          call getConfigINT  ('ivegt_dynamics','misc',i,ival,texist)
          if(texist) ivegt_dynamics = ival
-         call getConfigINT  ('ibigleaf','misc',i,ival,texist)
-         if(texist) ibigleaf = ival
          call getConfigINT  ('integration_scheme','misc',i,ival,texist)
          if(texist) integration_scheme = ival
 
@@ -451,8 +449,6 @@ recursive subroutine read_ed_xml_config(filename)
            if(texist) dbh_crit(myPFT) = real(rval)
            call getConfigREAL  ('dbh_adult','pft',i,rval,texist)
            if(texist) dbh_adult(myPFT) = real(rval)
-           call getConfigREAL  ('dbh_bigleaf','pft',i,rval,texist)
-           if(texist) dbh_bigleaf(myPFT) = real(rval)
 
      ! Leaf
            call getConfigREAL  ('b1Bl','pft',i,rval,texist)
@@ -1278,7 +1274,6 @@ subroutine write_ed_xml_config
      call putConfigSTRING("input_filepath",sfilin)
      call putConfigSTRING("history_out_filepath",sfilout)
      call putConfigINT("ivegt_dynamics",ivegt_dynamics)
-     call putConfigINT("ibigleaf",ibigleaf)
      call putConfigINT("integration_scheme",integration_scheme)
   call libxml2f90_ll_closetag("misc")
 
@@ -1447,7 +1442,6 @@ subroutine write_ed_xml_config
         call putConfigREAL("min_dbh",    min_dbh(i))
         call putConfigREAL("dbh_crit",   dbh_crit(i))
         call putConfigREAL("dbh_adult",  dbh_adult(i))
-        call putConfigREAL("dbh_bigleaf",dbh_bigleaf(i))
 
      !! LEAF
         call putConfigREAL("b1Bl_small", b1Bl_small(i))

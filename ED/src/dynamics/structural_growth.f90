@@ -30,8 +30,7 @@ subroutine structural_growth(cgrid, month)
    use decomp_coms    , only : f_labile               ! ! intent(in)
    use ed_max_dims    , only : n_pft                  & ! intent(in)
                              , n_dbh                  ! ! intent(in)
-   use ed_misc_coms   , only : ibigleaf               & ! intent(in)
-                             , current_time           ! ! intent(in)
+   use ed_misc_coms   , only : current_time           ! ! intent(in)
    use ed_therm_lib   , only : calc_veg_hcap          & ! function
                              , update_veg_energy_cweh ! ! function
    use ed_misc_coms   , only : igrass                 ! ! intent(in)
@@ -216,13 +215,11 @@ subroutine structural_growth(cgrid, month)
                !---------------------------------------------------------------------------!
 
 
-               if (ibigleaf == 0 ) then
                   !------ NPP allocation to wood and coarse roots in KgC /m2 --------------!
                   cpatch%today_NPPwood(ico) = agf_bs(ipft)*f_bdead*cpatch%bstorage(ico)    &
                                              * cpatch%nplant(ico)
                   cpatch%today_NPPcroot(ico) = (1. - agf_bs(ipft)) * f_bdead               &
                                              * cpatch%bstorage(ico) * cpatch%nplant(ico)
-               end if
                !---------------------------------------------------------------------------!
 
 
@@ -937,7 +934,6 @@ subroutine plant_structural_allocation(ipft,hite,dbh,lat,phen_status, bdead, bst
                             , is_liana     ! ! intent(in)
    use ed_misc_coms  , only : current_time & ! intent(in)
                             , igrass       ! ! intent(in)
-   use ed_misc_coms  , only : ibigleaf     ! ! intent(in)
    use allometry     , only : dbh2bd       & ! intent(in)
                             , h2dbh        ! ! intent(in)
    implicit none
@@ -988,8 +984,6 @@ subroutine plant_structural_allocation(ipft,hite,dbh,lat,phen_status, bdead, bst
    !---------------------------------------------------------------------------------------!
 
 
-   select case (ibigleaf)
-   case (0)
       !------------------------------------------------------------------------------------!
       !      Size and age structure.  Calculate fraction of bstorage going to bdead and    !
       ! reproduction.  First we must make sure that the plant should do something here.  A !
@@ -1084,26 +1078,6 @@ subroutine plant_structural_allocation(ipft,hite,dbh,lat,phen_status, bdead, bst
          f_bseeds = 0.0
       end if
       !------------------------------------------------------------------------------------!
-   case (1)
-      !------------------------------------------------------------------------------------!
-      !    Big-leaf solver.  As long as it is OK to grow, everything goes into 'reproduct- !
-      !  ion'.  This will ultimately be used to increase NPLANT of the 'big leaf' cohort.  !
-      !------------------------------------------------------------------------------------!
-      if ((phenology(ipft) /= 2   .or.  late_spring) .and. phen_status == 0)    then
-         !---------------------------------------------------------------------------------!
-         ! A plant should only grow if it is the right time of year (for cold deciduous    !
-         ! plants), or if the plants are not actively dropping leaves or off allometry.    !
-         !---------------------------------------------------------------------------------!
-         f_bseeds = 1.0 - st_fract(ipft)
-         f_bdead  = 0.0
-      else
-         f_bdead  = 0.0
-         f_bseeds = 0.0
-      end if
-   end select
-   !---------------------------------------------------------------------------------------!
-
-
 
 
    !---------------------------------------------------------------------------------------!

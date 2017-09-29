@@ -1147,7 +1147,6 @@ subroutine ed_opspec_misc
                                     , runtype                      & ! intent(in)
                                     , ied_init_mode                & ! intent(in)
                                     , ivegt_dynamics               & ! intent(in)
-                                    , ibigleaf                     & ! intent(in)
                                     , integration_scheme           & ! intent(in)
                                     , iallom                       & ! intent(in)
                                     , igrass                       & ! intent(in)
@@ -1372,18 +1371,6 @@ subroutine ed_opspec_misc
    end if
 
    if (ied_init_mode == -8) then 
-      !------------------------------------------------------------------------------------!
-      !     The special 8-layer model works only in size- and age-structured runs.         !
-      !------------------------------------------------------------------------------------!
-      if (ibigleaf == 1) then
-         write (reason,fmt='(a)')                                                          &
-                            'IED_INIT_MODE can''t be -8 when running big leaf mode.'       &
-                            ,trim(runtype),'...'
-         call opspec_fatal(reason,'opspec_misc')
-         ifaterr = ifaterr +1
-      end if
-      !------------------------------------------------------------------------------------!
-
 
       !------------------------------------------------------------------------------------!
       !     This is just for idealised test runs and shouldn't be used as a regular        !
@@ -1588,18 +1575,6 @@ end do
       ifaterr = ifaterr +1
    end if
 
-   if (ibigleaf < 0 .or. ibigleaf > 1) then
-      write (reason,fmt='(a,1x,i4,a)')                                                     &
-         'Invalid IBIGLEAF, it must be between 0 and 1. Yours is set to',ibigleaf,'...'
-      call opspec_fatal(reason,'opspec_misc')
-      ifaterr = ifaterr +1
-   elseif (ibigleaf == 1 .and. ( crown_mod /= 0 .or. abs(maxpatch) == 1 )) then
-      write (reason,fmt='(a,1x,i4,a)')                                                     &
-         'CROWN_MOD must be 0 and MAXPATCH cannot be -1 or 1 when IBIGLEAF is set to 1...'
-      call opspec_fatal(reason,'opspec_misc')
-      ifaterr = ifaterr +1
-   end if
-
    !---------------------------------------------------------------------------------------!
    !      Integration scheme can be only 0 (Euler) or 1 (4th order Runge-Kutta).  The      !
    ! branch thermodynamics is currently working only with Runge-Kutta, so we won't allow   !
@@ -1659,13 +1634,6 @@ end do
                     ,igrass,'...'
       call opspec_fatal(reason,'opspec_misc')
       ifaterr = ifaterr +1
-   elseif (igrass == 1 .and. ibigleaf == 1) then
-      write (reason,fmt='(a,1x,a)')                                                        &
-                    'Invalid setting.  New grass allometry (IGRASS = 1) is not supported'  &
-                   ,'in big leaf ED (IBIGLEAF = 1)...'
-      call opspec_fatal(reason,'opspec_misc')
-      ifaterr = ifaterr +1
-   
    end if
 
    if (iphen_scheme < -1 .or. iphen_scheme > 3) then
