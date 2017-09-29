@@ -92,8 +92,6 @@ subroutine ed_output(analysis_time,new_day,dail_analy_time,mont_analy_time,dcyc_
       !----- Write out analysis fields - mostly polygon averages. -------------------------!
       if (ifoutput == 3) call h5_output('INST')
       if (itoutput == 3) call h5_output('OPTI')
-
-      !----- If printpolys is on then print this info to the screen. ----------------------!
       if (iprintpolys == 1) then
          do ifm=1,ngrids
             call print_fields(ifm,edgrid_g(ifm))

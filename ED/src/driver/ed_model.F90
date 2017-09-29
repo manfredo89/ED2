@@ -11,14 +11,11 @@
 !------------------------------------------------------------------------------------------!
 subroutine ed_model()
    use ed_met_driver
-   use heun_driver
-   use euler_driver
    use update_derived_props_module
    use ism_hyd
    use stable_cohorts
    use rk4_integ_utils
    use radiate_driver_module
-   use hybrid_driver
    use ed_misc_coms  , only : ivegt_dynamics              & ! intent(in)
                             , integration_scheme          & ! intent(in)
                             , current_time                & ! intent(in)
@@ -264,24 +261,9 @@ subroutine ed_model()
 
 
       !----- Solve the photosynthesis and biophysics. -------------------------------------!
-      select case (integration_scheme)
-      case (0)
-         do ifm=1,ngrids
-            call euler_timestep(edgrid_g(ifm))
-         end do
-      case (1)
-         do ifm=1,ngrids
-            call rk4_timestep(edgrid_g(ifm))
-         end do
-      case (2)
-         do ifm=1,ngrids
-            call heun_timestep(edgrid_g(ifm))
-         end do
-      case (3)
-         do ifm=1,ngrids
-            call hybrid_timestep(edgrid_g(ifm))
-         end do
-      end select
+      do ifm=1,ngrids
+         call rk4_timestep(edgrid_g(ifm))
+      end do
       !------------------------------------------------------------------------------------!
 
 

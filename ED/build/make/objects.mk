@@ -12,7 +12,6 @@ OBJ_MODEL =                        \
 	allometry.o                \
 	an_header.o                \
 	average_utils.o            \
-	bdf2_solver.o              \
 	budget_utils.o             \
 	canopy_air_coms.o          \
 	canopy_layer_coms.o        \
@@ -28,7 +27,6 @@ OBJ_MODEL =                        \
 	disturb_coms.o             \
 	edio.o                     \
 	ed_1st.o                   \
-	ed_bigleaf_init.o          \
 	ed_driver.o                \
 	ed_filelist.o              \
 	ed_grid.o                  \
@@ -38,7 +36,6 @@ OBJ_MODEL =                        \
 	ed_load_namelist.o         \
 	ed_max_dims.o              \
 	ed_mem_alloc.o             \
-	ed_mem_grid_dim_defs.o     \
 	ed_met_driver.o            \
 	ed_misc_coms.o             \
 	ed_model.o                 \
@@ -59,7 +56,6 @@ OBJ_MODEL =                        \
 	ed_work_vars.o             \
 	ed_xml_config.o            \
 	ename_coms.o               \
-	euler_driver.o             \
 	events.o                   \
 	farq_leuning.o             \
 	fatal_error.o              \
@@ -73,8 +69,6 @@ OBJ_MODEL =                        \
 	h5_output.o                \
 	hdf5_coms.o                \
 	hdf5_utils.o               \
-	heun_driver.o              \
-	hybrid_driver.o            \
 	hydrology_coms.o           \
 	hydrology_constants.o      \
 	invmondays.o               \
@@ -86,9 +80,7 @@ OBJ_MODEL =                        \
 	mem_polygons.o             \
 	met_driver_coms.o          \
 	mortality.o                \
-	multiple_scatter.o         \
 	numutils.o                 \
-	old_twostream_rad.o        \
 	phenology_aux.o            \
 	phenology_coms.o           \
 	phenology_driv.o           \

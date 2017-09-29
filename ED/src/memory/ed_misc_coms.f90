@@ -69,10 +69,10 @@ Module ed_misc_coms
    type(simtime) :: out_time_state
 
    character(len=str_len), dimension(maxgrds) :: sfilin
-   character(len=str_len) ::ffilout 
+   character(len=str_len) ::ffilout
    character(len=str_len) ::sfilout
    integer :: ied_init_mode
-   
+
    character(len=str_len) :: thsums_database
 
    integer :: growth_resp_scheme
@@ -155,8 +155,8 @@ Module ed_misc_coms
    character(len=str_len), dimension(maxpvars) :: pfmtstr
    integer :: ipmin
    integer :: ipmax
-   
-   
+
+
    ! XML configuration file
    character(len=str_len) :: iedcnfgf
 
@@ -173,18 +173,18 @@ Module ed_misc_coms
 
    ! flags to turn on/off intersite variability in edaphic variables
    ! easier than redefining site files
-   integer :: vary_elev 
+   integer :: vary_elev
    integer :: vary_rad
-   integer :: vary_hyd  
+   integer :: vary_hyd
 
    ! soil biogeochem initial conditions (over-rides patch files)
    ! useful for data assimilation & sensitivity analysis
-   real    :: init_fsc 
-   real    :: init_stsc 
-   real    :: init_ssc 
-   real    :: init_stsl 
-   real    :: init_fsn 
-   real    :: init_msn 
+   real    :: init_fsc
+   real    :: init_stsc
+   real    :: init_ssc
+   real    :: init_stsl
+   real    :: init_fsn
+   real    :: init_msn
 
    ! Logical Switches for various memory structures
 
@@ -198,18 +198,18 @@ Module ed_misc_coms
    logical :: writing_year ! Writing yearly
    logical :: writing_eorq ! If either monthly or mean diel are written.
    logical :: writing_long ! If either daily, monthly, or mean diel are written.
-   logical :: history_fast ! Save sub-daily (fast) means to history 
-   logical :: history_dail ! Save daily means to history 
+   logical :: history_fast ! Save sub-daily (fast) means to history
+   logical :: history_dail ! Save daily means to history
    logical :: history_eorq ! Save monthly means and mean diel to history
 
    ! Namelist option to attach metadata to HDF5 output files 0=no, 1=yes
 
    integer :: attach_metadata
-   
+
    !---------------------------------------------------------------------------------------!
    !     Age and Size classes.                                                             !
    !---------------------------------------------------------------------------------------!
-   real    :: maxdbh ! Maximum DBH to be divided in classes 
+   real    :: maxdbh ! Maximum DBH to be divided in classes
    real    :: maxage ! Maximum age to be divided in classes
                      ! In both cases, if the value exceeds the maximum, they will all
                      !    go to the last class.
@@ -239,11 +239,11 @@ Module ed_misc_coms
 
    !----- Namelist option for the new grass scheme. (ALS, Feb 2012) -----------------------!
    integer :: igrass ! 0 -- Original ED-2.1 grasses (aka bonzai grass)
-                     ! 1 -- New grass scheme which has bdead = 0, height = f(bleaf), and   
+                     ! 1 -- New grass scheme which has bdead = 0, height = f(bleaf), and
                      !      growth occurs daily
    !---------------------------------------------------------------------------------------!
-   
-   !----- Namelist option to suppress warnings when HDF5 data is not in the 
+
+   !----- Namelist option to suppress warnings when HDF5 data is not in the
    !      initialization file.  Errors will still report and halt the run.
 
    logical :: suppress_h5_warnings

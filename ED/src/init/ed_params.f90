@@ -80,8 +80,7 @@ subroutine load_ed_ecosystem_params()
    ! not.                                                                                  !
    !---------------------------------------------------------------------------------------!
    is_tropical(1:4)   = .true.
-   is_tropical(5:11)  = .false.
-   is_tropical(12:13) = .false.
+   is_tropical(5:13)  = .false.
    is_tropical(14:17) = .true.
    !---------------------------------------------------------------------------------------!
 
@@ -693,14 +692,7 @@ subroutine init_can_rad_params()
    wood_reflect_vis(16)    = 1.60d-1  ! 3.10d-1
    wood_reflect_vis(17)    = 1.10d-1  ! 1.60d-1
    !----- Near infrared. ------------------------------------------------------------------!
-   wood_reflect_nir(1)     = 2.50d-1  ! 5.30d-1
-   wood_reflect_nir(2:4)   = 2.50d-1  ! 3.90d-1
-   wood_reflect_nir(5)     = 2.50d-1  ! 5.30d-1
-   wood_reflect_nir( 6:11) = 2.50d-1  ! 3.90d-1
-   wood_reflect_nir(12:13) = 2.50d-1  ! 5.30d-1
-   wood_reflect_nir(14:15) = 2.50d-1  ! 5.30d-1
-   wood_reflect_nir(16)    = 2.50d-1  ! 5.30d-1
-   wood_reflect_nir(17)    = 2.50d-1  ! 3.90d-1
+   wood_reflect_nir(1:17)   = 2.50d-1  ! 5.30d-1
    !---------------------------------------------------------------------------------------!
 
 
@@ -1510,42 +1502,14 @@ subroutine init_pft_photo_params()
    D0(16)                    = d0_grass
    D0(17)                    = d0_tree
 
-   Vm_low_temp(1)            =  8.0             ! c4 grass
-   Vm_low_temp(2)            =  8.0             ! early tropical
-   Vm_low_temp(3)            =  8.0             ! mid tropical
-   Vm_low_temp(4)            =  8.0             ! late tropical
-   Vm_low_temp(5)            =  4.7137          ! c3 grass
-   Vm_low_temp(6)            =  4.7137          ! northern pines ! 5.0
-   Vm_low_temp(7)            =  4.7137          ! southern pines ! 5.0
-   Vm_low_temp(8)            =  4.7137          ! late conifers  ! 5.0
-   Vm_low_temp(9)            =  4.7137          ! early hardwoods
-   Vm_low_temp(10)           =  4.7137          ! mid hardwoods
-   Vm_low_temp(11)           =  4.7137          ! late hardwoods
-   Vm_low_temp(12)           =  4.7137          ! c3 pasture
-   Vm_low_temp(13)           =  4.7137          ! c3 crop
+   Vm_low_temp(1:4)          =  8.0             ! c4 grass
+   Vm_low_temp(5:13)         =  4.7137          ! c3 grass
    Vm_low_temp(14)           =  8.0             ! c4 pasture
    Vm_low_temp(15)           =  8.0             ! c4 crop
    Vm_low_temp(16)           =  4.7137          ! subtropical C3 grass
    Vm_low_temp(17)           =  8.0             ! Liana
 
-   Vm_high_temp(1)           =  45.0 ! C4
-   Vm_high_temp(2)           =  45.0 ! C3
-   Vm_high_temp(3)           =  45.0 ! C3
-   Vm_high_temp(4)           =  45.0 ! C3
-   Vm_high_temp(5)           =  45.0 ! C3
-   Vm_high_temp(6)           =  45.0 ! C3
-   Vm_high_temp(7)           =  45.0 ! C3
-   Vm_high_temp(8)           =  45.0 ! C3
-   Vm_high_temp(9)           =  45.0 ! C3
-   Vm_high_temp(10)          =  45.0 ! C3
-   Vm_high_temp(11)          =  45.0 ! C3
-   Vm_high_temp(12)          =  45.0 ! C3
-   Vm_high_temp(13)          =  45.0 ! C3
-   Vm_high_temp(14)          =  45.0 ! C4
-   Vm_high_temp(15)          =  45.0 ! C4
-   Vm_high_temp(16)          =  45.0 ! C3
-   Vm_high_temp(17)          =  45.0 ! C3
-
+   Vm_high_temp(1:17)        =  45.0
    !---------------------------------------------------------------------------------------!
    !    Vm_decay_e is the correction term for high and low temperatures when running the   !
    ! original ED-2.1 correction as in Moorcroft et al. (2001).                             !
@@ -1947,7 +1911,7 @@ subroutine init_pft_resp_params()
    leaf_turnover_rate(14)         = 2.0
    leaf_turnover_rate(15)         = 2.0
    leaf_turnover_rate(16)         = 2.0
-   leaf_turnover_rate(17)         = 0.54! set by matching SLA with Sanchez A. 2009
+   leaf_turnover_rate(17)         = 1.27
 
    !----- Root turnover rate.  ------------------------------------------------------------!
    root_turnover_rate(1)          = leaf_turnover_rate(1)
@@ -1999,26 +1963,10 @@ subroutine init_pft_resp_params()
    select case (iphysiol)
       case (0,1)
          !----- Arrhenius function. ----------------------------------------------------------!
-         root_respiration_factor(1)     = 0.528 * rrffact
-         root_respiration_factor(2:4)   = 0.528 * rrffact
-         root_respiration_factor(5)     = 0.528 * rrffact
-         root_respiration_factor(6:8)   = 0.528 * rrffact
-         root_respiration_factor(9:11)  = 0.528 * rrffact
-         root_respiration_factor(12:13) = 0.528 * rrffact
-         root_respiration_factor(14:15) = 0.528 * rrffact
-         root_respiration_factor(16)    = 0.528 * rrffact
-         root_respiration_factor(17)    = 0.528 * rrffact
+         root_respiration_factor(1:17)   = 0.528 * rrffact
       case (2,3)
          !----- Collatz function. ------------------------------------------------------------!
-         root_respiration_factor(1)     = 0.280 * rrffact
-         root_respiration_factor(2:4)   = 0.280 * rrffact
-         root_respiration_factor(5)     = 0.280 * rrffact
-         root_respiration_factor(6:8)   = 0.280 * rrffact
-         root_respiration_factor(9:11)  = 0.280 * rrffact
-         root_respiration_factor(12:13) = 0.280 * rrffact
-         root_respiration_factor(14:15) = 0.280 * rrffact
-         root_respiration_factor(16)    = 0.280 * rrffact
-         root_respiration_factor(17)    = 0.280 * rrffact
+         root_respiration_factor(1:17)   = 0.280 * rrffact
    end select
    !---------------------------------------------------------------------------------------!
 
@@ -2766,23 +2714,7 @@ subroutine init_pft_alloc_params()
    !---------------------------------------------------------------------------------------!
    select case (iallom)
       case (0,1)
-         dbh_bigleaf( 1) = dbh_crit( 1)
-         dbh_bigleaf( 2) = dbh_crit( 2)
-         dbh_bigleaf( 3) = dbh_crit( 3)
-         dbh_bigleaf( 4) = dbh_crit( 4)
-         dbh_bigleaf( 5) = dbh_crit( 5)
-         dbh_bigleaf( 6) = dbh_crit( 6)
-         dbh_bigleaf( 7) = dbh_crit( 7)
-         dbh_bigleaf( 8) = dbh_crit( 8)
-         dbh_bigleaf( 9) = dbh_crit( 9)
-         dbh_bigleaf(10) = dbh_crit(10)
-         dbh_bigleaf(11) = dbh_crit(11)
-         dbh_bigleaf(12) = dbh_crit(12)
-         dbh_bigleaf(13) = dbh_crit(13)
-         dbh_bigleaf(14) = dbh_crit(14)
-         dbh_bigleaf(15) = dbh_crit(15)
-         dbh_bigleaf(16) = dbh_crit(16)
-         dbh_bigleaf(17) = dbh_crit(17)
+         dbh_bigleaf(:) = dbh_crit(:)
       case default
          dbh_bigleaf( 1) = dbh_crit( 1)
          dbh_bigleaf( 2) = 29.69716
@@ -5350,8 +5282,11 @@ subroutine overwrite_with_xml_config(thisnode)
          write(unit=*,fmt='(a)') '** (You provided '//trim(iedcnfgf)//').'
          write(unit=*,fmt='(a)') '**                                         **'
          write(unit=*,fmt='(a)') '*********************************************'
+         !call write_ed_xml_config()
+
       end if
    end if  !! end XML
+!   call write_ed_xml_config()
    return
 end subroutine overwrite_with_xml_config
 !==========================================================================================!

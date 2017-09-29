@@ -392,44 +392,20 @@ subroutine load_ecosystem_state()
       !----- Initialize with ED1-type restart information. --------------------------------!
       write(unit=*,fmt='(a,i3.3)') ' + Initializing from ED restart file. Node: ',mynum
       call read_ed10_ed20_history_file
-      select case (ibigleaf)
-      case (1)
-         do igr=1,ngrids
-            call ed_bigleaf_init(edgrid_g(igr))
-         end do
-      end select
 
    case (4)   
       write(unit=*,fmt='(a,i3.3)') ' + Initializing from ED2.1 state file. Node: ',mynum
       call read_ed21_history_file
-      select case (ibigleaf)
-      case (1)
-         do igr=1,ngrids
-            call ed_bigleaf_init(edgrid_g(igr))
-         end do
-      end select
 
    case (5,99)
       write(unit=*,fmt='(a,i3.3)')                                                         &
           ' + Initializing from a collection of ED2.1 state files. Node: ',mynum
       call read_ed21_history_unstruct
-      select case (ibigleaf)
-      case (1)
-         do igr=1,ngrids
-            call ed_bigleaf_init(edgrid_g(igr))
-         end do
-      end select
 
    case (7)
       write(unit=*,fmt='(a,i3.3)')                                                         &
            ' + Initializing Soils+Veg from nearest neighbor ED2.1 files. Node: ',mynum
       call read_ed21_polyclone
-      select case (ibigleaf)
-      case (1)
-         do igr=1,ngrids
-            call ed_bigleaf_init(edgrid_g(igr))
-         end do
-      end select
       
    end select
 

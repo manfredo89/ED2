@@ -834,51 +834,6 @@ subroutine sfcrad_ed(cosaoi,csite,mzg,mzs,ntext_soil,ncol_soil,tuco,rlong,twilig
          !     First, let's solve the long-wave.  Here we must check which model to use,   !
          ! two-stream or multiple scattering.                                              !
          !---------------------------------------------------------------------------------!
-         select case (icanrad)
-         case (0)
-            !------------------------------------------------------------------------------!
-            !    Original two-stream model.                                                !
-            !------------------------------------------------------------------------------!
-            call old_lw_two_stream(emissivity,T_surface,rlong,cohort_count,                &
-                                   radscr(ibuff)%pft_array(1:cohort_count),                &
-                                   radscr(ibuff)%LAI_array(1:cohort_count),                &
-                                   radscr(ibuff)%WAI_array(1:cohort_count),                &
-                                   radscr(ibuff)%leaf_temp_array(1:cohort_count),          &
-                                   radscr(ibuff)%wood_temp_array(1:cohort_count),          &
-                                   radscr(ibuff)%radprof_array(1:n_radprof,1:cohort_count),&
-                                   radscr(ibuff)%lw_v_array(1:cohort_count),               &
-                                   downward_lw_below,                                      &
-                                   upward_lw_below,                                        &
-                                   upward_lw_above)
-            !------------------------------------------------------------------------------!
-
-         case (1)
-            !------------------------------------------------------------------------------!
-            !      Multiple-scatter model.  Here there is one important difference: we do  !
-            ! NOT scale longwave radiation, and we do NOT split longwave radiation coming  !
-            ! from the sky and coming from the surface, as they interact in the middle     !
-            ! layers.  We save all radiation in the "incid" arrays, and scale them after   !
-            ! the solution, so the code called after this step can be used the same way    !
-            ! for both radiations.                                                         !
-            !------------------------------------------------------------------------------!
-            call lw_multiple_scatter(emissivity,T_surface,rlong,cohort_count,              &
-                                   radscr(ibuff)%pft_array(1:cohort_count),                &
-                                   radscr(ibuff)%LAI_array(1:cohort_count),                &
-                                   radscr(ibuff)%WAI_array(1:cohort_count),                &
-                                   radscr(ibuff)%CA_array(1:cohort_count),                 &
-                                   radscr(ibuff)%leaf_temp_array(1:cohort_count),          &
-                                   radscr(ibuff)%wood_temp_array(1:cohort_count),          &
-                                   radscr(ibuff)%radprof_array(1:n_radprof,1:cohort_count),&
-                                   radscr(ibuff)%lw_v_array(1:cohort_count),               &
-                                   downward_lw_below,                                      &
-                                   upward_lw_below,                                        &
-                                   upward_lw_above)
-            !------------------------------------------------------------------------------!
-
-
-
-
-         case (2)
             !------------------------------------------------------------------------------!
             !    Updated two-stream model.                                                 !
             !------------------------------------------------------------------------------!
@@ -893,7 +848,6 @@ subroutine sfcrad_ed(cosaoi,csite,mzg,mzs,ntext_soil,ncol_soil,tuco,rlong,twilig
                                    radscr(ibuff)%lw_v_array(1:cohort_count),               &
                                    downward_lw_below,upward_lw_below,upward_lw_above)
             !------------------------------------------------------------------------------!
-         end select
          !---------------------------------------------------------------------------------!
 
 
@@ -915,68 +869,6 @@ subroutine sfcrad_ed(cosaoi,csite,mzg,mzs,ntext_soil,ncol_soil,tuco,rlong,twilig
             ! to use.  Unlike the long-wave, here we scale radiation the same way in both  !
             ! cases, because PAR and NIR are truly independent bands.                      !
             !------------------------------------------------------------------------------!
-            select case (icanrad)
-            case (0)
-               !---------------------------------------------------------------------------!
-               !    Two-stream model.                                                      !
-               !---------------------------------------------------------------------------!
-               call old_sw_two_stream(albedo_ground_par,albedo_ground_nir,cosaoi           &
-                                     ,cohort_count                                         &
-                                     ,radscr(ibuff)%pft_array(1:cohort_count)              &
-                                     ,radscr(ibuff)%LAI_array(1:cohort_count)                 &
-                                     ,radscr(ibuff)%WAI_array(1:cohort_count)                 &
-                                    ,radscr(ibuff)%CA_array(1:cohort_count)                  &
-                                     ,radscr(ibuff)%radprof_array(1:n_radprof,1:cohort_count) &
-                                     ,radscr(ibuff)%par_v_beam_array(1:cohort_count)          &
-                                     ,radscr(ibuff)%par_v_diffuse_array(1:cohort_count)       &
-                                     ,radscr(ibuff)%rshort_v_beam_array(1:cohort_count)       &
-                                     ,radscr(ibuff)%rshort_v_diffuse_array(1:cohort_count)    &
-                                     ,downward_par_below_beam                              &
-                                     ,downward_par_below_diffuse                           &
-                                     ,upward_par_above_diffuse                             &
-                                     ,downward_nir_below_beam                              &
-                                     ,downward_nir_below_diffuse                           &
-                                     ,upward_nir_above_diffuse                             &
-                                     ,radscr(ibuff)%par_level_beam(1:cohort_count)         &
-                                     ,radscr(ibuff)%par_level_diffd(1:cohort_count)        &
-                                     ,radscr(ibuff)%par_level_diffu(1:cohort_count)        &
-                                     ,radscr(ibuff)%light_level_array(1:cohort_count)      &
-                                     ,radscr(ibuff)%light_beam_level_array(1:cohort_count) &
-                                     ,radscr(ibuff)%light_diff_level_array(1:cohort_count))
-
-               !---------------------------------------------------------------------------!
-
-            case (1)
-               !---------------------------------------------------------------------------!
-               !      Multiple-scatter model.                                              !
-               !---------------------------------------------------------------------------!
-
-               call sw_multiple_scatter(albedo_ground_par,albedo_ground_nir,cosaoi         &
-                                     ,cohort_count                                         &
-                                     ,radscr(ibuff)%pft_array(1:cohort_count)              &
-                                     ,radscr(ibuff)%LAI_array(1:cohort_count)                 &
-                                     ,radscr(ibuff)%WAI_array(1:cohort_count)                 &
-                                     ,radscr(ibuff)%CA_array(1:cohort_count)                  &
-                                     ,radscr(ibuff)%radprof_array(1:n_radprof,1:cohort_count) &
-                                     ,radscr(ibuff)%par_v_beam_array(1:cohort_count)          &
-                                     ,radscr(ibuff)%par_v_diffuse_array(1:cohort_count)       &
-                                     ,radscr(ibuff)%rshort_v_beam_array(1:cohort_count)       &
-                                     ,radscr(ibuff)%rshort_v_diffuse_array(1:cohort_count)    &
-                                     ,downward_par_below_beam                              &
-                                     ,downward_par_below_diffuse                           &
-                                     ,upward_par_above_diffuse                             &
-                                     ,downward_nir_below_beam                              &
-                                     ,downward_nir_below_diffuse                           &
-                                     ,upward_nir_above_diffuse                             &
-                                     ,radscr(ibuff)%par_level_beam(1:cohort_count)         &
-                                     ,radscr(ibuff)%par_level_diffd(1:cohort_count)        &
-                                     ,radscr(ibuff)%par_level_diffu(1:cohort_count)        &
-                                     ,radscr(ibuff)%light_level_array(1:cohort_count)      &
-                                     ,radscr(ibuff)%light_beam_level_array(1:cohort_count) &
-                                     ,radscr(ibuff)%light_diff_level_array(1:cohort_count))
-
-               !---------------------------------------------------------------------------!
-            case (2)
                !---------------------------------------------------------------------------!
                !    Updated two-stream model.                                              !
                !---------------------------------------------------------------------------!
@@ -1008,7 +900,6 @@ subroutine sfcrad_ed(cosaoi,csite,mzg,mzs,ntext_soil,ncol_soil,tuco,rlong,twilig
               ! THE LAST 5 ARRAYS SHOULD BE 1:cohort_count ?
 
                !---------------------------------------------------------------------------!
-            end select
             !------------------------------------------------------------------------------!
 
             !------------------------------------------------------------------------------!
