@@ -1,0 +1,670 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+<title>Listing of allometry.f90</title>
+</head>
+<body bgcolor="FFFFFF">
+<h4>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;allometry.f90&#160;&#160;&#160;&#160;&#160;&#160;&#160;<font size=-1>coverage:&#160 84.62&#160;%func&#160;&#160;&#160;&#160; 46.09&#160;%block</font></h4>
+<hr size=1 noshade>
+<pre>
+     1) <a name="l1" style="background-color: #ffffff">!==========================================================================================!</a>
+     2) <a name="l2" style="background-color: #ffffff">!==========================================================================================!</a>
+     3) <a name="l3" style="background-color: #ffffff">!    This module is a library with several allometric relationships.                       !</a>
+     4) <a name="l4" style="background-color: #ffffff">!------------------------------------------------------------------------------------------!</a>
+     5) <a name="l5" style="background-color: #ffffff">module allometry</a>
+     6) <a name="l6" style="background-color: #ffffff"></a>
+     7) <a name="l7" style="background-color: #ffffff">implicit none</a>
+     8) <a name="l8" style="background-color: #ffffff"></a>
+     9) <a name="l9" style="background-color: #ffffff">contains</a>
+    10) <a name="l10" style="background-color: #ffffff">   !=======================================================================================!</a>
+    11) <a name="l11" style="background-color: #ffffff">   !=======================================================================================!</a>
+    12) <a name="l12" style="background-color: #ffffff">   real function h2dbh(h,ipft)</a>
+    13) <a name="l13" style="background-color: #ffffff"></a>
+    14) <a name="l14" style="background-color: #ffffff">      use pft_coms    , only : is_tropical &amp; ! intent(in)</a>
+    15) <a name="l15" style="background-color: #ffffff">         , b1Ht        &amp; ! intent(in), lookup table</a>
+    16) <a name="l16" style="background-color: #ffffff">         , b2Ht        &amp; ! intent(in), lookup table</a>
+    17) <a name="l17" style="background-color: #ffffff">         , hgt_ref     ! ! intent(in)</a>
+    18) <a name="l18" style="background-color: #ffffff">      use ed_misc_coms, only : iallom      ! ! intent(in)</a>
+    19) <a name="l19" style="background-color: #ffffff"></a>
+    20) <a name="l20" style="background-color: #ffffff">      !----- Arguments --------------------------------------------------------------------!</a>
+    21) <a name="l21" style="background-color: #ffffff">      real   , intent(in) :: h</a>
+    22) <a name="l22" style="background-color: #ffffff">      integer, intent(in) :: ipft</a>
+    23) <a name="l23" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+    24) <a name="l24" style="background-color: #ffffff"></a>
+    25) <a name="l25" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+    26) <a name="l26" style="background-color: #ffffff">      !      Select which type of model we are running.                                    !</a>
+    27) <a name="l27" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+    28) <a name="l28" style="background-color: #ffffff">      !----- Size- and age-structure (typical ED model). ----------------------------------!</a>
+    29) <a name="l29" style="background-color: #fafad2">      if (</a><a style="background-color: #ffff99">is_tropical(ipft)) then</a>
+    30) <a name="l30" style="background-color: #ffff99">         select case (</a><a style="background-color: #ffffff">iallom)</a>
+    31) <a name="l31" style="background-color: #ffffff">            case (0,1)</a>
+    32) <a name="l32" style="background-color: #ffffff">               !----- Default ED-2.1 allometry. -------------------------------------------!</a>
+    33) <a name="l33" style="background-color: #ffff99">               h2dbh = exp((log(h)-b1Ht(ipft))/b2Ht(ipft))</a>
+    34) <a name="l34" style="background-color: #ffff99">            case default</a>
+    35) <a name="l35" style="background-color: #ffff99">               !----- Poorter et al. (2006) allometry. ------------------------------------!</a>
+    36) <a name="l36" style="background-color: #ffffff">               h2dbh =  ( log(hgt_ref(ipft) / ( hgt_ref(ipft) - h ) ) / b1Ht(ipft) )       &amp;</a>
+    37) <a name="l37" style="background-color: #ffffff">                  ** ( 1.0 / b2Ht(ipft) )</a>
+    38) <a name="l38" style="background-color: #ffffff">         end select</a>
+    39) <a name="l39" style="background-color: #ffffff">      else ! Temperate</a>
+    40) <a name="l40" style="background-color: #ffffff">         h2dbh = log(1.0-(h-hgt_ref(ipft))/b1Ht(ipft))/b2Ht(ipft)</a>
+    41) <a name="l41" style="background-color: #ffffff">      end if</a>
+    42) <a name="l42" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+    43) <a name="l43" style="background-color: #ffffff"></a>
+    44) <a name="l44" style="background-color: #ffffff">      return</a>
+    45) <a name="l45" style="background-color: #ffffff">   end function h2dbh</a>
+    46) <a name="l46" style="background-color: #ffffff">   !=======================================================================================!</a>
+    47) <a name="l47" style="background-color: #ffffff">   !=======================================================================================!</a>
+    48) <a name="l48" style="background-color: #ffffff"></a>
+    49) <a name="l49" style="background-color: #ffffff"></a>
+    50) <a name="l50" style="background-color: #ffffff"></a>
+    51) <a name="l51" style="background-color: #ffffff"></a>
+    52) <a name="l52" style="background-color: #ffffff"></a>
+    53) <a name="l53" style="background-color: #ffffff"></a>
+    54) <a name="l54" style="background-color: #ffffff">   !=======================================================================================!</a>
+    55) <a name="l55" style="background-color: #ffffff">   !=======================================================================================!</a>
+    56) <a name="l56" style="background-color: #ffffff">   real function dbh2h(ipft, dbh)</a>
+    57) <a name="l57" style="background-color: #ffffff">      use pft_coms    , only : is_tropical &amp; ! intent(in)</a>
+    58) <a name="l58" style="background-color: #ffffff">         , dbh_crit    &amp; ! intent(in)</a>
+    59) <a name="l59" style="background-color: #ffffff">         , b1Ht        &amp; ! intent(in)</a>
+    60) <a name="l60" style="background-color: #ffffff">         , b2Ht        &amp; ! intent(in)</a>
+    61) <a name="l61" style="background-color: #ffffff">         , hgt_ref     &amp; ! intent(in)</a>
+    62) <a name="l62" style="background-color: #ffffff">         , hgt_max     ! ! intent(in)</a>
+    63) <a name="l63" style="background-color: #ffffff">      use ed_misc_coms, only : iallom      &amp; ! intent(in)</a>
+    64) <a name="l64" style="background-color: #ffffff">         , ibigleaf    ! ! intent(in)</a>
+    65) <a name="l65" style="background-color: #ffffff">      use ed_state_vars, only:  patchtype  ! ! structure</a>
+    66) <a name="l66" style="background-color: #ffffff"></a>
+    67) <a name="l67" style="background-color: #ffffff">      !----- Arguments --------------------------------------------------------------------!</a>
+    68) <a name="l68" style="background-color: #ffffff">      integer       , intent(in) :: ipft</a>
+    69) <a name="l69" style="background-color: #ffffff">      real          , intent(in) :: dbh</a>
+    70) <a name="l70" style="background-color: #ffffff">      !----- Local variables --------------------------------------------------------------!</a>
+    71) <a name="l71" style="background-color: #ffffff">      real                :: mdbh</a>
+    72) <a name="l72" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+    73) <a name="l73" style="background-color: #ffffff"></a>
+    74) <a name="l74" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+    75) <a name="l75" style="background-color: #ffffff">      !      Select which type of model we are running.                                    !</a>
+    76) <a name="l76" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+    77) <a name="l77" style="background-color: #ffffff">      select case (ibigleaf)</a>
+    78) <a name="l78" style="background-color: #ffffff">         case (0)</a>
+    79) <a name="l79" style="background-color: #ffffff">            !----- Size- and age-structure (typical ED model). ----------------------------!</a>
+    80) <a name="l80" style="background-color: #fafad2">            if (</a><a style="background-color: #ffff99">is_tropical(ipft)) then</a>
+    81) <a name="l81" style="background-color: #ffffff">               mdbh = min(dbh,dbh_crit(ipft))</a>
+    82) <a name="l82" style="background-color: #ffffff">               select case (iallom)</a>
+    83) <a name="l83" style="background-color: #ffffff">                  case (0,1)</a>
+    84) <a name="l84" style="background-color: #ffffff">                     !----- Default ED-2.1 allometry. -------------------------------------!</a>
+    85) <a name="l85" style="background-color: #ffff99">                     dbh2h = exp (b1Ht(ipft) + b2Ht(ipft) * log(mdbh) )</a>
+    86) <a name="l86" style="background-color: #ffff99">                  case default</a>
+    87) <a name="l87" style="background-color: #ffff99">                     !----- Poorter et al. (2006) allometry. ------------------------------!</a>
+    88) <a name="l88" style="background-color: #ffffff">                     dbh2h = hgt_ref(ipft) * (1. - exp(-b1Ht(ipft) * mdbh ** b2Ht(ipft)))</a>
+    89) <a name="l89" style="background-color: #ffffff">               end select</a>
+    90) <a name="l90" style="background-color: #ffffff">            else !----- Temperate PFT allometry. ------------------------------------------!</a>
+    91) <a name="l91" style="background-color: #ffffff">               dbh2h = hgt_ref(ipft) + b1Ht(ipft) * (1.0 - exp(b2Ht(ipft) * dbh))</a>
+    92) <a name="l92" style="background-color: #ffffff">            end if</a>
+    93) <a name="l93" style="background-color: #ffffff"></a>
+    94) <a name="l94" style="background-color: #ffffff">         case (1)</a>
+    95) <a name="l95" style="background-color: #ffffff">            !------------------------------------------------------------------------------!</a>
+    96) <a name="l96" style="background-color: #ffffff">            !     Big-leaf version of ED. DBH is not really meaningful, but in the big-leaf!</a>
+    97) <a name="l97" style="background-color: #ffffff">            ! model the typical allometry doesn't really make sense so we impose maximum   !</a>
+    98) <a name="l98" style="background-color: #ffffff">            ! height.                                                                      !</a>
+    99) <a name="l99" style="background-color: #ffffff">            !------------------------------------------------------------------------------!</a>
+   100) <a name="l100" style="background-color: #ffff99">            dbh2h = hgt_max(ipft)</a>
+   101) <a name="l101" style="background-color: #ffff99">         !---------------------------------------------------------------------------------!</a>
+   102) <a name="l102" style="background-color: #ffff99">      end select</a>
+   103) <a name="l103" style="background-color: #ffff99">      !------------------------------------------------------------------------------------!</a>
+   104) <a name="l104" style="background-color: #ffff99"></a>
+   105) <a name="l105" style="background-color: #ffffff">      return</a>
+   106) <a name="l106" style="background-color: #ffffff">   end function dbh2h</a>
+   107) <a name="l107" style="background-color: #ffffff">   !=======================================================================================!</a>
+   108) <a name="l108" style="background-color: #ffffff">   !=======================================================================================!</a>
+   109) <a name="l109" style="background-color: #ffffff"></a>
+   110) <a name="l110" style="background-color: #ffffff"></a>
+   111) <a name="l111" style="background-color: #ffffff">   !=======================================================================================!</a>
+   112) <a name="l112" style="background-color: #ffffff">   !=======================================================================================!</a>
+   113) <a name="l113" style="background-color: #ffffff">   real function dbh2bd(dbh,ipft)</a>
+   114) <a name="l114" style="background-color: #ffffff"></a>
+   115) <a name="l115" style="background-color: #ffffff">      use pft_coms    , only : C2B         &amp; ! intent(in)</a>
+   116) <a name="l116" style="background-color: #ffffff">         , b1Bs_small  &amp; ! intent(in), lookup table</a>
+   117) <a name="l117" style="background-color: #ffffff">         , b2Bs_small  &amp; ! intent(in), lookup table</a>
+   118) <a name="l118" style="background-color: #ffffff">         , b1Bs_large  &amp; ! intent(in), lookup table</a>
+   119) <a name="l119" style="background-color: #ffffff">         , b2Bs_large  &amp; ! intent(in), lookup table</a>
+   120) <a name="l120" style="background-color: #ffffff">         , is_grass    &amp; ! intent(in)</a>
+   121) <a name="l121" style="background-color: #ffffff">         , dbh_crit    ! ! intent(in), lookup table</a>
+   122) <a name="l122" style="background-color: #ffffff">      use ed_misc_coms, only : igrass      ! ! intent(in)</a>
+   123) <a name="l123" style="background-color: #ffffff"></a>
+   124) <a name="l124" style="background-color: #ffffff">      !----- Arguments --------------------------------------------------------------------!</a>
+   125) <a name="l125" style="background-color: #ffffff">      real   , intent(in) :: dbh</a>
+   126) <a name="l126" style="background-color: #ffffff">      integer, intent(in) :: ipft</a>
+   127) <a name="l127" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+   128) <a name="l128" style="background-color: #ffffff"></a>
+   129) <a name="l129" style="background-color: #fafad2">         if (is_grass(ipft) .and. igrass==1) then</a>
+   130) <a name="l130" style="background-color: #ffff99">            dbh2bd = 0.0</a>
+   131) <a name="l131" style="background-color: #ffffff">         else if (dbh &lt;= dbh_crit(ipft)) then</a>
+   132) <a name="l132" style="background-color: #ffffff">            dbh2bd = b1Bs_small(ipft) / C2B * dbh ** b2Bs_small(ipft)</a>
+   133) <a name="l133" style="background-color: #ffffff">         else</a>
+   134) <a name="l134" style="background-color: #ffffff">            dbh2bd = b1Bs_large(ipft) / C2B * dbh ** b2Bs_large(ipft)</a>
+   135) <a name="l135" style="background-color: #ffffff">      end if</a>
+   136) <a name="l136" style="background-color: #ffffff">      return</a>
+   137) <a name="l137" style="background-color: #ffffff">   end function dbh2bd</a>
+   138) <a name="l138" style="background-color: #ffffff">   !=======================================================================================!</a>
+   139) <a name="l139" style="background-color: #ffffff">   !=======================================================================================!</a>
+   140) <a name="l140" style="background-color: #ffffff"></a>
+   141) <a name="l141" style="background-color: #ffffff"></a>
+   142) <a name="l142" style="background-color: #ffffff">   !=======================================================================================!</a>
+   143) <a name="l143" style="background-color: #ffffff">   !=======================================================================================!</a>
+   144) <a name="l144" style="background-color: #ffffff">   !     This function computes the diameter at the breast height given the structural     !</a>
+   145) <a name="l145" style="background-color: #ffffff">   ! (dead) biomass and the PFT type.  In addition to these inputs, it is also required to !</a>
+   146) <a name="l146" style="background-color: #ffffff">   ! give a first guess for DBH, which can be the previous value, for example.   This is   !</a>
+   147) <a name="l147" style="background-color: #ffffff">   ! only used for the new allometry, because we must solve an iterative root-finding      !</a>
+   148) <a name="l148" style="background-color: #ffffff">   ! method.                                                                               !</a>
+   149) <a name="l149" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+   150) <a name="l150" style="background-color: #ffffff">   real function bd2dbh(ipft, bdead)</a>
+   151) <a name="l151" style="background-color: #ffffff">      use pft_coms    , only : b1Bs_small  &amp; ! intent(in), lookup table</a>
+   152) <a name="l152" style="background-color: #ffffff">         , b2Bs_small  &amp; ! intent(in), lookup table</a>
+   153) <a name="l153" style="background-color: #ffffff">         , b1Bs_large  &amp; ! intent(in), lookup table</a>
+   154) <a name="l154" style="background-color: #ffffff">         , b2Bs_large  &amp; ! intent(in), lookup table</a>
+   155) <a name="l155" style="background-color: #ffffff">         , bdead_crit  &amp; ! intent(in), lookup table</a>
+   156) <a name="l156" style="background-color: #ffffff">         , C2B         ! ! intent(in)</a>
+   157) <a name="l157" style="background-color: #ffffff"></a>
+   158) <a name="l158" style="background-color: #ffffff">      !----- Arguments --------------------------------------------------------------------!</a>
+   159) <a name="l159" style="background-color: #ffffff">      integer, intent(in) :: ipft      ! PFT type                            [         ---]</a>
+   160) <a name="l160" style="background-color: #ffffff">      real   , intent(in) :: bdead     ! Structural (dead) biomass           [   kgC/plant]</a>
+   161) <a name="l161" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+   162) <a name="l162" style="background-color: #ffffff"></a>
+   163) <a name="l163" style="background-color: #ffffff"></a>
+   164) <a name="l164" style="background-color: #ffffff"></a>
+   165) <a name="l165" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+   166) <a name="l166" style="background-color: #ffffff">      !    Decide which coefficients to use based on the critical bdead.                   !</a>
+   167) <a name="l167" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+   168) <a name="l168" style="background-color: #fafad2">         if (bdead &lt;= </a><a style="background-color: #ffff99">bdead_crit(ipft)) then</a>
+   169) <a name="l169" style="background-color: #ffffff">            bd2dbh = (bdead / b1Bs_small(ipft) * C2B)**(1.0/b2Bs_small(ipft))</a>
+   170) <a name="l170" style="background-color: #ffffff">         else</a>
+   171) <a name="l171" style="background-color: #ffffff">            bd2dbh = (bdead / b1Bs_large(ipft) * C2B)**(1.0/b2Bs_large(ipft))</a>
+   172) <a name="l172" style="background-color: #ffffff">      end if</a>
+   173) <a name="l173" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+   174) <a name="l174" style="background-color: #ffffff"></a>
+   175) <a name="l175" style="background-color: #ffffff">      return</a>
+   176) <a name="l176" style="background-color: #ffffff">   end function bd2dbh</a>
+   177) <a name="l177" style="background-color: #ffffff">   !=======================================================================================!</a>
+   178) <a name="l178" style="background-color: #ffffff">   !=======================================================================================!</a>
+   179) <a name="l179" style="background-color: #ffffff"></a>
+   180) <a name="l180" style="background-color: #ffffff"></a>
+   181) <a name="l181" style="background-color: #ffffff"></a>
+   182) <a name="l182" style="background-color: #ffffff"></a>
+   183) <a name="l183" style="background-color: #ffffff"></a>
+   184) <a name="l184" style="background-color: #ffffff"></a>
+   185) <a name="l185" style="background-color: #ffffff">   !=======================================================================================!</a>
+   186) <a name="l186" style="background-color: #ffffff">   !=======================================================================================!</a>
+   187) <a name="l187" style="background-color: #ffffff">   !      This function computes the maximum leaf biomass [kgC/m2] given the size (either  !</a>
+   188) <a name="l188" style="background-color: #ffffff">   ! height or DBH).  Trees would always use DBH as the starting point, but grasses may    !</a>
+   189) <a name="l189" style="background-color: #ffffff">   ! use DBH (old style) or height (new style).  This replaces dbh2bl and h2bl with a      !</a>
+   190) <a name="l190" style="background-color: #ffffff">   ! single generic function that should be used by all plants.                            !</a>
+   191) <a name="l191" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+   192) <a name="l192" style="background-color: #ffffff">   real function size2bl(dbh,hite,ipft)</a>
+   193) <a name="l193" style="background-color: #ffffff">      use pft_coms    , only : dbh_adult   &amp; ! intent(in), lookup table</a>
+   194) <a name="l194" style="background-color: #ffffff">         , dbh_crit    &amp; ! intent(in), lookup table</a>
+   195) <a name="l195" style="background-color: #ffffff">         , C2B         &amp; ! intent(in), lookup table</a>
+   196) <a name="l196" style="background-color: #ffffff">         , b1Bl_small  &amp; ! intent(in), lookup table</a>
+   197) <a name="l197" style="background-color: #ffffff">         , b2Bl_small  &amp; ! intent(in), lookup table</a>
+   198) <a name="l198" style="background-color: #ffffff">         , b1Bl_large  &amp; ! intent(in), lookup table</a>
+   199) <a name="l199" style="background-color: #ffffff">         , b2Bl_large  &amp; ! intent(in), lookup table</a>
+   200) <a name="l200" style="background-color: #ffffff">         , is_liana    &amp; ! intent(in)</a>
+   201) <a name="l201" style="background-color: #ffffff">         , is_grass    ! ! intent(in)</a>
+   202) <a name="l202" style="background-color: #ffffff">      use ed_misc_coms, only : igrass      ! ! intent(in)</a>
+   203) <a name="l203" style="background-color: #ffffff">      use ed_state_vars, only: patchtype  ! ! structure</a>
+   204) <a name="l204" style="background-color: #ffffff"></a>
+   205) <a name="l205" style="background-color: #ffffff">      !----- Arguments --------------------------------------------------------------------!</a>
+   206) <a name="l206" style="background-color: #ffffff">      real          , intent(in) :: dbh</a>
+   207) <a name="l207" style="background-color: #ffffff">      real          , intent(in) :: hite</a>
+   208) <a name="l208" style="background-color: #ffffff">      integer       , intent(in) :: ipft</a>
+   209) <a name="l209" style="background-color: #ffffff">      !----- Local variables --------------------------------------------------------------!</a>
+   210) <a name="l210" style="background-color: #ffffff">      real                :: mdbh</a>
+   211) <a name="l211" style="background-color: #ffffff">      real                :: ldbh</a>
+   212) <a name="l212" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+   213) <a name="l213" style="background-color: #ffffff"></a>
+   214) <a name="l214" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+   215) <a name="l215" style="background-color: #ffffff">      ! lianas dbh_crit would be too small for the leaf biomass. We choose ldbh to be the  !</a>
+   216) <a name="l216" style="background-color: #ffffff">      ! DBH that give lianas the same (~) Bl_max as late successionals                     !</a>
+   217) <a name="l217" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+   218) <a name="l218" style="background-color: #fafad2">      if (</a><a style="background-color: #ffff99">is_liana(ipft)) then</a>
+   219) <a name="l219" style="background-color: #ffffff">         ldbh = 26.0</a>
+   220) <a name="l220" style="background-color: #ffffff">      else</a>
+   221) <a name="l221" style="background-color: #ffffff">         ldbh = dbh_crit(ipft)</a>
+   222) <a name="l222" style="background-color: #ffffff">      end if</a>
+   223) <a name="l223" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+   224) <a name="l224" style="background-color: #ffffff"></a>
+   225) <a name="l225" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+   226) <a name="l226" style="background-color: #ffffff">      !     Get the DBH, or potential DBH in case of grasses.                              !</a>
+   227) <a name="l227" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+   228) <a name="l228" style="background-color: #ffffff">      if (is_grass(ipft) .and. igrass == 1) then </a>
+   229) <a name="l229" style="background-color: #ffffff">         !---- Use height for new grasses. ------------------------------------------------!</a>
+   230) <a name="l230" style="background-color: #ffff99">         mdbh   = min(h2dbh(hite,ipft),ldbh)</a>
+   231) <a name="l231" style="background-color: #ffff99">      else</a>
+   232) <a name="l232" style="background-color: #ffff99">         !---- Use dbh for trees. ---------------------------------------------------------!</a>
+   233) <a name="l233" style="background-color: #ffffff">         mdbh   = min(dbh,ldbh)</a>
+   234) <a name="l234" style="background-color: #ffffff">      end if</a>
+   235) <a name="l235" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+   236) <a name="l236" style="background-color: #ffffff"></a>
+   237) <a name="l237" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+   238) <a name="l238" style="background-color: #ffffff">      !     Find leaf biomass depending on the tree size.                                  !</a>
+   239) <a name="l239" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+   240) <a name="l240" style="background-color: #ffffff">         if (mdbh &lt; dbh_adult(ipft)) then</a>
+   241) <a name="l241" style="background-color: #ffffff">            size2bl = b1Bl_small(ipft) / C2B * mdbh ** b2Bl_small(ipft)</a>
+   242) <a name="l242" style="background-color: #ffffff">         else</a>
+   243) <a name="l243" style="background-color: #ffffff">            size2bl = b1Bl_large(ipft) / C2B * mdbh ** b2Bl_large(ipft)</a>
+   244) <a name="l244" style="background-color: #ffffff">      end if</a>
+   245) <a name="l245" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+   246) <a name="l246" style="background-color: #ffffff"></a>
+   247) <a name="l247" style="background-color: #ffffff"></a>
+   248) <a name="l248" style="background-color: #ffffff">      return</a>
+   249) <a name="l249" style="background-color: #ffffff">   end function size2bl</a>
+   250) <a name="l250" style="background-color: #ffffff">      !====================================================================================!</a>
+   251) <a name="l251" style="background-color: #ffffff">      !====================================================================================!</a>
+   252) <a name="l252" style="background-color: #ffffff"></a>
+   253) <a name="l253" style="background-color: #ffffff"></a>
+   254) <a name="l254" style="background-color: #ffffff">   !=======================================================================================!</a>
+   255) <a name="l255" style="background-color: #ffffff">   !=======================================================================================!</a>
+   256) <a name="l256" style="background-color: #ffffff">   !      This function determines an effective DBH for grasses given their leaf biomass.  !</a>
+   257) <a name="l257" style="background-color: #ffffff">   ! DBH has no real meaning for grasses with the new allometry.                           !</a>
+   258) <a name="l258" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+   259) <a name="l259" style="background-color: #ffffff">   real function </a><a style="background-color: #ffcccc">bl2dbh(bleaf,ipft)</a>
+   260) <a name="l260" style="background-color: #ffcccc">      use pft_coms,     only : dbh_crit    &amp; ! intent(in), lookup table</a>
+   261) <a name="l261" style="background-color: #ffcccc">         , hgt_max     &amp; ! intent(in), lookup table</a>
+   262) <a name="l262" style="background-color: #ffcccc">         , is_grass    &amp; ! intent(in)</a>
+   263) <a name="l263" style="background-color: #ffcccc">         , C2B         &amp; ! intent(in)</a>
+   264) <a name="l264" style="background-color: #ffcccc">         , b1Bl_small  &amp; ! intent(in), lookup table</a>
+   265) <a name="l265" style="background-color: #ffcccc">         , b2Bl_small  &amp; ! intent(in), lookup table</a>
+   266) <a name="l266" style="background-color: #ffcccc">         , b1Bl_large  &amp; ! intent(in), lookup table</a>
+   267) <a name="l267" style="background-color: #ffcccc">         , b2Bl_large  &amp; ! intent(in), lookup table</a>
+   268) <a name="l268" style="background-color: #ffcccc">         , bleaf_adult ! ! intent(in), lookup table</a>
+   269) <a name="l269" style="background-color: #ffcccc">      use ed_misc_coms, only : igrass      ! ! intent(in)</a>
+   270) <a name="l270" style="background-color: #ffcccc"></a>
+   271) <a name="l271" style="background-color: #ffcccc">      !----- Arguments --------------------------------------------------------------------!</a>
+   272) <a name="l272" style="background-color: #ffcccc">      real   , intent(in)      :: bleaf</a>
+   273) <a name="l273" style="background-color: #ffcccc">      integer, intent(in)      :: ipft</a>
+   274) <a name="l274" style="background-color: #ffcccc">      !----- Local variables --------------------------------------------------------------!</a>
+   275) <a name="l275" style="background-color: #ffcccc">      real                :: mdbh</a>
+   276) <a name="l276" style="background-color: #ffcccc">      !------------------------------------------------------------------------------------!</a>
+   277) <a name="l277" style="background-color: #ffcccc"></a>
+   278) <a name="l278" style="background-color: #ffcccc"></a>
+   279) <a name="l279" style="background-color: #ffcccc"></a>
+   280) <a name="l280" style="background-color: #ffcccc">         !----- Find out whether this is an adult tree or a sapling/grass. ----------------!</a>
+   281) <a name="l281" style="background-color: #ffcccc">         if (bleaf &lt; bleaf_adult(ipft)) then</a>
+   282) <a name="l282" style="background-color: #ffcccc">            mdbh = (bleaf * C2B / b1Bl_small(ipft) ) ** (1./b2Bl_small(ipft))</a>
+   283) <a name="l283" style="background-color: #ffcccc">         else</a>
+   284) <a name="l284" style="background-color: #ffcccc">            mdbh = (bleaf * C2B / b1Bl_large(ipft) ) ** (1./b2Bl_large(ipft))</a>
+   285) <a name="l285" style="background-color: #ffcccc">         end if</a>
+   286) <a name="l286" style="background-color: #ffcccc">         !---------------------------------------------------------------------------------!</a>
+   287) <a name="l287" style="background-color: #ffcccc"></a>
+   288) <a name="l288" style="background-color: #ffcccc"></a>
+   289) <a name="l289" style="background-color: #ffcccc">         !---------------------------------------------------------------------------------!</a>
+   290) <a name="l290" style="background-color: #ffcccc">         !     For grasses, limit maximum effective dbh by maximum height.                 !</a>
+   291) <a name="l291" style="background-color: #ffcccc">         !---------------------------------------------------------------------------------!</a>
+   292) <a name="l292" style="background-color: #ffcccc">         if (is_grass(ipft) .and. igrass == 1) then</a>
+   293) <a name="l293" style="background-color: #ffcccc">            bl2dbh = min(mdbh, h2dbh(hgt_max(ipft),ipft))</a>
+   294) <a name="l294" style="background-color: #ffcccc">         else</a>
+   295) <a name="l295" style="background-color: #ffcccc">            bl2dbh = min(mdbh, dbh_crit(ipft))</a>
+   296) <a name="l296" style="background-color: #ffcccc">      end if</a>
+   297) <a name="l297" style="background-color: #ffcccc">      !------------------------------------------------------------------------------------!</a>
+   298) <a name="l298" style="background-color: #ffcccc"></a>
+   299) <a name="l299" style="background-color: #ffcccc"></a>
+   300) <a name="l300" style="background-color: #ffcccc">      return</a>
+   301) <a name="l301" style="background-color: #ffcccc">   end function bl2dbh</a>
+   302) <a name="l302" style="background-color: #ffcccc"></a><a style="background-color: #ffffff">   !=======================================================================================!</a>
+   303) <a name="l303" style="background-color: #ffffff">   !=======================================================================================!</a>
+   304) <a name="l304" style="background-color: #ffffff"></a>
+   305) <a name="l305" style="background-color: #ffffff"></a>
+   306) <a name="l306" style="background-color: #ffffff"></a>
+   307) <a name="l307" style="background-color: #ffffff"></a>
+   308) <a name="l308" style="background-color: #ffffff"></a>
+   309) <a name="l309" style="background-color: #ffffff"></a>
+   310) <a name="l310" style="background-color: #ffffff">   !=======================================================================================!</a>
+   311) <a name="l311" style="background-color: #ffffff">   !=======================================================================================!</a>
+   312) <a name="l312" style="background-color: #ffffff">   !      This function determines the height for grasses given their leaf biomass.        !</a>
+   313) <a name="l313" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+   314) <a name="l314" style="background-color: #ffffff">   real function </a><a style="background-color: #ffcccc">bl2h(bleaf,ipft)</a>
+   315) <a name="l315" style="background-color: #ffcccc">      use pft_coms,      only:  hgt_max    ! ! intent(in), lookup table</a>
+   316) <a name="l316" style="background-color: #ffcccc">      </a>
+   317) <a name="l317" style="background-color: #ffcccc">      !----- Arguments --------------------------------------------------------------------!</a>
+   318) <a name="l318" style="background-color: #ffcccc">      real   , intent(in)      :: bleaf</a>
+   319) <a name="l319" style="background-color: #ffcccc">      integer, intent(in)      :: ipft</a>
+   320) <a name="l320" style="background-color: #ffcccc">      !------------------------------------------------------------------------------------!</a>
+   321) <a name="l321" style="background-color: #ffcccc"></a>
+   322) <a name="l322" style="background-color: #ffcccc">      !----- Use existing allometric equations to convert leaves to height. ---------------!</a>
+   323) <a name="l323" style="background-color: #ffcccc">      bl2h = min(hgt_max(ipft),dbh2h(ipft,bl2dbh(bleaf,ipft)))</a>
+   324) <a name="l324" style="background-color: #ffcccc"></a>
+   325) <a name="l325" style="background-color: #ffcccc">      return</a>
+   326) <a name="l326" style="background-color: #ffcccc">   end function bl2h</a>
+   327) <a name="l327" style="background-color: #ffcccc"></a><a style="background-color: #ffffff">   !=======================================================================================!</a>
+   328) <a name="l328" style="background-color: #ffffff">   !=======================================================================================!</a>
+   329) <a name="l329" style="background-color: #ffffff"></a>
+   330) <a name="l330" style="background-color: #ffffff"></a>
+   331) <a name="l331" style="background-color: #ffffff">   !=======================================================================================!</a>
+   332) <a name="l332" style="background-color: #ffffff">   !=======================================================================================!</a>
+   333) <a name="l333" style="background-color: #ffffff">   !    Canopy Area allometry from Dietze and Clark (2008).                                !</a>
+   334) <a name="l334" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+   335) <a name="l335" style="background-color: #ffffff">   real function dbh2ca(dbh,hite,sla,ipft)</a>
+   336) <a name="l336" style="background-color: #ffffff">      use ed_misc_coms, only : iallom      ! ! intent(in)</a>
+   337) <a name="l337" style="background-color: #ffffff">      use pft_coms    , only : dbh_crit    &amp; ! intent(in)</a>
+   338) <a name="l338" style="background-color: #ffffff">         , hgt_max     &amp; ! intent(in)</a>
+   339) <a name="l339" style="background-color: #ffffff">         , is_grass    &amp; ! intent(in)</a>
+   340) <a name="l340" style="background-color: #ffffff">         , is_liana    &amp; ! intent(in)</a>
+   341) <a name="l341" style="background-color: #ffffff">         , b1Ca        &amp; ! intent(in)</a>
+   342) <a name="l342" style="background-color: #ffffff">         , b2Ca        ! ! intent(in)</a>
+   343) <a name="l343" style="background-color: #ffffff">      use ed_misc_coms, only : igrass      ! ! intent(in)</a>
+   344) <a name="l344" style="background-color: #ffffff">      use ed_state_vars, only: patchtype  ! ! structure</a>
+   345) <a name="l345" style="background-color: #ffffff"></a>
+   346) <a name="l346" style="background-color: #ffffff">      !----- Arguments --------------------------------------------------------------------!</a>
+   347) <a name="l347" style="background-color: #ffffff">      real          , intent(in) :: dbh</a>
+   348) <a name="l348" style="background-color: #ffffff">      real          , intent(in) :: hite</a>
+   349) <a name="l349" style="background-color: #ffffff">      real          , intent(in) :: sla</a>
+   350) <a name="l350" style="background-color: #ffffff">      integer       , intent(in) :: ipft</a>
+   351) <a name="l351" style="background-color: #ffffff">      !----- Internal variables -----------------------------------------------------------!</a>
+   352) <a name="l352" style="background-color: #ffffff">      real                :: loclai ! The maximum local LAI for a given DBH</a>
+   353) <a name="l353" style="background-color: #ffffff">      real                :: ldbh</a>
+   354) <a name="l354" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+   355) <a name="l355" style="background-color: #ffffff"></a>
+   356) <a name="l356" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+   357) <a name="l357" style="background-color: #ffffff">      ! lianas dbh_crit would be too small for the leaf biomass. We choose ldbh to be the  !</a>
+   358) <a name="l358" style="background-color: #ffffff">      ! DBH that give lianas the same (~) Bl_max as late successionals                     !</a>
+   359) <a name="l359" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+   360) <a name="l360" style="background-color: #fafad2">      if (</a><a style="background-color: #ffff99">is_liana(ipft)) then</a>
+   361) <a name="l361" style="background-color: #ffffff">         ldbh = 26.0</a>
+   362) <a name="l362" style="background-color: #ffffff">      else</a>
+   363) <a name="l363" style="background-color: #ffffff">         ldbh = dbh_crit(ipft)</a>
+   364) <a name="l364" style="background-color: #ffffff">      end if</a>
+   365) <a name="l365" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+   366) <a name="l366" style="background-color: #ffffff"></a>
+   367) <a name="l367" style="background-color: #ffffff">      if (dbh &lt; tiny(1.0)) then</a>
+   368) <a name="l368" style="background-color: #ffff99">         loclai = 0.0</a>
+   369) <a name="l369" style="background-color: #ffff99">         dbh2ca = 0.0</a>
+   370) <a name="l370" style="background-color: #ffff99">      else</a>
+   371) <a name="l371" style="background-color: #ffff99"></a>
+   372) <a name="l372" style="background-color: #ffff99">         !----- make this function generic to size, not just dbh. -------------------------!</a>
+   373) <a name="l373" style="background-color: #ffff99"></a>
+   374) <a name="l374" style="background-color: #ffffff">         loclai = sla * size2bl(dbh,hite,ipft)</a>
+   375) <a name="l375" style="background-color: #ffffff"></a>
+   376) <a name="l376" style="background-color: #ffffff">         select case (iallom)</a>
+   377) <a name="l377" style="background-color: #ffffff">            case (0)</a>
+   378) <a name="l378" style="background-color: #ffffff">               !----- No upper bound in the allometry. ------------------------------------!</a>
+   379) <a name="l379" style="background-color: #ffff99">               dbh2ca = b1Ca(ipft) * dbh ** b2Ca(ipft)</a>
+   380) <a name="l380" style="background-color: #ffff99"></a>
+   381) <a name="l381" style="background-color: #ffff99">            case default</a>
+   382) <a name="l382" style="background-color: #ffff99">               !----- Impose a maximum crown area. ----------------------------------------!</a>
+   383) <a name="l383" style="background-color: #ffffff">               if (</a><a style="background-color: #ffff99">is_grass(ipft) .and. igrass==1) then</a>
+   384) <a name="l384" style="background-color: #ffff99">                  dbh2ca = b1Ca(ipft) * min(dbh,h2dbh(hgt_max(ipft),ipft) ) ** b2Ca(ipft)</a>
+   385) <a name="l385" style="background-color: #ffff99">               else</a>
+   386) <a name="l386" style="background-color: #ffffff">                  dbh2ca = b1Ca(ipft) * min(dbh, ldbh                     ) ** b2Ca(ipft)</a>
+   387) <a name="l387" style="background-color: #ffffff">               end if</a>
+   388) <a name="l388" style="background-color: #ffffff">         end select</a>
+   389) <a name="l389" style="background-color: #ffffff">      end if</a>
+   390) <a name="l390" style="background-color: #ffffff"></a>
+   391) <a name="l391" style="background-color: #ffffff">      !----- Local LAI / Crown area should never be less than one. ------------------------!</a>
+   392) <a name="l392" style="background-color: #ffffff">      dbh2ca = min (loclai, dbh2ca)</a>
+   393) <a name="l393" style="background-color: #ffffff"></a>
+   394) <a name="l394" style="background-color: #ffffff">      return</a>
+   395) <a name="l395" style="background-color: #ffffff">   end function dbh2ca</a>
+   396) <a name="l396" style="background-color: #ffffff">   !=======================================================================================!</a>
+   397) <a name="l397" style="background-color: #ffffff">   !=======================================================================================!</a>
+   398) <a name="l398" style="background-color: #ffffff"></a>
+   399) <a name="l399" style="background-color: #ffffff"></a>
+   400) <a name="l400" style="background-color: #ffffff"></a>
+   401) <a name="l401" style="background-color: #ffffff"></a>
+   402) <a name="l402" style="background-color: #ffffff">   !=======================================================================================!</a>
+   403) <a name="l403" style="background-color: #ffffff">   !=======================================================================================!</a>
+   404) <a name="l404" style="background-color: #ffffff">   !    This function computes the standing volume of a tree.                              !</a>
+   405) <a name="l405" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+   406) <a name="l406" style="background-color: #ffffff">   real function dbh2vol(hgt,dbh,ipft)</a>
+   407) <a name="l407" style="background-color: #ffffff">      use pft_coms    , only : b1Vol    &amp; ! intent(in)</a>
+   408) <a name="l408" style="background-color: #ffffff">         , b2Vol    ! ! intent(in)</a>
+   409) <a name="l409" style="background-color: #ffffff"></a>
+   410) <a name="l410" style="background-color: #ffffff">      !----- Arguments --------------------------------------------------------------------!</a>
+   411) <a name="l411" style="background-color: #ffffff">      real   , intent(in) :: hgt</a>
+   412) <a name="l412" style="background-color: #ffffff">      real   , intent(in) :: dbh</a>
+   413) <a name="l413" style="background-color: #ffffff">      integer, intent(in) :: ipft</a>
+   414) <a name="l414" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+   415) <a name="l415" style="background-color: #ffffff"></a>
+   416) <a name="l416" style="background-color: #ffffff"></a>
+   417) <a name="l417" style="background-color: #fafad2">      dbh2vol = </a><a style="background-color: #ffff99">b1Vol(ipft) </a><a style="background-color: #ffffff">* hgt * dbh ** b2Vol(ipft)</a>
+   418) <a name="l418" style="background-color: #ffffff"></a>
+   419) <a name="l419" style="background-color: #ffffff">      return</a>
+   420) <a name="l420" style="background-color: #ffffff">   end function dbh2vol</a>
+   421) <a name="l421" style="background-color: #ffffff">   !=======================================================================================!</a>
+   422) <a name="l422" style="background-color: #ffffff">   !=======================================================================================!</a>
+   423) <a name="l423" style="background-color: #ffffff"></a>
+   424) <a name="l424" style="background-color: #ffffff"></a>
+   425) <a name="l425" style="background-color: #ffffff"></a>
+   426) <a name="l426" style="background-color: #ffffff"></a>
+   427) <a name="l427" style="background-color: #ffffff"></a>
+   428) <a name="l428" style="background-color: #ffffff"></a>
+   429) <a name="l429" style="background-color: #ffffff">   !=======================================================================================!</a>
+   430) <a name="l430" style="background-color: #ffffff">   !=======================================================================================!</a>
+   431) <a name="l431" style="background-color: #ffffff">   integer function dbh2krdepth(hite,dbh,ipft,lsl)</a>
+   432) <a name="l432" style="background-color: #ffffff">      use ed_misc_coms, only : iallom   ! ! intent(in)</a>
+   433) <a name="l433" style="background-color: #ffffff">      use grid_coms   , only : nzg      ! ! intent(in)</a>
+   434) <a name="l434" style="background-color: #ffffff">      use soil_coms   , only : slz      ! ! intent(in)</a>
+   435) <a name="l435" style="background-color: #ffffff">      use pft_coms    , only : b1Rd     &amp; ! intent(in)</a>
+   436) <a name="l436" style="background-color: #ffffff">         , b2Rd     ! ! intent(in)</a>
+   437) <a name="l437" style="background-color: #ffffff"></a>
+   438) <a name="l438" style="background-color: #ffffff">      !----- Arguments --------------------------------------------------------------------!</a>
+   439) <a name="l439" style="background-color: #ffffff">      real   , intent(in) :: hite</a>
+   440) <a name="l440" style="background-color: #ffffff">      real   , intent(in) :: dbh</a>
+   441) <a name="l441" style="background-color: #ffffff">      integer, intent(in) :: ipft</a>
+   442) <a name="l442" style="background-color: #ffffff">      integer, intent(in) :: lsl</a>
+   443) <a name="l443" style="background-color: #ffffff">      !----- Local variables --------------------------------------------------------------!</a>
+   444) <a name="l444" style="background-color: #ffffff">      real                :: volume</a>
+   445) <a name="l445" style="background-color: #ffffff">      real                :: root_depth</a>
+   446) <a name="l446" style="background-color: #ffffff">      integer             :: k</a>
+   447) <a name="l447" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+   448) <a name="l448" style="background-color: #ffffff"></a>
+   449) <a name="l449" style="background-color: #ffffff"></a>
+   450) <a name="l450" style="background-color: #ffffff">      !----- Grasses get a fixed rooting depth of 70 cm. ----------------------------------!</a>
+   451) <a name="l451" style="background-color: #ffffff">      select case (iallom)</a>
+   452) <a name="l452" style="background-color: #ffffff">         case (0)</a>
+   453) <a name="l453" style="background-color: #ffffff">            !------------------------------------------------------------------------------!</a>
+   454) <a name="l454" style="background-color: #ffffff">            !    Original ED-2.1 (I don't know the source for this equation, though).      !</a>
+   455) <a name="l455" style="background-color: #ffffff">            !------------------------------------------------------------------------------!</a>
+   456) <a name="l456" style="background-color: #ffff99">            volume     = dbh2vol(hite,dbh,ipft)</a>
+   457) <a name="l457" style="background-color: #ffff99">            root_depth = b1Rd(ipft)  * volume ** b2Rd(ipft)</a>
+   458) <a name="l458" style="background-color: #ffff99"></a>
+   459) <a name="l459" style="background-color: #ffff99">         case default</a>
+   460) <a name="l460" style="background-color: #ffff99">            !------------------------------------------------------------------------------!</a>
+   461) <a name="l461" style="background-color: #ffff99">            !    This is just a test allometry, that imposes root depth to be 0.5 m for    !</a>
+   462) <a name="l462" style="background-color: #ffff99">            ! plants that are 0.15-m tall, and 5.0 m for plants that are 35-m tall.        !</a>
+   463) <a name="l463" style="background-color: #ffff99">            !------------------------------------------------------------------------------!</a>
+   464) <a name="l464" style="background-color: #ffffff">            root_depth = b1Rd(ipft) * hite ** b2Rd(ipft)</a>
+   465) <a name="l465" style="background-color: #ffffff">      end select</a>
+   466) <a name="l466" style="background-color: #ffffff"></a>
+   467) <a name="l467" style="background-color: #ffffff"></a>
+   468) <a name="l468" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+   469) <a name="l469" style="background-color: #ffffff">      !     Root depth is the maximum root depth if the soil is that deep.  Find what is   !</a>
+   470) <a name="l470" style="background-color: #ffffff">      ! the deepest soil layer this root can go.                                           !</a>
+   471) <a name="l471" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+   472) <a name="l472" style="background-color: #ffffff">      dbh2krdepth = nzg</a>
+   473) <a name="l473" style="background-color: #ffffff">      do k=nzg,lsl+1,-1</a>
+   474) <a name="l474" style="background-color: #ffffff">         if (root_depth &lt; slz(k)) dbh2krdepth = k-1</a>
+   475) <a name="l475" style="background-color: #ffffff">      end do</a>
+   476) <a name="l476" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+   477) <a name="l477" style="background-color: #ffffff"></a>
+   478) <a name="l478" style="background-color: #ffffff">      return</a>
+   479) <a name="l479" style="background-color: #ffffff">   end function dbh2krdepth</a>
+   480) <a name="l480" style="background-color: #ffffff">   !=======================================================================================!</a>
+   481) <a name="l481" style="background-color: #ffffff">   !=======================================================================================!</a>
+   482) <a name="l482" style="background-color: #ffffff"></a>
+   483) <a name="l483" style="background-color: #ffffff"></a>
+   484) <a name="l484" style="background-color: #ffffff"></a>
+   485) <a name="l485" style="background-color: #ffffff"></a>
+   486) <a name="l486" style="background-color: #ffffff"></a>
+   487) <a name="l487" style="background-color: #ffffff"></a>
+   488) <a name="l488" style="background-color: #ffffff">   !=======================================================================================!</a>
+   489) <a name="l489" style="background-color: #ffffff">   !=======================================================================================!</a>
+   490) <a name="l490" style="background-color: #ffffff">   !    This function finds the trunk height.  Currently this is based on the following    !</a>
+   491) <a name="l491" style="background-color: #ffffff">   ! reference, which is for a site in Bolivia:                                            !</a>
+   492) <a name="l492" style="background-color: #ffffff">   !                                                                                       !</a>
+   493) <a name="l493" style="background-color: #ffffff">   ! Poorter L., L. Bongers, F. Bongers, 2006: Architecture of 54 moist-forest tree        !</a>
+   494) <a name="l494" style="background-color: #ffffff">   !     species: traits, trade-offs, and functional groups. Ecology, 87, 1289-1301.       !</a>
+   495) <a name="l495" style="background-color: #ffffff">   !                                                                                       !</a>
+   496) <a name="l496" style="background-color: #ffffff">   ! Crown length is defined as the height of the tree minus the height of the first leaf  !</a>
+   497) <a name="l497" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+   498) <a name="l498" style="background-color: #ffffff">   real function h2crownbh(height,ipft)</a>
+   499) <a name="l499" style="background-color: #ffffff">      use pft_coms, only : b1Cl &amp; ! intent(in)</a>
+   500) <a name="l500" style="background-color: #ffffff">         , b2Cl ! ! intent(in)</a>
+   501) <a name="l501" style="background-color: #ffffff"></a>
+   502) <a name="l502" style="background-color: #ffffff">      !----- Arguments --------------------------------------------------------------------!</a>
+   503) <a name="l503" style="background-color: #ffffff">      real   , intent(in) :: height</a>
+   504) <a name="l504" style="background-color: #ffffff">      integer, intent(in) :: ipft</a>
+   505) <a name="l505" style="background-color: #ffffff">      !----- Local variables. -------------------------------------------------------------!</a>
+   506) <a name="l506" style="background-color: #ffffff">      real                :: crown_length</a>
+   507) <a name="l507" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+   508) <a name="l508" style="background-color: #ffffff">      </a>
+   509) <a name="l509" style="background-color: #fafad2">      crown_length = b1Cl(ipft) * height ** b2Cl(ipft)</a>
+   510) <a name="l510" style="background-color: #fafad2">      h2crownbh    = max(0.05,height - crown_length)</a>
+   511) <a name="l511" style="background-color: #fafad2"></a>
+   512) <a name="l512" style="background-color: #fafad2">      return</a>
+   513) <a name="l513" style="background-color: #ffffff">   end function h2crownbh</a>
+   514) <a name="l514" style="background-color: #ffffff">   !=======================================================================================!</a>
+   515) <a name="l515" style="background-color: #ffffff">   !=======================================================================================!</a>
+   516) <a name="l516" style="background-color: #ffffff"></a>
+   517) <a name="l517" style="background-color: #ffffff"></a>
+   518) <a name="l518" style="background-color: #ffffff"></a>
+   519) <a name="l519" style="background-color: #ffffff"></a>
+   520) <a name="l520" style="background-color: #ffffff"></a>
+   521) <a name="l521" style="background-color: #ffffff"></a>
+   522) <a name="l522" style="background-color: #ffffff">   !=======================================================================================!</a>
+   523) <a name="l523" style="background-color: #ffffff">   !=======================================================================================!</a>
+   524) <a name="l524" style="background-color: #ffffff">   !     This subroutine finds the total above ground biomass (wood + leaves)              !</a>
+   525) <a name="l525" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+   526) <a name="l526" style="background-color: #ffffff">   real function ed_biomass(cpatch,ico)</a>
+   527) <a name="l527" style="background-color: #ffffff">      use pft_coms,      only : agf_bs  !! intent(in)</a>
+   528) <a name="l528" style="background-color: #ffffff">      use ed_state_vars, only : patchtype     ! ! Structure</a>
+   529) <a name="l529" style="background-color: #ffffff"></a>
+   530) <a name="l530" style="background-color: #ffffff">      !----- Arguments --------------------------------------------------------------------!</a>
+   531) <a name="l531" style="background-color: #ffffff">      type(patchtype), target :: cpatch</a>
+   532) <a name="l532" style="background-color: #ffffff">      integer, intent(in)     :: ico</a>
+   533) <a name="l533" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+   534) <a name="l534" style="background-color: #ffffff"></a>
+   535) <a name="l535" style="background-color: #fafad2">      ed_biomass = cpatch%</a><a style="background-color: #ffff99">bleaf(ico) </a><a style="background-color: #ffffff">+ cpatch%bsapwooda(ico)                               &amp;</a>
+   536) <a name="l536" style="background-color: #ffffff">                   + (cpatch%bdead(ico) * agf_bs(cpatch%pft(ico)))</a>
+   537) <a name="l537" style="background-color: #ffffff"></a>
+   538) <a name="l538" style="background-color: #ffffff">      return</a>
+   539) <a name="l539" style="background-color: #ffffff">   end function ed_biomass</a>
+   540) <a name="l540" style="background-color: #ffffff">   !=======================================================================================!</a>
+   541) <a name="l541" style="background-color: #ffffff">   !=======================================================================================!</a>
+   542) <a name="l542" style="background-color: #ffffff"></a>
+   543) <a name="l543" style="background-color: #ffffff"></a>
+   544) <a name="l544" style="background-color: #ffffff">   !=======================================================================================!</a>
+   545) <a name="l545" style="background-color: #ffffff">   !=======================================================================================!</a>
+   546) <a name="l546" style="background-color: #ffffff">   !     This subroutine estimates the tree area indices, namely leaf, branch(plus twigs), !</a>
+   547) <a name="l547" style="background-color: #ffffff">   ! and stem.  For the leaf area index (LAI), we use the specific leaf area (SLA), a      !</a>
+   548) <a name="l548" style="background-color: #ffffff">   ! constant.  The wood area index WAI is found using the model proposed by J�rvel�      !</a>
+   549) <a name="l549" style="background-color: #ffffff">   ! (2004) to find the specific projected area.                                           !</a>
+   550) <a name="l550" style="background-color: #ffffff">   !                                                                                       !</a>
+   551) <a name="l551" style="background-color: #ffffff">   ! G. Hormann, S. Irrgan, H. Jochheim, M. Lukes, H. Meesenburg, J. Muller, B. Scheler,   !</a>
+   552) <a name="l552" style="background-color: #ffffff">   !    J. Scherzer, G. Schuler, B. Schultze, B. Strohbach, F. Suckow, M. Wegehenkel, and  !</a>
+   553) <a name="l553" style="background-color: #ffffff">   !    G. Wessolek.   Wasserhaushalt von waldokosystemen: methodenleitfaden zur           !</a>
+   554) <a name="l554" style="background-color: #ffffff">   !    bestimmung der wasserhaushaltskomponenten auf level II-flachen. Technical note,    !</a>
+   555) <a name="l555" style="background-color: #ffffff">   !    Bundesministerium fur Verbraucherschutz, Ernahrung und Landwirtschaft (BMVEL),     !</a>
+   556) <a name="l556" style="background-color: #ffffff">   !    Bonn, Germany, 2003. URL http://www.wasklim.de/download/Methodenband.pdf.          !</a>
+   557) <a name="l557" style="background-color: #ffffff">   !                                                                                       !</a>
+   558) <a name="l558" style="background-color: #ffffff">   ! P. C. Olivas, S. F. Oberbauer, D. B. Clark, D. A. Clark, M. G. Ryan, J. J. O'Brien,   !</a>
+   559) <a name="l559" style="background-color: #ffffff">   !    and H. Ordonez.  Comparison of direct and indirect methods for assessing leaf area !</a>
+   560) <a name="l560" style="background-color: #ffffff">   !    index across a tropical rain forest landscape.  Agric. For. Meteorol., 177,        !</a>
+   561) <a name="l561" style="background-color: #ffffff">   !    110--116, 2013.                                                                    !</a>
+   562) <a name="l562" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+   563) <a name="l563" style="background-color: #ffffff">   subroutine area_indices(cpatch, ico)</a>
+   564) <a name="l564" style="background-color: #ffffff">      use ed_state_vars, only : patchtype     ! ! Structure</a>
+   565) <a name="l565" style="background-color: #ffffff">      use pft_coms     , only : dbh_crit        &amp; ! intent(in)</a>
+   566) <a name="l566" style="background-color: #ffffff">                              , b1WAI           &amp; ! intent(in)</a>
+   567) <a name="l567" style="background-color: #ffffff">                              , b2WAI           ! ! intent(in)</a>
+   568) <a name="l568" style="background-color: #ffffff">      use rk4_coms     , only : ibranch_thermo  ! ! intent(in)</a>
+   569) <a name="l569" style="background-color: #ffffff">      use ed_misc_coms , only : iallom          ! ! intent(in)</a>
+   570) <a name="l570" style="background-color: #ffffff"></a>
+   571) <a name="l571" style="background-color: #ffffff">      !----- Arguments --------------------------------------------------------------------!</a>
+   572) <a name="l572" style="background-color: #ffffff">      type(patchtype), target :: cpatch</a>
+   573) <a name="l573" style="background-color: #ffffff">      integer, intent(in)     :: ico</a>
+   574) <a name="l574" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+   575) <a name="l575" style="background-color: #ffffff"></a>
+   576) <a name="l576" style="background-color: #ffffff">      !----- Local variables --------------------------------------------------------------!</a>
+   577) <a name="l577" style="background-color: #ffffff">      real                    :: bleaf</a>
+   578) <a name="l578" style="background-color: #ffffff">      real                    :: nplant</a>
+   579) <a name="l579" style="background-color: #ffffff">      real                    :: sla</a>
+   580) <a name="l580" style="background-color: #ffffff">      real                    :: hite</a>
+   581) <a name="l581" style="background-color: #ffffff">      real                    :: dbh</a>
+   582) <a name="l582" style="background-color: #ffffff">      integer                 :: ipft</a>
+   583) <a name="l583" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+   584) <a name="l584" style="background-color: #ffffff">      </a>
+   585) <a name="l585" style="background-color: #fafad2">      bleaf  = </a><a style="background-color: #ffff99">cpatch%bleaf(ico)</a>
+   586) <a name="l586" style="background-color: #ffffff">      nplant = cpatch%nplant(ico)</a>
+   587) <a name="l587" style="background-color: #ffffff">      sla    = cpatch%sla(ico)</a>
+   588) <a name="l588" style="background-color: #ffffff">      hite   = cpatch%hite(ico)</a>
+   589) <a name="l589" style="background-color: #ffffff">      ipft   = cpatch%pft(ico)</a>
+   590) <a name="l590" style="background-color: #ffffff">      dbh    = cpatch%dbh(ico)</a>
+   591) <a name="l591" style="background-color: #ffffff"></a>
+   592) <a name="l592" style="background-color: #ffffff">      !----- First, we compute the LAI ----------------------------------------------------!</a>
+   593) <a name="l593" style="background-color: #ffffff">      cpatch%lai(ico) = bleaf * nplant * sla</a>
+   594) <a name="l594" style="background-color: #ffffff"></a>
+   595) <a name="l595" style="background-color: #ffffff">      !----- Find the crown area. ---------------------------------------------------------!</a>
+   596) <a name="l596" style="background-color: #ffffff">      cpatch%crown_area(ico) = min(1.0, nplant * dbh2ca(dbh,hite,sla,ipft))</a>
+   597) <a name="l597" style="background-color: #ffffff"></a>
+   598) <a name="l598" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+   599) <a name="l599" style="background-color: #ffffff">      !     Here we check whether we need to compute the branch, stem, and effective       !</a>
+   600) <a name="l600" style="background-color: #ffffff">      ! branch area indices.  These are only needed when branch thermodynamics is used,    !</a>
+   601) <a name="l601" style="background-color: #ffffff">      ! otherwise, simply assign zeroes to them.                                           !</a>
+   602) <a name="l602" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+   603) <a name="l603" style="background-color: #ffffff">      select case (ibranch_thermo)</a>
+   604) <a name="l604" style="background-color: #ffffff">      case (0) </a>
+   605) <a name="l605" style="background-color: #ffffff">         !----- Ignore branches and trunk. ------------------------------------------------!</a>
+   606) <a name="l606" style="background-color: #ffff99">         cpatch%wai(ico)  = 0.</a>
+   607) <a name="l607" style="background-color: #ffff99">         !---------------------------------------------------------------------------------!</a>
+   608) <a name="l608" style="background-color: #ffff99"></a>
+   609) <a name="l609" style="background-color: #ffff99">      case (1,2)</a>
+   610) <a name="l610" style="background-color: #ffff99">         !---------------------------------------------------------------------------------!</a>
+   611) <a name="l611" style="background-color: #ffff99">         !     Decide the WAI according to the allometry.                                  !</a>
+   612) <a name="l612" style="background-color: #ffff99">         !---------------------------------------------------------------------------------!</a>
+   613) <a name="l613" style="background-color: #ffff99">         select case (</a><a style="background-color: #ffffff">iallom)</a>
+   614) <a name="l614" style="background-color: #ffffff">         case (3)</a>
+   615) <a name="l615" style="background-color: #ffffff">            !------------------------------------------------------------------------------!</a>
+   616) <a name="l616" style="background-color: #ffffff">            !     Assume a simple extrapolation based on Olivas et al. (2013).  WAI is     !</a>
+   617) <a name="l617" style="background-color: #ffffff">            ! always 11% of the potential LAI.                                             !</a>
+   618) <a name="l618" style="background-color: #ffffff">            !------------------------------------------------------------------------------!</a>
+   619) <a name="l619" style="background-color: #ffff99">            cpatch%wai(ico) = 0.11 * nplant * sla * size2bl(dbh,hite,ipft)</a>
+   620) <a name="l620" style="background-color: #ffff99">            !------------------------------------------------------------------------------!</a>
+   621) <a name="l621" style="background-color: #ffff99">         case default</a>
+   622) <a name="l622" style="background-color: #ffff99">            !----- Solve branches using the equations from Hormann et al. (2003) ----------!</a>
+   623) <a name="l623" style="background-color: #ffffff">            cpatch%wai(ico) = nplant * b1WAI(ipft) * min(dbh,dbh_crit(ipft)) ** b2WAI(ipft)</a>
+   624) <a name="l624" style="background-color: #ffffff">            !------------------------------------------------------------------------------!</a>
+   625) <a name="l625" style="background-color: #ffffff">         end select</a>
+   626) <a name="l626" style="background-color: #ffffff">         !---------------------------------------------------------------------------------!</a>
+   627) <a name="l627" style="background-color: #ffffff">      end select</a>
+   628) <a name="l628" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+   629) <a name="l629" style="background-color: #ffffff"></a>
+   630) <a name="l630" style="background-color: #ffffff">      return</a>
+   631) <a name="l631" style="background-color: #ffffff">   end subroutine area_indices</a>
+   632) <a name="l632" style="background-color: #ffffff">   !=======================================================================================!</a>
+   633) <a name="l633" style="background-color: #ffffff">   !=======================================================================================!</a>
+   634) <a name="l634" style="background-color: #ffffff">end module allometry</a>
+   635) <a name="l635" style="background-color: #ffffff">!==========================================================================================!</a>
+   636) <a name="l636" style="background-color: #ffffff">!==========================================================================================!</a>
+   637) <a name="l637" style="background-color: #ffffff"></a>
+   638) <a name="l638" style="background-color: #ffffff"></a>
+</pre>
+<hr size=1 noshade>
+<table border=0 cellpadding=3 cellspacing=0 width="100%" style="color:black;font-weight:normal;font-family:Verdana,Arial;font-size:xx-small">
+<td width="50%">
+<table border=0 cellpadding=3 cellspacing=0>
+<tr>
+<td>
+<a target="_new" href="http://www.intel.com"><img src="__IntelR.gif" border="0"></a>
+</td>
+<td style="font-size:xx-small">
+<i>generated by </i><BR><a target="_new" href="http://www.intel.com/software/products/compilers">Intel(R) C++/Fortran Compiler code-coverage tool</a>
+</td>
+</tr>
+</table>
+</td>
+<td>
+<table border=0 cellpadding=3 cellspacing=0 width="50%">
+<tr><a>Web-Page Owner: <a href="mailto:nobody">Nobody</a></tr>
+</table>
+</td>
+</table>
+</body>
+</html>

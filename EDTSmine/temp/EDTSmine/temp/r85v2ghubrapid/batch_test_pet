@@ -1,0 +1,12 @@
+#PBS -l walltime=02:00:00
+#PBS -l pvmem=3GB
+#PBS -N test_pet
+#PBS -e test_pet.$PBS_JOBID.err
+#PBS -o test_pet.$PBS_JOBID.out
+#PBS -V
+
+module load HDF5
+
+cd $PBS_O_WORKDIR
+
+./ed_2.1-test -f ED2IN-PET-TEST

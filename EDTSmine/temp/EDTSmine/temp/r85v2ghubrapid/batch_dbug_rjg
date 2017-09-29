@@ -1,0 +1,11 @@
+#PBS -l nodes=3:ppn=8
+#PBS -l walltime=02:00:00
+#PBS -N dbug_rjg
+#PBS -e dbug_rjg.$PBS_JOBID.err
+#PBS -o dbug_rjg.$PBS_JOBID.out
+
+module load HDF5
+
+cd $PBS_O_WORKDIR
+
+mpirun -n 24 ./ed_2.1-dbug -f ED2IN-RJG-DBUG

@@ -1,0 +1,12 @@
+#PBS -l walltime=02:00:00
+#PBS -l pvmem=3GB
+#PBS -N dbug_s67
+#PBS -e dbug_s67.$PBS_JOBID.err
+#PBS -o dbug_s67.$PBS_JOBID.out
+#PBS -V
+
+module load HDF5
+
+cd $PBS_O_WORKDIR
+
+./ed_2.1-dbug -f ED2IN-S67-DBUG

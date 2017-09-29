@@ -1,0 +1,328 @@
+<html>
+<head>
+<title>Listing of mortality.f90</title>
+</head>
+<body bgcolor="FFFFFF">
+<h4>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;mortality.f90&#160;&#160;&#160;&#160;&#160;&#160;&#160;<font size=-1>coverage:&#160 100.00&#160;%func&#160;&#160;&#160;&#160; 42.07&#160;%block</font></h4>
+<hr size=1 noshade>
+<pre>
+     1) <a name="l1" style="background-color: #ffffff">!==========================================================================================!</a>
+     2) <a name="l2" style="background-color: #ffffff">!==========================================================================================!</a>
+     3) <a name="l3" style="background-color: #ffffff">module mortality</a>
+     4) <a name="l4" style="background-color: #ffffff">   !=======================================================================================!</a>
+     5) <a name="l5" style="background-color: #ffffff">   !=======================================================================================!</a>
+     6) <a name="l6" style="background-color: #ffffff"></a>
+     7) <a name="l7" style="background-color: #ffffff"></a>
+     8) <a name="l8" style="background-color: #ffffff">   contains</a>
+     9) <a name="l9" style="background-color: #ffffff"></a>
+    10) <a name="l10" style="background-color: #ffffff"></a>
+    11) <a name="l11" style="background-color: #ffffff"></a>
+    12) <a name="l12" style="background-color: #ffffff">   !=======================================================================================!</a>
+    13) <a name="l13" style="background-color: #ffffff">   !=======================================================================================!</a>
+    14) <a name="l14" style="background-color: #ffffff">   !    This subroutine computes the total PFT-dependent mortality rate:                   !</a>
+    15) <a name="l15" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+    16) <a name="l16" style="background-color: #ffffff">   subroutine mortality_rates(cpatch,ico,avg_daily_temp, patch_age)</a>
+    17) <a name="l17" style="background-color: #ffffff">      use ed_state_vars , only : patchtype                  ! ! Structure</a>
+    18) <a name="l18" style="background-color: #ffffff">      use pft_coms      , only : mort0                      &amp; ! intent(in)</a>
+    19) <a name="l19" style="background-color: #ffffff">                               , mort1                      &amp; ! intent(in)</a>
+    20) <a name="l20" style="background-color: #ffffff">                               , mort2                      &amp; ! intent(in)</a>
+    21) <a name="l21" style="background-color: #ffffff">                               , mort3                      &amp; ! intent(in)</a>
+    22) <a name="l22" style="background-color: #ffffff">                               , plant_min_temp             &amp; ! intent(in)</a>
+    23) <a name="l23" style="background-color: #ffffff">                               , frost_mort                 ! ! intent(in)</a>
+    24) <a name="l24" style="background-color: #ffffff">      use disturb_coms  , only : treefall_disturbance_rate  &amp; ! intent(in)</a>
+    25) <a name="l25" style="background-color: #ffffff">                               , treefall_hite_threshold    &amp; ! intent(in)</a>
+    26) <a name="l26" style="background-color: #ffffff">                               , time2canopy                ! ! intent(in)</a>
+    27) <a name="l27" style="background-color: #ffffff">      use ed_max_dims   , only : n_pft                      ! ! intent(in)</a>
+    28) <a name="l28" style="background-color: #ffffff">      use consts_coms   , only : lnexp_min                  &amp; ! intent(in)</a>
+    29) <a name="l29" style="background-color: #ffffff">                               , lnexp_max                  ! ! intent(in)</a>
+    30) <a name="l30" style="background-color: #ffffff">      implicit none</a>
+    31) <a name="l31" style="background-color: #ffffff">      !----- Arguments --------------------------------------------------------------------!</a>
+    32) <a name="l32" style="background-color: #ffffff">      type(patchtype), target     :: cpatch          ! Current patch</a>
+    33) <a name="l33" style="background-color: #ffffff">      integer        , intent(in) :: ico             ! Current cohort ID</a>
+    34) <a name="l34" style="background-color: #ffffff">      real           , intent(in) :: avg_daily_temp  ! Mean temperature yesterday</a>
+    35) <a name="l35" style="background-color: #ffffff">      real           , intent(in) :: patch_age       ! Patch age</a>
+    36) <a name="l36" style="background-color: #ffffff">      !----- Local variables --------------------------------------------------------------!</a>
+    37) <a name="l37" style="background-color: #ffffff">      integer                     :: ipft            ! PFT </a>
+    38) <a name="l38" style="background-color: #ffffff">      real                        :: temp_dep        ! Temp. function  (frost mortality)</a>
+    39) <a name="l39" style="background-color: #ffffff">      real                        :: expmort         ! Carbon-balance term</a>
+    40) <a name="l40" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+    41) <a name="l41" style="background-color: #ffffff"></a>
+    42) <a name="l42" style="background-color: #ffffff"></a>
+    43) <a name="l43" style="background-color: #ffffff">      !----- Assume happy end, all plants survive... --------------------------------------!</a>
+    44) <a name="l44" style="background-color: #fafad2">      cpatch%mort_rate(1:4,ico) = 0.0</a>
+    45) <a name="l45" style="background-color: #ffffff">      ipft = cpatch%pft(ico)</a>
+    46) <a name="l46" style="background-color: #ffffff"></a>
+    47) <a name="l47" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+    48) <a name="l48" style="background-color: #ffffff">      ! 1.  Ageing, PFT-dependent but otherwise constant.                                  !</a>
+    49) <a name="l49" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+    50) <a name="l50" style="background-color: #ffffff">      cpatch%mort_rate(1,ico) = mort3(ipft)</a>
+    51) <a name="l51" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+    52) <a name="l52" style="background-color: #ffffff"></a>
+    53) <a name="l53" style="background-color: #ffffff"></a>
+    54) <a name="l54" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+    55) <a name="l55" style="background-color: #ffffff">      ! 2.  Mortality rates due to negative carbon balance.                                !</a>
+    56) <a name="l56" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+    57) <a name="l57" style="background-color: #ffffff">      expmort = max( lnexp_min, min( lnexp_max                                             &amp;</a>
+    58) <a name="l58" style="background-color: #ffffff">                                   , mort2(ipft) * ( cpatch%cbr_bar(ico) - mort0(ipft) ) ) )</a>
+    59) <a name="l59" style="background-color: #ffffff">      cpatch%mort_rate(2,ico) = mort1(ipft) / (1. + exp(expmort))</a>
+    60) <a name="l60" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+    61) <a name="l61" style="background-color: #ffffff"></a>
+    62) <a name="l62" style="background-color: #ffffff"></a>
+    63) <a name="l63" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+    64) <a name="l64" style="background-color: #ffffff">      ! 3.  Mortality due to treefall.                                                     !</a>
+    65) <a name="l65" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+    66) <a name="l66" style="background-color: #ffffff">      if (cpatch%hite(ico) &lt;= treefall_hite_threshold .and. patch_age &gt; time2canopy) then</a>
+    67) <a name="l67" style="background-color: #ffffff">         cpatch%mort_rate(3,ico) = treefall_disturbance_rate</a>
+    68) <a name="l68" style="background-color: #ffffff">      else</a>
+    69) <a name="l69" style="background-color: #ffffff">         cpatch%mort_rate(3,ico) = 0.</a>
+    70) <a name="l70" style="background-color: #ffffff">      end if</a>
+    71) <a name="l71" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+    72) <a name="l72" style="background-color: #ffffff"></a>
+    73) <a name="l73" style="background-color: #ffffff"></a>
+    74) <a name="l74" style="background-color: #ffffff"></a>
+    75) <a name="l75" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+    76) <a name="l76" style="background-color: #ffffff">      ! 4.   Mortality due to cold, after:                                                 !</a>
+    77) <a name="l77" style="background-color: #ffffff">      !      Albani, M.; D. Medvigy; G. C. Hurtt; P. R. Moorcroft, 2006: The contributions !</a>
+    78) <a name="l78" style="background-color: #ffffff">      !           of land-use change, CO2 fertilization, and climate variability to the    !</a>
+    79) <a name="l79" style="background-color: #ffffff">      !           Eastern US carbon sink.  Glob. Change Biol., 12, 2370-2390,              !</a>
+    80) <a name="l80" style="background-color: #ffffff">      !           doi: 10.1111/j.1365-2486.2006.01254.x                                    !</a>
+    81) <a name="l81" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+    82) <a name="l82" style="background-color: #ffffff">      temp_dep = max( 0.0, min( 1.0, 1.0 - (avg_daily_temp - plant_min_temp(ipft)) / 5.0) )</a>
+    83) <a name="l83" style="background-color: #ffffff">      cpatch%mort_rate(4,ico) = frost_mort(ipft) * temp_dep</a>
+    84) <a name="l84" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+    85) <a name="l85" style="background-color: #ffffff"></a>
+    86) <a name="l86" style="background-color: #ffffff"></a>
+    87) <a name="l87" style="background-color: #ffffff"></a>
+    88) <a name="l88" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+    89) <a name="l89" style="background-color: #ffffff">      ! 5. Disturbance rate mortality.  This is not used by the cohort dynamics, instead   !</a>
+    90) <a name="l90" style="background-color: #ffffff">      !    this is just to account for the lost density due to the patch creation.  This   !</a>
+    91) <a name="l91" style="background-color: #ffffff">      !    mortality will be determined by the disturbance_mortality subroutine, not here. !</a>
+    92) <a name="l92" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+    93) <a name="l93" style="background-color: #ffffff">      !cpatch%mort_rate(5,ico) = TBD</a>
+    94) <a name="l94" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+    95) <a name="l95" style="background-color: #ffffff"></a>
+    96) <a name="l96" style="background-color: #ffffff">      return</a>
+    97) <a name="l97" style="background-color: #ffffff">   end subroutine mortality_rates</a>
+    98) <a name="l98" style="background-color: #ffffff">   !=======================================================================================!</a>
+    99) <a name="l99" style="background-color: #ffffff">   !=======================================================================================!</a>
+   100) <a name="l100" style="background-color: #ffffff"></a>
+   101) <a name="l101" style="background-color: #ffffff"></a>
+   102) <a name="l102" style="background-color: #ffffff"></a>
+   103) <a name="l103" style="background-color: #ffffff"></a>
+   104) <a name="l104" style="background-color: #ffffff"></a>
+   105) <a name="l105" style="background-color: #ffffff"></a>
+   106) <a name="l106" style="background-color: #ffffff">   !=======================================================================================!</a>
+   107) <a name="l107" style="background-color: #ffffff">   !=======================================================================================!</a>
+   108) <a name="l108" style="background-color: #ffffff">   !     This subroutine determines the mortality rates associated with the current        !</a>
+   109) <a name="l109" style="background-color: #ffffff">   ! disturbance.                                                                          !</a>
+   110) <a name="l110" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+   111) <a name="l111" style="background-color: #ffffff">   subroutine disturbance_mortality(csite,ipa,disturbance_rate,new_lu,dist_path            &amp;</a>
+   112) <a name="l112" style="background-color: #ffffff">                                   ,mindbh_harvest)</a>
+   113) <a name="l113" style="background-color: #ffffff">      use ed_state_vars, only : sitetype  &amp; ! structure</a>
+   114) <a name="l114" style="background-color: #ffffff">                              , patchtype ! ! structure</a>
+   115) <a name="l115" style="background-color: #ffffff">      use ed_max_dims  , only : n_pft     ! ! intent(in)</a>
+   116) <a name="l116" style="background-color: #ffffff">      implicit none</a>
+   117) <a name="l117" style="background-color: #ffffff">      !----- Arguments. -------------------------------------------------------------------!</a>
+   118) <a name="l118" style="background-color: #ffffff">      type(sitetype)                   , target     :: csite</a>
+   119) <a name="l119" style="background-color: #ffffff">      integer                          , intent(in) :: ipa</a>
+   120) <a name="l120" style="background-color: #ffffff">      real                             , intent(in) :: disturbance_rate</a>
+   121) <a name="l121" style="background-color: #ffffff">      integer                          , intent(in) :: new_lu</a>
+   122) <a name="l122" style="background-color: #ffffff">      integer                          , intent(in) :: dist_path</a>
+   123) <a name="l123" style="background-color: #ffffff">      real           , dimension(n_pft), intent(in) :: mindbh_harvest</a>
+   124) <a name="l124" style="background-color: #ffffff">      !----- Local variables. -------------------------------------------------------------!</a>
+   125) <a name="l125" style="background-color: #ffffff">      type(patchtype)                  , pointer    :: cpatch</a>
+   126) <a name="l126" style="background-color: #ffffff">      integer                                       :: ico</a>
+   127) <a name="l127" style="background-color: #ffffff">      real                                          :: f_survival</a>
+   128) <a name="l128" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+   129) <a name="l129" style="background-color: #ffffff"></a>
+   130) <a name="l130" style="background-color: #fafad2">      cpatch =&gt; </a><a style="background-color: #ffff99">csite%patch(ipa)</a>
+   131) <a name="l131" style="background-color: #ffffff">      do ico=1,</a><a style="background-color: #fafad2">cpatch%ncohorts</a>
+   132) <a name="l132" style="background-color: #ffffff">         f_survival = survivorship(new_lu,dist_path,mindbh_harvest,cpatch,ico)</a>
+   133) <a name="l133" style="background-color: #ffffff">         cpatch%mort_rate(5,ico) = cpatch%mort_rate(5,ico)                                 &amp;</a>
+   134) <a name="l134" style="background-color: #ffffff">                                 - log( f_survival                                         &amp;</a>
+   135) <a name="l135" style="background-color: #ffffff">                                      + (1.0 - f_survival) * exp(- disturbance_rate) )</a>
+   136) <a name="l136" style="background-color: #ffffff">      end do</a>
+   137) <a name="l137" style="background-color: #ffffff">      return</a>
+   138) <a name="l138" style="background-color: #ffffff">   end subroutine disturbance_mortality</a>
+   139) <a name="l139" style="background-color: #ffffff">   !=======================================================================================!</a>
+   140) <a name="l140" style="background-color: #ffffff">   !=======================================================================================!</a>
+   141) <a name="l141" style="background-color: #ffffff"></a>
+   142) <a name="l142" style="background-color: #ffffff"></a>
+   143) <a name="l143" style="background-color: #ffffff"></a>
+   144) <a name="l144" style="background-color: #ffffff"></a>
+   145) <a name="l145" style="background-color: #ffffff"></a>
+   146) <a name="l146" style="background-color: #ffffff">   !=======================================================================================!</a>
+   147) <a name="l147" style="background-color: #ffffff">   !=======================================================================================!</a>
+   148) <a name="l148" style="background-color: #ffffff">   !     This function computes the survivorship rate associated with a disturbance.       !</a>
+   149) <a name="l149" style="background-color: #ffffff">   !  Input variables:                                                                     !</a>
+   150) <a name="l150" style="background-color: #ffffff">   !  -- new_lu: the disturbance/land use type after disturbance:                          !</a>
+   151) <a name="l151" style="background-color: #ffffff">   !     1. Clear cut (cropland and pasture).                                              !</a>
+   152) <a name="l152" style="background-color: #ffffff">   !     2. Forest plantation.                                                             !</a>
+   153) <a name="l153" style="background-color: #ffffff">   !     3. Tree fall.                                                                     !</a>
+   154) <a name="l154" style="background-color: #ffffff">   !     4. Fire.                                                                          !</a>
+   155) <a name="l155" style="background-color: #ffffff">   !     5. Forest regrowth.                                                               !</a>
+   156) <a name="l156" style="background-color: #ffffff">   !     6. Logged forest.                                                                 !</a>
+   157) <a name="l157" style="background-color: #ffffff">   !  -- dist_path: the pathway for the disturbance.  The flags depend on new_lu.  See     !</a>
+   158) <a name="l158" style="background-color: #ffffff">   !        comments at the select case (new_lu) block for additional details.             !</a>
+   159) <a name="l159" style="background-color: #ffffff">   !  -- mindbh_harvest: minimum DBH for harvesting (selective logging and forest          !</a>
+   160) <a name="l160" style="background-color: #ffffff">   !        plantantions).  If the tree DBH is greater than mindbh_harvest, the tree may   !</a>
+   161) <a name="l161" style="background-color: #ffffff">   !        be harvested, otherwise it may be damaged by logging but not harvested.        !</a>
+   162) <a name="l162" style="background-color: #ffffff">   !  -- cpatch: current patch.                                                            !</a>
+   163) <a name="l163" style="background-color: #ffffff">   !  -- ico: index for current cohort.                                                    !</a>
+   164) <a name="l164" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+   165) <a name="l165" style="background-color: #ffffff">   real function survivorship(new_lu,dist_path,mindbh_harvest,cpatch,ico)</a>
+   166) <a name="l166" style="background-color: #ffffff">      use ed_state_vars, only : patchtype                ! ! structure</a>
+   167) <a name="l167" style="background-color: #ffffff">      use disturb_coms , only : treefall_hite_threshold  &amp; ! intent(in)</a>
+   168) <a name="l168" style="background-color: #ffffff">                              , fire_hite_threshold      ! ! intent(in)</a>
+   169) <a name="l169" style="background-color: #ffffff">      use pft_coms     , only : treefall_s_ltht          &amp; ! intent(in)</a>
+   170) <a name="l170" style="background-color: #ffffff">                              , treefall_s_gtht          &amp; ! intent(in)</a>
+   171) <a name="l171" style="background-color: #ffffff">                              , fire_s_ltht              &amp; ! intent(in)</a>
+   172) <a name="l172" style="background-color: #ffffff">                              , fire_s_gtht              ! ! intent(in)</a>
+   173) <a name="l173" style="background-color: #ffffff">      use ed_max_dims  , only : n_pft                    ! ! intent(in)</a>
+   174) <a name="l174" style="background-color: #ffffff">      </a>
+   175) <a name="l175" style="background-color: #ffffff">      implicit none</a>
+   176) <a name="l176" style="background-color: #ffffff">      !----- Arguments. -------------------------------------------------------------------!</a>
+   177) <a name="l177" style="background-color: #ffffff">      type(patchtype)                 , target     :: cpatch</a>
+   178) <a name="l178" style="background-color: #ffffff">      real          , dimension(n_pft), intent(in) :: mindbh_harvest</a>
+   179) <a name="l179" style="background-color: #ffffff">      integer                         , intent(in) :: ico</a>
+   180) <a name="l180" style="background-color: #ffffff">      integer                         , intent(in) :: new_lu</a>
+   181) <a name="l181" style="background-color: #ffffff">      integer                         , intent(in) :: dist_path</a>
+   182) <a name="l182" style="background-color: #ffffff">      !----- Local variables. -------------------------------------------------------------!</a>
+   183) <a name="l183" style="background-color: #ffffff">      integer                                      :: ipft</a>
+   184) <a name="l184" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+   185) <a name="l185" style="background-color: #ffffff"></a>
+   186) <a name="l186" style="background-color: #ffffff"></a>
+   187) <a name="l187" style="background-color: #ffffff">      !----- Alias for current PFT. -------------------------------------------------------!</a>
+   188) <a name="l188" style="background-color: #fafad2">      ipft = </a><a style="background-color: #ffff99">cpatch%pft(ico)</a>
+   189) <a name="l189" style="background-color: #ffff99">      !------------------------------------------------------------------------------------!</a>
+   190) <a name="l190" style="background-color: #ffff99"></a>
+   191) <a name="l191" style="background-color: #ffff99">      !------------------------------------------------------------------------------------!</a>
+   192) <a name="l192" style="background-color: #ffff99">      !      Survivorship depends on the disturbance type (new_lu), and within each        !</a>
+   193) <a name="l193" style="background-color: #ffff99">      ! disturbance type, it may depend on the disturbance pathway (dist_path), the PFT,   !</a>
+   194) <a name="l194" style="background-color: #ffff99">      ! and size.                                                                          !</a>
+   195) <a name="l195" style="background-color: #ffff99">      !------------------------------------------------------------------------------------!</a>
+   196) <a name="l196" style="background-color: #ffff99">      select case(</a><a style="background-color: #fafad2">new_lu)</a>
+   197) <a name="l197" style="background-color: #fafad2">      case (</a><a style="background-color: #ffff99">1)</a>
+   198) <a name="l198" style="background-color: #ffff99">         !---------------------------------------------------------------------------------!</a>
+   199) <a name="l199" style="background-color: #ffff99">         !     Clear cut (cropland/pasture).  For now, nothing survives.                   !</a>
+   200) <a name="l200" style="background-color: #ffff99">         !---------------------------------------------------------------------------------!</a>
+   201) <a name="l201" style="background-color: #ffff99">         survivorship = 0.0</a>
+   202) <a name="l202" style="background-color: #ffff99">         !---------------------------------------------------------------------------------!</a>
+   203) <a name="l203" style="background-color: #ffff99"></a>
+   204) <a name="l204" style="background-color: #ffff99">      case (2)</a>
+   205) <a name="l205" style="background-color: #ffff99">         !---------------------------------------------------------------------------------!</a>
+   206) <a name="l206" style="background-color: #ffff99">         !     Forest plantation.  Two types of mortality may exist: treefall disturbance  !</a>
+   207) <a name="l207" style="background-color: #ffff99">         ! rates (which will maintain a plantation set as a plantation as it is a managed  !</a>
+   208) <a name="l208" style="background-color: #ffff99">         ! land), and harvesting.                                                          !</a>
+   209) <a name="l209" style="background-color: #ffff99">         !---------------------------------------------------------------------------------!</a>
+   210) <a name="l210" style="background-color: #ffff99">         select case (dist_path)</a>
+   211) <a name="l211" style="background-color: #ffff99">         case (20)</a>
+   212) <a name="l212" style="background-color: #ffff99">            !----- Harvesting, assumes that nothing survives. -----------------------------!</a>
+   213) <a name="l213" style="background-color: #ffff99">            survivorship = 0.0</a>
+   214) <a name="l214" style="background-color: #ffff99">            !------------------------------------------------------------------------------!</a>
+   215) <a name="l215" style="background-color: #ffff99"></a>
+   216) <a name="l216" style="background-color: #ffff99">         case (21)</a>
+   217) <a name="l217" style="background-color: #ffff99">            !----- Tree fall, assumes typical tree fall mortality. ------------------------!</a>
+   218) <a name="l218" style="background-color: #ffff99">            if (cpatch%hite(ico) &lt; treefall_hite_threshold) then</a>
+   219) <a name="l219" style="background-color: #ffff99">               survivorship = treefall_s_ltht(ipft)</a>
+   220) <a name="l220" style="background-color: #ffff99">            else</a>
+   221) <a name="l221" style="background-color: #ffff99">               survivorship = treefall_s_gtht(ipft)</a>
+   222) <a name="l222" style="background-color: #ffff99">            end if</a>
+   223) <a name="l223" style="background-color: #ffff99">            !------------------------------------------------------------------------------!</a>
+   224) <a name="l224" style="background-color: #ffff99">         end select</a>
+   225) <a name="l225" style="background-color: #ffff99">         !---------------------------------------------------------------------------------!</a>
+   226) <a name="l226" style="background-color: #ffff99"></a>
+   227) <a name="l227" style="background-color: #ffff99">      case (</a><a style="background-color: #ffffff">3)</a>
+   228) <a name="l228" style="background-color: #ffffff">         !---------------------------------------------------------------------------------!</a>
+   229) <a name="l229" style="background-color: #ffffff">         !     Tree fall.  Mortality depends on the cohort height and PFT.                 !</a>
+   230) <a name="l230" style="background-color: #ffffff">         !---------------------------------------------------------------------------------!</a>
+   231) <a name="l231" style="background-color: #ffffff">         if (cpatch%hite(ico) &lt; treefall_hite_threshold) then</a>
+   232) <a name="l232" style="background-color: #ffffff">            survivorship = treefall_s_ltht(ipft)</a>
+   233) <a name="l233" style="background-color: #ffffff">         else</a>
+   234) <a name="l234" style="background-color: #ffff99">            survivorship = treefall_s_gtht(ipft)</a>
+   235) <a name="l235" style="background-color: #ffff99">         end if</a>
+   236) <a name="l236" style="background-color: #ffff99">         !---------------------------------------------------------------------------------!</a>
+   237) <a name="l237" style="background-color: #ffff99"></a>
+   238) <a name="l238" style="background-color: #ffff99">      case (4)</a>
+   239) <a name="l239" style="background-color: #ffff99">         !---------------------------------------------------------------------------------!</a>
+   240) <a name="l240" style="background-color: #ffff99">         !     Fire.  For now fire mortality depends on the cohort height and PFT.         !</a>
+   241) <a name="l241" style="background-color: #ffff99">         !---------------------------------------------------------------------------------!</a>
+   242) <a name="l242" style="background-color: #ffff99">         if (cpatch%hite(ico) &lt; fire_hite_threshold) then</a>
+   243) <a name="l243" style="background-color: #ffff99">            survivorship = fire_s_ltht(ipft)</a>
+   244) <a name="l244" style="background-color: #ffff99">         else</a>
+   245) <a name="l245" style="background-color: #ffff99">            survivorship = fire_s_gtht(ipft)</a>
+   246) <a name="l246" style="background-color: #ffff99">         end if</a>
+   247) <a name="l247" style="background-color: #ffff99">         !---------------------------------------------------------------------------------!</a>
+   248) <a name="l248" style="background-color: #ffff99"></a>
+   249) <a name="l249" style="background-color: #ffff99">       case (5)</a>
+   250) <a name="l250" style="background-color: #ffff99">         !---------------------------------------------------------------------------------!</a>
+   251) <a name="l251" style="background-color: #ffff99">         !     Abandonment (secondary regrowth).  Two paths are possible: abandonment      !</a>
+   252) <a name="l252" style="background-color: #ffff99">         ! occurs after one last harvest, or the field/plantation is left as is.           !</a>
+   253) <a name="l253" style="background-color: #ffff99">         !---------------------------------------------------------------------------------!</a>
+   254) <a name="l254" style="background-color: #ffff99">         select case (dist_path)</a>
+   255) <a name="l255" style="background-color: #ffff99">         case (50)</a>
+   256) <a name="l256" style="background-color: #ffff99">            !----- Agriculture field is left as is. ---------------------------------------!</a>
+   257) <a name="l257" style="background-color: #ffff99">            survivorship = 1.0</a>
+   258) <a name="l258" style="background-color: #ffff99">            !------------------------------------------------------------------------------!</a>
+   259) <a name="l259" style="background-color: #ffff99">         case (51)</a>
+   260) <a name="l260" style="background-color: #ffff99">            !----- Forest plantation abandoned following fire. ----------------------------!</a>
+   261) <a name="l261" style="background-color: #ffff99">            if (cpatch%hite(ico) &lt; fire_hite_threshold) then</a>
+   262) <a name="l262" style="background-color: #ffff99">               survivorship = fire_s_ltht(ipft)</a>
+   263) <a name="l263" style="background-color: #ffff99">            else</a>
+   264) <a name="l264" style="background-color: #ffff99">               survivorship = fire_s_gtht(ipft)</a>
+   265) <a name="l265" style="background-color: #ffff99">            end if</a>
+   266) <a name="l266" style="background-color: #ffff99">            !------------------------------------------------------------------------------!</a>
+   267) <a name="l267" style="background-color: #ffff99">         case (52)</a>
+   268) <a name="l268" style="background-color: #ffff99">            !----- Harvest precedes abandonment.  Nothing survives. -----------------------!</a>
+   269) <a name="l269" style="background-color: #ffff99">            survivorship = 0.0</a>
+   270) <a name="l270" style="background-color: #ffff99">            !------------------------------------------------------------------------------!</a>
+   271) <a name="l271" style="background-color: #ffff99">         end select</a>
+   272) <a name="l272" style="background-color: #ffff99">         !---------------------------------------------------------------------------------!</a>
+   273) <a name="l273" style="background-color: #ffff99"></a>
+   274) <a name="l274" style="background-color: #ffff99">       case (6)</a>
+   275) <a name="l275" style="background-color: #ffff99">         !---------------------------------------------------------------------------------!</a>
+   276) <a name="l276" style="background-color: #ffff99">         !     Logging.  At this point a single pathway exists: cohorts above threshold    !</a>
+   277) <a name="l277" style="background-color: #ffff99">         ! are completely removed, and small cohorts have the same survivorship as small   !</a>
+   278) <a name="l278" style="background-color: #ffff99">         ! cohorts at a treefall site.  Both could be re-visited in the future, and        !</a>
+   279) <a name="l279" style="background-color: #ffff99">         ! different pathways for conventional and reduced-impact logging could be         !</a>
+   280) <a name="l280" style="background-color: #ffff99">         ! applied.                                                                        !</a>
+   281) <a name="l281" style="background-color: #ffff99">         !---------------------------------------------------------------------------------!</a>
+   282) <a name="l282" style="background-color: #ffff99">         if (cpatch%dbh(ico) &gt;= mindbh_harvest(ipft)) then</a>
+   283) <a name="l283" style="background-color: #ffff99">            survivorship = 0.0</a>
+   284) <a name="l284" style="background-color: #ffff99">         else</a>
+   285) <a name="l285" style="background-color: #ffff99">            survivorship = treefall_s_ltht(ipft)</a>
+   286) <a name="l286" style="background-color: #ffff99">         end if</a>
+   287) <a name="l287" style="background-color: #ffff99">         !---------------------------------------------------------------------------------!</a>
+   288) <a name="l288" style="background-color: #ffff99">      end select</a>
+   289) <a name="l289" style="background-color: #ffff99">      !------------------------------------------------------------------------------------!</a>
+   290) <a name="l290" style="background-color: #ffff99"></a>
+   291) <a name="l291" style="background-color: #ffffff">      return</a>
+   292) <a name="l292" style="background-color: #ffffff">   end function survivorship</a>
+   293) <a name="l293" style="background-color: #ffffff">   !=======================================================================================!</a>
+   294) <a name="l294" style="background-color: #ffffff">   !=======================================================================================!</a>
+   295) <a name="l295" style="background-color: #ffffff">end module mortality</a>
+   296) <a name="l296" style="background-color: #ffffff">!==========================================================================================!</a>
+   297) <a name="l297" style="background-color: #ffffff">!==========================================================================================!</a>
+</pre>
+<hr size=1 noshade>
+<table border=0 cellpadding=3 cellspacing=0 width="100%" style="color:black;font-weight:normal;font-family:Verdana,Arial;font-size:xx-small">
+<td width="50%">
+<table border=0 cellpadding=3 cellspacing=0>
+<tr>
+<td>
+<a target="_new" href="http://www.intel.com"><img src="__IntelR.gif" border="0"></a>
+</td>
+<td style="font-size:xx-small">
+<i>generated by </i><BR><a target="_new" href="http://www.intel.com/software/products/compilers">Intel(R) C++/Fortran Compiler code-coverage tool</a>
+</td>
+</tr>
+</table>
+</td>
+<td>
+<table border=0 cellpadding=3 cellspacing=0 width="50%">
+<tr><a>Web-Page Owner: <a href="mailto:nobody">Nobody</a></tr>
+</table>
+</td>
+</table>
+</body>
+</html>

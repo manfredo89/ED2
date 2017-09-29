@@ -1,0 +1,254 @@
+<html>
+<head>
+<title>Listing of fire.f90</title>
+</head>
+<body bgcolor="FFFFFF">
+<h4>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;fire.f90&#160;&#160;&#160;&#160;&#160;&#160;&#160;<font size=-1>coverage:&#160 100.00&#160;%func&#160;&#160;&#160;&#160; 38.26&#160;%block</font></h4>
+<hr size=1 noshade>
+<pre>
+     1) <a name="l1" style="background-color: #ffffff">!==========================================================================================!</a>
+     2) <a name="l2" style="background-color: #ffffff">!==========================================================================================!</a>
+     3) <a name="l3" style="background-color: #ffffff">!    This subroutine will evaluate whether fire conditions exist, and if that is the case, !</a>
+     4) <a name="l4" style="background-color: #ffffff">! it will calculate the disturbance rate due to fire.                                      !</a>
+     5) <a name="l5" style="background-color: #ffffff">!------------------------------------------------------------------------------------------!</a>
+     6) <a name="l6" style="background-color: #ffffff">subroutine fire_frequency(cgrid)</a>
+     7) <a name="l7" style="background-color: #ffffff">   use ed_state_vars , only : edtype                 &amp; ! structure</a>
+     8) <a name="l8" style="background-color: #ffffff">                            , polygontype            &amp; ! structure</a>
+     9) <a name="l9" style="background-color: #ffffff">                            , sitetype               &amp; ! structure</a>
+    10) <a name="l10" style="background-color: #ffffff">                            , patchtype              ! ! structure</a>
+    11) <a name="l11" style="background-color: #ffffff">   use ed_misc_coms  , only : simtime                &amp; ! intent(in)</a>
+    12) <a name="l12" style="background-color: #ffffff">                            , current_time           &amp; ! intent(in)</a>
+    13) <a name="l13" style="background-color: #ffffff">                            , dtlsm                  ! ! intent(in)</a>
+    14) <a name="l14" style="background-color: #ffffff">   use grid_coms     , only : nzg                    ! ! intent(in)</a>
+    15) <a name="l15" style="background-color: #ffffff">   use soil_coms     , only : soil                   &amp; ! intent(in)</a>
+    16) <a name="l16" style="background-color: #ffffff">                            , dslz                   ! ! intent(in)</a>
+    17) <a name="l17" style="background-color: #ffffff">   use disturb_coms  , only : include_fire           &amp; ! intent(in)</a>
+    18) <a name="l18" style="background-color: #ffffff">                            , sm_fire                &amp; ! intent(in)</a>
+    19) <a name="l19" style="background-color: #ffffff">                            , fire_dryness_threshold &amp; ! intent(in)</a>
+    20) <a name="l20" style="background-color: #ffffff">                            , k_fire_first           &amp; ! intent(in)</a>
+    21) <a name="l21" style="background-color: #ffffff">                            , fire_parameter         ! ! intent(in)</a>
+    22) <a name="l22" style="background-color: #ffffff">   use consts_coms   , only : wdns                   &amp; ! intent(in)</a>
+    23) <a name="l23" style="background-color: #ffffff">                            , wdnsi                  &amp; ! intent(in)</a>
+    24) <a name="l24" style="background-color: #ffffff">                            , day_sec                ! ! intent(in)</a>
+    25) <a name="l25" style="background-color: #ffffff">   implicit none</a>
+    26) <a name="l26" style="background-color: #ffffff">   !----- Arguments -----------------------------------------------------------------------!</a>
+    27) <a name="l27" style="background-color: #ffffff">   type(edtype)      , target     :: cgrid</a>
+    28) <a name="l28" style="background-color: #ffffff">   !----- Local variables -----------------------------------------------------------------!</a>
+    29) <a name="l29" style="background-color: #ffffff">   type(polygontype) , pointer    :: cpoly</a>
+    30) <a name="l30" style="background-color: #ffffff">   type(sitetype)    , pointer    :: csite</a>
+    31) <a name="l31" style="background-color: #ffffff">   type(patchtype)   , pointer    :: cpatch</a>
+    32) <a name="l32" style="background-color: #ffffff">   type(simtime)                  :: lastmonth</a>
+    33) <a name="l33" style="background-color: #ffffff">   integer                        :: ipy</a>
+    34) <a name="l34" style="background-color: #ffffff">   integer                        :: isi</a>
+    35) <a name="l35" style="background-color: #ffffff">   integer                        :: ipa</a>
+    36) <a name="l36" style="background-color: #ffffff">   integer                        :: ico</a>
+    37) <a name="l37" style="background-color: #ffffff">   integer                        :: imon</a>
+    38) <a name="l38" style="background-color: #ffffff">   integer                        :: k</a>
+    39) <a name="l39" style="background-color: #ffffff">   integer                        :: nsoil</a>
+    40) <a name="l40" style="background-color: #ffffff">   real                           :: ndaysi</a>
+    41) <a name="l41" style="background-color: #ffffff">   real                           :: normfac</a>
+    42) <a name="l42" style="background-color: #ffffff">   real                           :: fire_wmass_threshold</a>
+    43) <a name="l43" style="background-color: #ffffff">   real                           :: fire_intensity</a>
+    44) <a name="l44" style="background-color: #ffffff">   real                           :: fuel</a>
+    45) <a name="l45" style="background-color: #ffffff">   real                           :: ignition_rate</a>
+    46) <a name="l46" style="background-color: #ffffff">   real                           :: mean_fire_intensity</a>
+    47) <a name="l47" style="background-color: #ffffff">   real                           :: sum_pcpg</a>
+    48) <a name="l48" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+    49) <a name="l49" style="background-color: #ffffff"></a>
+    50) <a name="l50" style="background-color: #ffffff"></a>
+    51) <a name="l51" style="background-color: #ffffff"></a>
+    52) <a name="l52" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+    53) <a name="l53" style="background-color: #ffffff">   !     Find the number of days of last month so we can normalise the integrated ground   !</a>
+    54) <a name="l54" style="background-color: #ffffff">   ! water.                                                                                !</a>
+    55) <a name="l55" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+    56) <a name="l56" style="background-color: #ffffff">   call lastmonthdate(current_time,lastmonth,ndaysi)</a>
+    57) <a name="l57" style="background-color: #ffffff">   normfac = dtlsm * ndaysi / (day_sec)</a>
+    58) <a name="l58" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+    59) <a name="l59" style="background-color: #ffffff"></a>
+    60) <a name="l60" style="background-color: #ffffff"></a>
+    61) <a name="l61" style="background-color: #ffffff">   !----- Current month. ------------------------------------------------------------------!</a>
+    62) <a name="l62" style="background-color: #ffffff">   imon = current_time%month</a>
+    63) <a name="l63" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+    64) <a name="l64" style="background-color: #ffffff"></a>
+    65) <a name="l65" style="background-color: #ffffff"></a>
+    66) <a name="l66" style="background-color: #ffffff">   !----- Loop over polygons and sites. ---------------------------------------------------!</a>
+    67) <a name="l67" style="background-color: #ffffff">   polyloop: do ipy = 1,cgrid%npolygons</a>
+    68) <a name="l68" style="background-color: #fafad2">      cpoly =&gt; </a><a style="background-color: #ffff99">cgrid%polygon(ipy)</a>
+    69) <a name="l69" style="background-color: #ffff99"></a>
+    70) <a name="l70" style="background-color: #ffff99"></a>
+    71) <a name="l71" style="background-color: #ffff99">      !------------------------------------------------------------------------------------!</a>
+    72) <a name="l72" style="background-color: #ffff99">      !     Loop over all sites.                                                           !</a>
+    73) <a name="l73" style="background-color: #ffff99">      !------------------------------------------------------------------------------------!</a>
+    74) <a name="l74" style="background-color: #ffffff">      siteloop: do isi = 1,</a><a style="background-color: #fafad2">cpoly%nsites</a>
+    75) <a name="l75" style="background-color: #ffffff">         csite =&gt; cpoly%site(isi)</a>
+    76) <a name="l76" style="background-color: #ffffff"></a>
+    77) <a name="l77" style="background-color: #ffffff">         !---------------------------------------------------------------------------------!</a>
+    78) <a name="l78" style="background-color: #ffffff">         !     Find the total rainfall of the past year and reset the counter for this     !</a>
+    79) <a name="l79" style="background-color: #ffffff">         ! month.                                                                          !</a>
+    80) <a name="l80" style="background-color: #ffffff">         !---------------------------------------------------------------------------------!</a>
+    81) <a name="l81" style="background-color: #ffffff">         sum_pcpg                         = sum(cpoly%avg_monthly_pcpg(:,isi))</a>
+    82) <a name="l82" style="background-color: #ffffff">         cpoly%avg_monthly_pcpg(imon,isi) = 0.</a>
+    83) <a name="l83" style="background-color: #ffffff">         !---------------------------------------------------------------------------------!</a>
+    84) <a name="l84" style="background-color: #ffffff"></a>
+    85) <a name="l85" style="background-color: #ffffff"></a>
+    86) <a name="l86" style="background-color: #ffffff"></a>
+    87) <a name="l87" style="background-color: #ffffff">         !----- Initialize ignition rate and the mean fire intensity (site variables). ----!</a>
+    88) <a name="l88" style="background-color: #ffffff">         ignition_rate       = 0.0</a>
+    89) <a name="l89" style="background-color: #ffffff">         mean_fire_intensity = 0.0</a>
+    90) <a name="l90" style="background-color: #ffffff">         !---------------------------------------------------------------------------------!</a>
+    91) <a name="l91" style="background-color: #ffffff"></a>
+    92) <a name="l92" style="background-color: #ffffff">         patchloop: do ipa=1,csite%npatches</a>
+    93) <a name="l93" style="background-color: #ffffff">            cpatch =&gt; csite%patch(ipa)</a>
+    94) <a name="l94" style="background-color: #ffffff"></a>
+    95) <a name="l95" style="background-color: #ffffff">            !----- Normalise the monthly mean ground water. -------------------------------!</a>
+    96) <a name="l96" style="background-color: #ffffff">            csite%avg_monthly_gndwater(ipa) = csite%avg_monthly_gndwater(ipa) * normfac</a>
+    97) <a name="l97" style="background-color: #ffffff">            !------------------------------------------------------------------------------!</a>
+    98) <a name="l98" style="background-color: #ffffff"></a>
+    99) <a name="l99" style="background-color: #ffffff"></a>
+   100) <a name="l100" style="background-color: #ffffff">            !----- Normalise the monthly mean ground water. -------------------------------!</a>
+   101) <a name="l101" style="background-color: #ffffff">            csite%avg_monthly_waterdef(ipa) = max(0.0,csite%avg_monthly_waterdef(ipa))</a>
+   102) <a name="l102" style="background-color: #ffffff">            !------------------------------------------------------------------------------!</a>
+   103) <a name="l103" style="background-color: #ffffff"></a>
+   104) <a name="l104" style="background-color: #ffffff"></a>
+   105) <a name="l105" style="background-color: #ffffff">            !----- Initialize patch fuel. -------------------------------------------------!</a>
+   106) <a name="l106" style="background-color: #ffffff">            fuel = 0.0</a>
+   107) <a name="l107" style="background-color: #ffffff">            !------------------------------------------------------------------------------!</a>
+   108) <a name="l108" style="background-color: #ffffff"></a>
+   109) <a name="l109" style="background-color: #ffffff"></a>
+   110) <a name="l110" style="background-color: #ffffff"></a>
+   111) <a name="l111" style="background-color: #ffffff">            !------------------------------------------------------------------------------!</a>
+   112) <a name="l112" style="background-color: #ffffff">            !    Loop through all cohorts in this patch, and compute the fuel.  Fuel will  !</a>
+   113) <a name="l113" style="background-color: #ffffff">            ! be defined as the above-ground biomass per unit area.                        !</a>
+   114) <a name="l114" style="background-color: #ffffff">            !------------------------------------------------------------------------------!</a>
+   115) <a name="l115" style="background-color: #ffffff">            cohortloop: do ico = 1,cpatch%ncohorts</a>
+   116) <a name="l116" style="background-color: #ffffff"></a>
+   117) <a name="l117" style="background-color: #ffffff">               fuel = fuel + cpatch%nplant(ico) * cpatch%agb(ico)</a>
+   118) <a name="l118" style="background-color: #ffffff"></a>
+   119) <a name="l119" style="background-color: #ffffff">            end do cohortloop</a>
+   120) <a name="l120" style="background-color: #ffffff">            !------------------------------------------------------------------------------!</a>
+   121) <a name="l121" style="background-color: #ffffff"></a>
+   122) <a name="l122" style="background-color: #ffffff"></a>
+   123) <a name="l123" style="background-color: #ffffff"></a>
+   124) <a name="l124" style="background-color: #ffffff">            !------------------------------------------------------------------------------!</a>
+   125) <a name="l125" style="background-color: #ffffff">            !     Determine the correct threshold to ignite fires according to the fire    !</a>
+   126) <a name="l126" style="background-color: #ffffff">            ! method.                                                                      !</a>
+   127) <a name="l127" style="background-color: #ffffff">            !------------------------------------------------------------------------------!</a>
+   128) <a name="l128" style="background-color: #ffffff">            select case (include_fire)</a>
+   129) <a name="l129" style="background-color: #ffffff">            case (0)</a>
+   130) <a name="l130" style="background-color: #ffffff">               !------ Set water mass threshold to infinity, so fires will never happen. --!</a>
+   131) <a name="l131" style="background-color: #ffffff">               fire_wmass_threshold = huge(1.)</a>
+   132) <a name="l132" style="background-color: #ffffff">               fire_intensity       = 0.</a>
+   133) <a name="l133" style="background-color: #ffffff">               !---------------------------------------------------------------------------!</a>
+   134) <a name="l134" style="background-color: #ffffff"></a>
+   135) <a name="l135" style="background-color: #ffffff">            case (1)</a>
+   136) <a name="l136" style="background-color: #ffffff">               !---------------------------------------------------------------------------!</a>
+   137) <a name="l137" style="background-color: #ffffff">               !     The fire threshold is equivalent to the dryness factor, converted to  !</a>
+   138) <a name="l138" style="background-color: #ffffff">               ! kg/m2.  This will be compared to the full column, so if the soil is too   !</a>
+   139) <a name="l139" style="background-color: #ffffff">               ! deep fires will be nearly impossible.                                     !</a>
+   140) <a name="l140" style="background-color: #ffffff">               !---------------------------------------------------------------------------!</a>
+   141) <a name="l141" style="background-color: #ffff99">               fire_wmass_threshold = fire_dryness_threshold * wdns</a>
+   142) <a name="l142" style="background-color: #ffff99">               if (csite%avg_monthly_gndwater(ipa) &lt; fire_wmass_threshold) then</a>
+   143) <a name="l143" style="background-color: #ffff99">                  fire_intensity      = fire_parameter</a>
+   144) <a name="l144" style="background-color: #ffff99">                  mean_fire_intensity = mean_fire_intensity                                &amp;</a>
+   145) <a name="l145" style="background-color: #ffff99">                                      + fire_intensity * csite%area(ipa)</a>
+   146) <a name="l146" style="background-color: #ffff99">               else</a>
+   147) <a name="l147" style="background-color: #ffff99">                  fire_intensity      = 0.0</a>
+   148) <a name="l148" style="background-color: #ffff99">               end if</a>
+   149) <a name="l149" style="background-color: #ffff99">               !---------------------------------------------------------------------------!</a>
+   150) <a name="l150" style="background-color: #ffff99"></a>
+   151) <a name="l151" style="background-color: #ffff99">            case (2)</a>
+   152) <a name="l152" style="background-color: #ffff99">               !---------------------------------------------------------------------------!</a>
+   153) <a name="l153" style="background-color: #ffff99">               !     We now compute the minimum amount of water in kg/m2 that the soil     !</a>
+   154) <a name="l154" style="background-color: #ffff99">               ! must have to avoid fires, using the soil properties and the soil moisture !</a>
+   155) <a name="l155" style="background-color: #ffff99">               ! fraction threshold.                                                       !</a>
+   156) <a name="l156" style="background-color: #ffff99">               !---------------------------------------------------------------------------!</a>
+   157) <a name="l157" style="background-color: #ffff99">               fire_wmass_threshold = 0.</a>
+   158) <a name="l158" style="background-color: #ffff99">               do k = k_fire_first, nzg</a>
+   159) <a name="l159" style="background-color: #ffff99">                  nsoil                = cpoly%ntext_soil(k,isi)</a>
+   160) <a name="l160" style="background-color: #ffff99">                  fire_wmass_threshold = fire_wmass_threshold                              &amp;</a>
+   161) <a name="l161" style="background-color: #ffff99">                                       + soil(nsoil)%soilfr * dslz(k) * wdns</a>
+   162) <a name="l162" style="background-color: #ffff99">               end do</a>
+   163) <a name="l163" style="background-color: #ffff99">               if (csite%avg_monthly_gndwater(ipa) &lt; fire_wmass_threshold) then</a>
+   164) <a name="l164" style="background-color: #ffff99">                  fire_intensity      = fire_parameter</a>
+   165) <a name="l165" style="background-color: #ffff99">                  mean_fire_intensity = mean_fire_intensity                                &amp;</a>
+   166) <a name="l166" style="background-color: #ffff99">                                      + fire_intensity * csite%area(ipa)</a>
+   167) <a name="l167" style="background-color: #ffff99">               else</a>
+   168) <a name="l168" style="background-color: #ffff99">                  fire_intensity      = 0.0</a>
+   169) <a name="l169" style="background-color: #ffff99">               end if</a>
+   170) <a name="l170" style="background-color: #ffff99">               !---------------------------------------------------------------------------!</a>
+   171) <a name="l171" style="background-color: #ffff99"></a>
+   172) <a name="l172" style="background-color: #ffff99">            case (3)</a>
+   173) <a name="l173" style="background-color: #ffff99">               !---------------------------------------------------------------------------!</a>
+   174) <a name="l174" style="background-color: #ffff99">               !     The threshold is independent on soil moisture.  We use climatological !</a>
+   175) <a name="l175" style="background-color: #ffff99">               ! water deficit instead.                                                    !</a>
+   176) <a name="l176" style="background-color: #ffff99">               !---------------------------------------------------------------------------!</a>
+   177) <a name="l177" style="background-color: #ffff99">               if (csite%avg_monthly_waterdef(ipa) &gt;= sm_fire * sum_pcpg) then</a>
+   178) <a name="l178" style="background-color: #ffff99">                  fire_intensity      = fire_parameter</a>
+   179) <a name="l179" style="background-color: #ffff99">                  mean_fire_intensity = mean_fire_intensity                                &amp;</a>
+   180) <a name="l180" style="background-color: #ffff99">                                      + fire_intensity * csite%area(ipa)</a>
+   181) <a name="l181" style="background-color: #ffff99">               else</a>
+   182) <a name="l182" style="background-color: #ffff99">                  fire_intensity      = 0.0</a>
+   183) <a name="l183" style="background-color: #ffff99">               end if</a>
+   184) <a name="l184" style="background-color: #ffff99">               !---------------------------------------------------------------------------!</a>
+   185) <a name="l185" style="background-color: #ffff99">            end select</a>
+   186) <a name="l186" style="background-color: #ffff99">            !------------------------------------------------------------------------------!</a>
+   187) <a name="l187" style="background-color: #ffff99"></a>
+   188) <a name="l188" style="background-color: #ffff99"></a>
+   189) <a name="l189" style="background-color: #ffff99"></a>
+   190) <a name="l190" style="background-color: #ffff99">            !------------------------------------------------------------------------------!</a>
+   191) <a name="l191" style="background-color: #ffff99">            !    If the soil is dry, then calculate patch contribution to the ignition     !</a>
+   192) <a name="l192" style="background-color: #ffff99">            ! rate.                                                                        !</a>
+   193) <a name="l193" style="background-color: #ffff99">            !------------------------------------------------------------------------------!</a>
+   194) <a name="l194" style="background-color: #ffffff">            ignition_rate = ignition_rate + fire_intensity * fuel * csite%area(ipa)</a>
+   195) <a name="l195" style="background-color: #ffffff">            !------------------------------------------------------------------------------!</a>
+   196) <a name="l196" style="background-color: #ffffff"></a>
+   197) <a name="l197" style="background-color: #ffffff"></a>
+   198) <a name="l198" style="background-color: #ffffff">            !----- Reset the ground water for next month. ---------------------------------!</a>
+   199) <a name="l199" style="background-color: #ffffff">            csite%avg_monthly_gndwater(ipa) = 0.</a>
+   200) <a name="l200" style="background-color: #ffffff">            !------------------------------------------------------------------------------!</a>
+   201) <a name="l201" style="background-color: #ffffff"></a>
+   202) <a name="l202" style="background-color: #ffffff">         end do patchloop</a>
+   203) <a name="l203" style="background-color: #ffffff">         !---------------------------------------------------------------------------------!</a>
+   204) <a name="l204" style="background-color: #ffffff"></a>
+   205) <a name="l205" style="background-color: #ffffff"></a>
+   206) <a name="l206" style="background-color: #ffffff"></a>
+   207) <a name="l207" style="background-color: #ffffff">         !----- Calculate fire disturbance rate [1/month]. --------------------------------!</a>
+   208) <a name="l208" style="background-color: #ffffff">         cpoly%lambda_fire  (imon,isi) = ignition_rate</a>
+   209) <a name="l209" style="background-color: #ffffff">         if (mean_fire_intensity &gt; 0.) then</a>
+   210) <a name="l210" style="background-color: #ffff99">            cpoly%ignition_rate (isi) = ignition_rate / mean_fire_intensity</a>
+   211) <a name="l211" style="background-color: #ffff99">         else</a>
+   212) <a name="l212" style="background-color: #ffffff">            cpoly%ignition_rate (isi) = 0.0</a>
+   213) <a name="l213" style="background-color: #ffffff">         end if</a>
+   214) <a name="l214" style="background-color: #ffffff">         !---------------------------------------------------------------------------------!</a>
+   215) <a name="l215" style="background-color: #ffffff">      end do siteloop</a>
+   216) <a name="l216" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+   217) <a name="l217" style="background-color: #ffffff">   end do polyloop</a>
+   218) <a name="l218" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+   219) <a name="l219" style="background-color: #ffffff"></a>
+   220) <a name="l220" style="background-color: #ffffff">   return</a>
+   221) <a name="l221" style="background-color: #ffffff">end subroutine fire_frequency</a>
+   222) <a name="l222" style="background-color: #ffffff">!==========================================================================================!</a>
+   223) <a name="l223" style="background-color: #ffffff">!==========================================================================================!</a>
+</pre>
+<hr size=1 noshade>
+<table border=0 cellpadding=3 cellspacing=0 width="100%" style="color:black;font-weight:normal;font-family:Verdana,Arial;font-size:xx-small">
+<td width="50%">
+<table border=0 cellpadding=3 cellspacing=0>
+<tr>
+<td>
+<a target="_new" href="http://www.intel.com"><img src="__IntelR.gif" border="0"></a>
+</td>
+<td style="font-size:xx-small">
+<i>generated by </i><BR><a target="_new" href="http://www.intel.com/software/products/compilers">Intel(R) C++/Fortran Compiler code-coverage tool</a>
+</td>
+</tr>
+</table>
+</td>
+<td>
+<table border=0 cellpadding=3 cellspacing=0 width="50%">
+<tr><a>Web-Page Owner: <a href="mailto:nobody">Nobody</a></tr>
+</table>
+</td>
+</table>
+</body>
+</html>

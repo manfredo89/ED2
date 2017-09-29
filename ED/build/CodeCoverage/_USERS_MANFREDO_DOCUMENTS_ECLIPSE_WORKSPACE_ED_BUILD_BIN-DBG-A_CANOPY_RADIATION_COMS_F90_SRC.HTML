@@ -1,0 +1,382 @@
+<html>
+<head>
+<title>Listing of canopy_radiation_coms.f90</title>
+</head>
+<body bgcolor="FFFFFF">
+<h4>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;canopy_radiation_coms.f90&#160;&#160;&#160;&#160;&#160;&#160;&#160;<font size=-1>coverage:&#160 100.00&#160;%func&#160;&#160;&#160;&#160; 86.21&#160;%block</font></h4>
+<hr size=1 noshade>
+<pre>
+     1) <a name="l1" style="background-color: #ffffff">!==========================================================================================!</a>
+     2) <a name="l2" style="background-color: #ffffff">!==========================================================================================!</a>
+     3) <a name="l3" style="background-color: #ffffff">!    This module contains several parameters used in the canopy radiation solver.          !</a>
+     4) <a name="l4" style="background-color: #ffffff">!                                                                                          !</a>
+     5) <a name="l5" style="background-color: #ffffff">!  IMPORTANT: Do not initialize non-parameters in their modules - not all compilers will   !</a>
+     6) <a name="l6" style="background-color: #ffffff">!             actually initialize them.  Instead, assign them at init_can_rad_params sub-  !</a>
+     7) <a name="l7" style="background-color: #ffffff">!             routine (ed_params.f90).                                                     !</a>
+     8) <a name="l8" style="background-color: #ffffff">!------------------------------------------------------------------------------------------!</a>
+     9) <a name="l9" style="background-color: #ffffff">module canopy_radiation_coms</a>
+    10) <a name="l10" style="background-color: #ffffff"></a>
+    11) <a name="l11" style="background-color: #ffffff">   use ed_max_dims , only : n_pft</a>
+    12) <a name="l12" style="background-color: #ffffff">   implicit none </a>
+    13) <a name="l13" style="background-color: #ffffff"></a>
+    14) <a name="l14" style="background-color: #ffffff"></a>
+    15) <a name="l15" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+    16) <a name="l16" style="background-color: #ffffff">   ! ICANRAD -- Specifies how canopy radiation is solved.  This variable sets both short-  !</a>
+    17) <a name="l17" style="background-color: #ffffff">   !            wave and longwave.                                                         !</a>
+    18) <a name="l18" style="background-color: #ffffff">   !            0.  Two-stream model (Medvigy 2006), with the possibility to apply         !</a>
+    19) <a name="l19" style="background-color: #ffffff">   !                finite crown area to direct shortwave radiation.                       !</a>
+    20) <a name="l20" style="background-color: #ffffff">   !            1.  Multiple-scattering model (Zhao and Qualls 2005,2006), with the        !</a>
+    21) <a name="l21" style="background-color: #ffffff">   !                possibility to apply finite crown area to all radiation fluxes.        !</a>
+    22) <a name="l22" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+    23) <a name="l23" style="background-color: #ffffff">   integer :: icanrad</a>
+    24) <a name="l24" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+    25) <a name="l25" style="background-color: #ffffff"></a>
+    26) <a name="l26" style="background-color: #ffffff"></a>
+    27) <a name="l27" style="background-color: #ffffff"></a>
+    28) <a name="l28" style="background-color: #ffffff"></a>
+    29) <a name="l29" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+    30) <a name="l30" style="background-color: #ffffff">   !     The following variables are temporary namelist variables used to control the      !</a>
+    31) <a name="l31" style="background-color: #ffffff">   ! radiation properties of leaves.                                                       !</a>
+    32) <a name="l32" style="background-color: #ffffff">   ! LTRANS_VIS   -- Leaf transmittance on visible.                                        !</a>
+    33) <a name="l33" style="background-color: #ffffff">   ! LTRANS_NIR   -- Leaf transmittance on near infrared.                                  !</a>
+    34) <a name="l34" style="background-color: #ffffff">   ! LREFLECT_VIS -- Leaf reflectance on visible.                                          !</a>
+    35) <a name="l35" style="background-color: #ffffff">   ! LREFLECT_NIR -- Leaf reflectance on near infrared.                                    !</a>
+    36) <a name="l36" style="background-color: #ffffff">   ! ORIENT_TREE  -- Leaf orientation parameter for tropical trees                         !</a>
+    37) <a name="l37" style="background-color: #ffffff">   ! ORIENT_GRASS -- Leaf orientation parameter for tropical grasses                       !</a>
+    38) <a name="l38" style="background-color: #ffffff">   ! CLUMP_TREE   -- Leaf clumping factor for tropical trees                               !</a>
+    39) <a name="l39" style="background-color: #ffffff">   ! CLUMP_GRASS  -- Leaf clumping factor for tropical grasses                             !</a>
+    40) <a name="l40" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+    41) <a name="l41" style="background-color: #ffffff">   real :: ltrans_vis</a>
+    42) <a name="l42" style="background-color: #ffffff">   real :: ltrans_nir</a>
+    43) <a name="l43" style="background-color: #ffffff">   real :: lreflect_vis</a>
+    44) <a name="l44" style="background-color: #ffffff">   real :: lreflect_nir</a>
+    45) <a name="l45" style="background-color: #ffffff">   real :: orient_tree</a>
+    46) <a name="l46" style="background-color: #ffffff">   real :: orient_grass</a>
+    47) <a name="l47" style="background-color: #ffffff">   real :: clump_tree</a>
+    48) <a name="l48" style="background-color: #ffffff">   real :: clump_grass</a>
+    49) <a name="l49" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+    50) <a name="l50" style="background-color: #ffffff"></a>
+    51) <a name="l51" style="background-color: #ffffff"></a>
+    52) <a name="l52" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+    53) <a name="l53" style="background-color: #ffffff">   !     Fraction of diffuse solar radiation in the PAR band.  Used when you don't know    !</a>
+    54) <a name="l54" style="background-color: #ffffff">   ! the direct/diffuse breakdown. (parameters)                                            !</a>
+    55) <a name="l55" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+    56) <a name="l56" style="background-color: #ffffff">   real :: fvis_beam_def</a>
+    57) <a name="l57" style="background-color: #ffffff">   real :: fvis_diff_def</a>
+    58) <a name="l58" style="background-color: #ffffff">   real :: fnir_beam_def</a>
+    59) <a name="l59" style="background-color: #ffffff">   real :: fnir_diff_def</a>
+    60) <a name="l60" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+    61) <a name="l61" style="background-color: #ffffff"></a>
+    62) <a name="l62" style="background-color: #ffffff"></a>
+    63) <a name="l63" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+    64) <a name="l64" style="background-color: #ffffff">   !    Structure with scratch variables for radiation (Thanks RGK!).                      !</a>
+    65) <a name="l65" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+    66) <a name="l66" style="background-color: #ffffff">   type radscrtype</a>
+    67) <a name="l67" style="background-color: #ffffff">      integer         , pointer, dimension(:)   :: pft_array</a>
+    68) <a name="l68" style="background-color: #ffffff">      real(kind=8)    , pointer, dimension(:)   :: leaf_temp_array</a>
+    69) <a name="l69" style="background-color: #ffffff">      real(kind=8)    , pointer, dimension(:)   :: wood_temp_array</a>
+    70) <a name="l70" style="background-color: #ffffff">      real(kind=8)    , pointer, dimension(:)   :: lai_array</a>
+    71) <a name="l71" style="background-color: #ffffff">      real(kind=8)    , pointer, dimension(:)   :: wai_array </a>
+    72) <a name="l72" style="background-color: #ffffff">      real(kind=8)    , pointer, dimension(:)   :: CA_array</a>
+    73) <a name="l73" style="background-color: #ffffff">      real(kind=8)    , pointer, dimension(:)   :: htop_array</a>
+    74) <a name="l74" style="background-color: #ffffff">      real(kind=8)    , pointer, dimension(:)   :: hbot_array</a>
+    75) <a name="l75" style="background-color: #ffffff">      real(kind=8)    , pointer, dimension(:)   :: par_level_beam</a>
+    76) <a name="l76" style="background-color: #ffffff">      real(kind=8)    , pointer, dimension(:)   :: par_level_diffd</a>
+    77) <a name="l77" style="background-color: #ffffff">      real(kind=8)    , pointer, dimension(:)   :: par_level_diffu</a>
+    78) <a name="l78" style="background-color: #ffffff">      real(kind=8)    , pointer, dimension(:)   :: light_level_array</a>
+    79) <a name="l79" style="background-color: #ffffff">      real(kind=8)    , pointer, dimension(:)   :: light_beam_level_array</a>
+    80) <a name="l80" style="background-color: #ffffff">      real(kind=8)    , pointer, dimension(:)   :: light_diff_level_array</a>
+    81) <a name="l81" style="background-color: #ffffff">      real            , pointer, dimension(:)   :: par_v_beam_array</a>
+    82) <a name="l82" style="background-color: #ffffff">      real            , pointer, dimension(:)   :: rshort_v_beam_array</a>
+    83) <a name="l83" style="background-color: #ffffff">      real            , pointer, dimension(:)   :: par_v_diffuse_array</a>
+    84) <a name="l84" style="background-color: #ffffff">      real            , pointer, dimension(:)   :: rshort_v_diffuse_array</a>
+    85) <a name="l85" style="background-color: #ffffff">      real            , pointer, dimension(:)   :: lw_v_array</a>
+    86) <a name="l86" style="background-color: #ffffff">      real            , pointer, dimension(:,:) :: radprof_array</a>
+    87) <a name="l87" style="background-color: #ffffff">   end type radscrtype</a>
+    88) <a name="l88" style="background-color: #ffffff">   type(radscrtype)   , pointer,dimension(:)    :: radscr(:)</a>
+    89) <a name="l89" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+    90) <a name="l90" style="background-color: #ffffff"></a>
+    91) <a name="l91" style="background-color: #ffffff"></a>
+    92) <a name="l92" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+    93) <a name="l93" style="background-color: #ffffff">   !     These are the normalised variables that will be used in the two-stream model.     !</a>
+    94) <a name="l94" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+    95) <a name="l95" style="background-color: #ffffff">   real(kind=8) :: par_beam_norm</a>
+    96) <a name="l96" style="background-color: #ffffff">   real(kind=8) :: par_diff_norm</a>
+    97) <a name="l97" style="background-color: #ffffff">   real(kind=8) :: nir_beam_norm</a>
+    98) <a name="l98" style="background-color: #ffffff">   real(kind=8) :: nir_diff_norm</a>
+    99) <a name="l99" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+   100) <a name="l100" style="background-color: #ffffff"></a>
+   101) <a name="l101" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+   102) <a name="l102" style="background-color: #ffffff">   !     Factors that define the orientation and clumping of leaves.                       !</a>
+   103) <a name="l103" style="background-color: #ffffff">   ! CLUMPING FACTOR - factor indicating the degree of clumpiness of leaves.               !</a>
+   104) <a name="l104" style="background-color: #ffffff">   ! ORIENT_FACTOR   - mean leaf orientation.                                              !</a>
+   105) <a name="l105" style="background-color: #ffffff">   !                     0 -- leaves are randomly oriented                                 !</a>
+   106) <a name="l106" style="background-color: #ffffff">   !                     1 -- all leaves are perfectly horizontal                          !</a>
+   107) <a name="l107" style="background-color: #ffffff">   !                    -1 -- all leaves are perfectly vertical.                           !</a>
+   108) <a name="l108" style="background-color: #ffffff">   ! PHI1            - The phi1 term from the CLM technical manual                         !</a>
+   109) <a name="l109" style="background-color: #ffffff">   ! PHI2            - The phi2 term from the CLM technical manual                         !</a>
+   110) <a name="l110" style="background-color: #ffffff">   ! MU_BAR          - average cosine of incidence angle for hemispheric (diffuse)         !</a>
+   111) <a name="l111" style="background-color: #ffffff">   !                   radiation (for both short wave and long wave)                       !</a>
+   112) <a name="l112" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+   113) <a name="l113" style="background-color: #ffffff">   real(kind=8), dimension(n_pft) :: clumping_factor</a>
+   114) <a name="l114" style="background-color: #ffffff">   real(kind=8), dimension(n_pft) :: orient_factor</a>
+   115) <a name="l115" style="background-color: #ffffff">   real(kind=8), dimension(n_pft) :: phi1</a>
+   116) <a name="l116" style="background-color: #ffffff">   real(kind=8), dimension(n_pft) :: phi2</a>
+   117) <a name="l117" style="background-color: #ffffff">   real(kind=8), dimension(n_pft) :: mu_bar</a>
+   118) <a name="l118" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+   119) <a name="l119" style="background-color: #ffffff"></a>
+   120) <a name="l120" style="background-color: #ffffff"></a>
+   121) <a name="l121" style="background-color: #ffffff"></a>
+   122) <a name="l122" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+   123) <a name="l123" style="background-color: #ffffff">   !     Reflectance coefficients.                                                         !</a>
+   124) <a name="l124" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+   125) <a name="l125" style="background-color: #ffffff">   !----- Visible (PAR). ------------------------------------------------------------------!</a>
+   126) <a name="l126" style="background-color: #ffffff">   real(kind=8), dimension(n_pft) :: leaf_reflect_vis</a>
+   127) <a name="l127" style="background-color: #ffffff">   real(kind=8), dimension(n_pft) :: wood_reflect_vis</a>
+   128) <a name="l128" style="background-color: #ffffff">   !----- Near infrared. ------------------------------------------------------------------!</a>
+   129) <a name="l129" style="background-color: #ffffff">   real(kind=8), dimension(n_pft) :: leaf_reflect_nir</a>
+   130) <a name="l130" style="background-color: #ffffff">   real(kind=8), dimension(n_pft) :: wood_reflect_nir</a>
+   131) <a name="l131" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+   132) <a name="l132" style="background-color: #ffffff"></a>
+   133) <a name="l133" style="background-color: #ffffff"></a>
+   134) <a name="l134" style="background-color: #ffffff"></a>
+   135) <a name="l135" style="background-color: #ffffff"></a>
+   136) <a name="l136" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+   137) <a name="l137" style="background-color: #ffffff">   !     Transmittance coefficients.                                                       !</a>
+   138) <a name="l138" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+   139) <a name="l139" style="background-color: #ffffff">   !----- Visible (PAR). ------------------------------------------------------------------!</a>
+   140) <a name="l140" style="background-color: #ffffff">   real(kind=8), dimension(n_pft) :: leaf_trans_vis</a>
+   141) <a name="l141" style="background-color: #ffffff">   real(kind=8), dimension(n_pft) :: wood_trans_vis</a>
+   142) <a name="l142" style="background-color: #ffffff">   !----- Near infrared. ------------------------------------------------------------------!</a>
+   143) <a name="l143" style="background-color: #ffffff">   real(kind=8), dimension(n_pft) :: leaf_trans_nir</a>
+   144) <a name="l144" style="background-color: #ffffff">   real(kind=8), dimension(n_pft) :: wood_trans_nir</a>
+   145) <a name="l145" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+   146) <a name="l146" style="background-color: #ffffff"></a>
+   147) <a name="l147" style="background-color: #ffffff"></a>
+   148) <a name="l148" style="background-color: #ffffff"></a>
+   149) <a name="l149" style="background-color: #ffffff"></a>
+   150) <a name="l150" style="background-color: #ffffff">   !----- Emissivity of the vegetation (TIR). ---------------------------------------------!</a>
+   151) <a name="l151" style="background-color: #ffffff">   real(kind=8), dimension(n_pft) :: leaf_emiss_tir</a>
+   152) <a name="l152" style="background-color: #ffffff">   real(kind=8), dimension(n_pft) :: wood_emiss_tir</a>
+   153) <a name="l153" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+   154) <a name="l154" style="background-color: #ffffff"></a>
+   155) <a name="l155" style="background-color: #ffffff"></a>
+   156) <a name="l156" style="background-color: #ffffff"></a>
+   157) <a name="l157" style="background-color: #ffffff"></a>
+   158) <a name="l158" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+   159) <a name="l159" style="background-color: #ffffff">   !     Scattering coefficients.                                                          !</a>
+   160) <a name="l160" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+   161) <a name="l161" style="background-color: #ffffff">   !----- Visible (PAR). ------------------------------------------------------------------!</a>
+   162) <a name="l162" style="background-color: #ffffff">   real(kind=8), dimension(n_pft) :: leaf_scatter_vis</a>
+   163) <a name="l163" style="background-color: #ffffff">   real(kind=8), dimension(n_pft) :: wood_scatter_vis</a>
+   164) <a name="l164" style="background-color: #ffffff">   !----- Near infrared. ------------------------------------------------------------------!</a>
+   165) <a name="l165" style="background-color: #ffffff">   real(kind=8), dimension(n_pft) :: leaf_scatter_nir</a>
+   166) <a name="l166" style="background-color: #ffffff">   real(kind=8), dimension(n_pft) :: wood_scatter_nir</a>
+   167) <a name="l167" style="background-color: #ffffff">   !----- Thermal infrared. ---------------------------------------------------------------!</a>
+   168) <a name="l168" style="background-color: #ffffff">   real(kind=8), dimension(n_pft) :: leaf_scatter_tir</a>
+   169) <a name="l169" style="background-color: #ffffff">   real(kind=8), dimension(n_pft) :: wood_scatter_tir</a>
+   170) <a name="l170" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+   171) <a name="l171" style="background-color: #ffffff"></a>
+   172) <a name="l172" style="background-color: #ffffff"></a>
+   173) <a name="l173" style="background-color: #ffffff"></a>
+   174) <a name="l174" style="background-color: #ffffff"></a>
+   175) <a name="l175" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+   176) <a name="l176" style="background-color: #ffffff">   !     Fraction of diffuse radiation that is upscattered.                                !</a>
+   177) <a name="l177" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+   178) <a name="l178" style="background-color: #ffffff">   !----- Visible (PAR). ------------------------------------------------------------------!</a>
+   179) <a name="l179" style="background-color: #ffffff">   real(kind=8), dimension(n_pft) :: leaf_backscatter_vis</a>
+   180) <a name="l180" style="background-color: #ffffff">   real(kind=8), dimension(n_pft) :: wood_backscatter_vis</a>
+   181) <a name="l181" style="background-color: #ffffff">   !----- Near infrared. ------------------------------------------------------------------!</a>
+   182) <a name="l182" style="background-color: #ffffff">   real(kind=8), dimension(n_pft) :: leaf_backscatter_nir</a>
+   183) <a name="l183" style="background-color: #ffffff">   real(kind=8), dimension(n_pft) :: wood_backscatter_nir</a>
+   184) <a name="l184" style="background-color: #ffffff">   !----- Backscattering of thermal infrared. ---------------------------------------------!</a>
+   185) <a name="l185" style="background-color: #ffffff">   real(kind=8), dimension(n_pft) :: leaf_backscatter_tir</a>
+   186) <a name="l186" style="background-color: #ffffff">   real(kind=8), dimension(n_pft) :: wood_backscatter_tir</a>
+   187) <a name="l187" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+   188) <a name="l188" style="background-color: #ffffff"></a>
+   189) <a name="l189" style="background-color: #ffffff"></a>
+   190) <a name="l190" style="background-color: #ffffff"></a>
+   191) <a name="l191" style="background-color: #ffffff"></a>
+   192) <a name="l192" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+   193) <a name="l193" style="background-color: #ffffff">   !    Snow pack properties.                                                              !</a>
+   194) <a name="l194" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+   195) <a name="l195" style="background-color: #ffffff">   real(kind=4) :: snow_albedo_vis</a>
+   196) <a name="l196" style="background-color: #ffffff">   real(kind=4) :: snow_albedo_nir</a>
+   197) <a name="l197" style="background-color: #ffffff">   real(kind=4) :: snow_emiss_tir</a>
+   198) <a name="l198" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+   199) <a name="l199" style="background-color: #ffffff"></a>
+   200) <a name="l200" style="background-color: #ffffff"></a>
+   201) <a name="l201" style="background-color: #ffffff"></a>
+   202) <a name="l202" style="background-color: #ffffff"></a>
+   203) <a name="l203" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+   204) <a name="l204" style="background-color: #ffffff">   !     The following variables control whether to call things that should be called      !</a>
+   205) <a name="l205" style="background-color: #ffffff">   ! when there is still some light.                                                       !</a>
+   206) <a name="l206" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+   207) <a name="l207" style="background-color: #ffffff">   real(kind=4)    :: rshort_twilight_min</a>
+   208) <a name="l208" style="background-color: #ffffff">   real(kind=4)    :: cosz_min</a>
+   209) <a name="l209" style="background-color: #ffffff">   real(kind=8)    :: cosz_min8</a>
+   210) <a name="l210" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+   211) <a name="l211" style="background-color: #ffffff"></a>
+   212) <a name="l212" style="background-color: #ffffff"></a>
+   213) <a name="l213" style="background-color: #ffffff">   !=======================================================================================!</a>
+   214) <a name="l214" style="background-color: #ffffff">   !=======================================================================================!</a>
+   215) <a name="l215" style="background-color: #ffffff"></a>
+   216) <a name="l216" style="background-color: #ffffff"></a>
+   217) <a name="l217" style="background-color: #ffffff">   contains</a>
+   218) <a name="l218" style="background-color: #ffffff"></a>
+   219) <a name="l219" style="background-color: #ffffff"></a>
+   220) <a name="l220" style="background-color: #ffffff"></a>
+   221) <a name="l221" style="background-color: #ffffff">   !=======================================================================================!</a>
+   222) <a name="l222" style="background-color: #ffffff">   !=======================================================================================!</a>
+   223) <a name="l223" style="background-color: #ffffff">   !     This sub-routine allocates the scratch variables after all pointers have been     !</a>
+   224) <a name="l224" style="background-color: #ffffff">   ! nullified.                                                                            !</a>
+   225) <a name="l225" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+   226) <a name="l226" style="background-color: #ffffff">   subroutine alloc_radscratch(cradscr,maxcohort)</a>
+   227) <a name="l227" style="background-color: #ffffff">      </a>
+   228) <a name="l228" style="background-color: #ffffff">      use ed_max_dims          , only : n_radprof            ! ! intent(in)</a>
+   229) <a name="l229" style="background-color: #ffffff">      implicit none</a>
+   230) <a name="l230" style="background-color: #ffffff">      !----- Arguments. -------------------------------------------------------------------!</a>
+   231) <a name="l231" style="background-color: #ffffff">      type(radscrtype), target     :: cradscr</a>
+   232) <a name="l232" style="background-color: #ffffff">      integer         , intent(in) :: maxcohort</a>
+   233) <a name="l233" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+   234) <a name="l234" style="background-color: #ffffff"></a>
+   235) <a name="l235" style="background-color: #ffffff">      call nullify_radscratch(cradscr)</a>
+   236) <a name="l236" style="background-color: #ffffff"></a>
+   237) <a name="l237" style="background-color: #fafad2">      allocate (cradscr%pft_array                 (          maxcohort))</a>
+   238) <a name="l238" style="background-color: #fafad2">      allocate (cradscr%leaf_temp_array           (          maxcohort))</a>
+   239) <a name="l239" style="background-color: #fafad2">      allocate (cradscr%wood_temp_array           (          maxcohort))</a>
+   240) <a name="l240" style="background-color: #fafad2">      allocate (cradscr%lai_array                 (          maxcohort))</a>
+   241) <a name="l241" style="background-color: #fafad2">      allocate (cradscr%wai_array                 (          maxcohort))</a>
+   242) <a name="l242" style="background-color: #fafad2">      allocate (cradscr%CA_array                  (          maxcohort))</a>
+   243) <a name="l243" style="background-color: #fafad2">      allocate (cradscr%htop_array                (          maxcohort))</a>
+   244) <a name="l244" style="background-color: #fafad2">      allocate (cradscr%hbot_array                (          maxcohort))</a>
+   245) <a name="l245" style="background-color: #fafad2">      allocate (cradscr%par_level_beam            (          maxcohort))</a>
+   246) <a name="l246" style="background-color: #fafad2">      allocate (cradscr%par_level_diffu           (          maxcohort))</a>
+   247) <a name="l247" style="background-color: #fafad2">      allocate (cradscr%par_level_diffd           (          maxcohort))</a>
+   248) <a name="l248" style="background-color: #fafad2">      allocate (cradscr%light_level_array         (          maxcohort))</a>
+   249) <a name="l249" style="background-color: #fafad2">      allocate (cradscr%light_beam_level_array    (          maxcohort))</a>
+   250) <a name="l250" style="background-color: #fafad2">      allocate (cradscr%light_diff_level_array    (          maxcohort))</a>
+   251) <a name="l251" style="background-color: #fafad2">      allocate (cradscr%par_v_beam_array          (          maxcohort))</a>
+   252) <a name="l252" style="background-color: #fafad2">      allocate (cradscr%rshort_v_beam_array       (          maxcohort))</a>
+   253) <a name="l253" style="background-color: #fafad2">      allocate (cradscr%par_v_diffuse_array       (          maxcohort))</a>
+   254) <a name="l254" style="background-color: #fafad2">      allocate (cradscr%rshort_v_diffuse_array    (          maxcohort))</a>
+   255) <a name="l255" style="background-color: #fafad2">      allocate (cradscr%lw_v_array                (          maxcohort))</a>
+   256) <a name="l256" style="background-color: #fafad2">      allocate (cradscr%radprof_array             (n_radprof,maxcohort))</a>
+   257) <a name="l257" style="background-color: #fafad2">      </a>
+   258) <a name="l258" style="background-color: #ffffff">      return</a>
+   259) <a name="l259" style="background-color: #ffffff">   end subroutine alloc_radscratch</a>
+   260) <a name="l260" style="background-color: #ffffff">   !=======================================================================================!</a>
+   261) <a name="l261" style="background-color: #ffffff">   !=======================================================================================!</a>
+   262) <a name="l262" style="background-color: #ffffff"></a>
+   263) <a name="l263" style="background-color: #ffffff"></a>
+   264) <a name="l264" style="background-color: #ffffff"></a>
+   265) <a name="l265" style="background-color: #ffffff"></a>
+   266) <a name="l266" style="background-color: #ffffff"></a>
+   267) <a name="l267" style="background-color: #ffffff"></a>
+   268) <a name="l268" style="background-color: #ffffff">   !=======================================================================================!</a>
+   269) <a name="l269" style="background-color: #ffffff">   !=======================================================================================!</a>
+   270) <a name="l270" style="background-color: #ffffff">   !     This sub-routine de-allocates the scratch variables.                              !</a>
+   271) <a name="l271" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+   272) <a name="l272" style="background-color: #ffffff">   subroutine dealloc_radscratch(cradscr)</a>
+   273) <a name="l273" style="background-color: #ffffff"></a>
+   274) <a name="l274" style="background-color: #ffffff">      implicit none</a>
+   275) <a name="l275" style="background-color: #ffffff">      !----- Arguments --------------------------------------------------------------------!</a>
+   276) <a name="l276" style="background-color: #ffffff">      type(radscrtype), target :: cradscr</a>
+   277) <a name="l277" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+   278) <a name="l278" style="background-color: #ffffff"></a>
+   279) <a name="l279" style="background-color: #ffffff">      if (associated(cradscr%pft_array             )) deallocate(cradscr%pft_array        )</a>
+   280) <a name="l280" style="background-color: #ffffff">      if (associated(cradscr%leaf_temp_array       )) deallocate(cradscr%leaf_temp_array  )</a>
+   281) <a name="l281" style="background-color: #ffffff">      if (associated(cradscr%wood_temp_array       )) deallocate(cradscr%wood_temp_array  )</a>
+   282) <a name="l282" style="background-color: #ffffff">      if (associated(cradscr%lai_array             )) deallocate(cradscr%lai_array        )</a>
+   283) <a name="l283" style="background-color: #ffffff">      if (associated(cradscr%wai_array             )) deallocate(cradscr%wai_array        )</a>
+   284) <a name="l284" style="background-color: #ffffff">      if (associated(cradscr%CA_array              )) deallocate(cradscr%CA_array         )</a>
+   285) <a name="l285" style="background-color: #ffffff">      if (associated(cradscr%htop_array            )) deallocate(cradscr%htop_array       )</a>
+   286) <a name="l286" style="background-color: #ffffff">      if (associated(cradscr%hbot_array            )) deallocate(cradscr%hbot_array       )</a>
+   287) <a name="l287" style="background-color: #ffffff">      if (associated(cradscr%par_level_beam        )) deallocate(cradscr%par_level_beam   )</a>
+   288) <a name="l288" style="background-color: #ffffff">      if (associated(cradscr%par_level_diffu       )) deallocate(cradscr%par_level_diffu  )</a>
+   289) <a name="l289" style="background-color: #ffffff">      if (associated(cradscr%par_level_diffd       )) deallocate(cradscr%par_level_diffd  )</a>
+   290) <a name="l290" style="background-color: #ffffff">      if (associated(cradscr%light_level_array     )) deallocate(cradscr%light_level_array)</a>
+   291) <a name="l291" style="background-color: #ffffff">      if (associated(cradscr%light_beam_level_array))                                      &amp;</a>
+   292) <a name="l292" style="background-color: #ffffff">                                                 deallocate(cradscr%light_beam_level_array)</a>
+   293) <a name="l293" style="background-color: #ffffff">      if (associated(cradscr%light_diff_level_array))                                      &amp;</a>
+   294) <a name="l294" style="background-color: #ffffff">                                                 deallocate(cradscr%light_diff_level_array)</a>
+   295) <a name="l295" style="background-color: #ffffff">      if (associated(cradscr%par_v_beam_array      )) deallocate(cradscr%par_v_beam_array )</a>
+   296) <a name="l296" style="background-color: #ffffff">      if (associated(cradscr%rshort_v_beam_array   ))                                      &amp;</a>
+   297) <a name="l297" style="background-color: #ffffff">                                                 deallocate(cradscr%rshort_v_beam_array   )</a>
+   298) <a name="l298" style="background-color: #ffffff">      if (associated(cradscr%par_v_diffuse_array   ))                                      &amp;</a>
+   299) <a name="l299" style="background-color: #ffffff">                                                 deallocate(cradscr%par_v_diffuse_array   )</a>
+   300) <a name="l300" style="background-color: #ffffff">      if (associated(cradscr%rshort_v_diffuse_array))                                      &amp;</a>
+   301) <a name="l301" style="background-color: #ffffff">                                                 deallocate(cradscr%rshort_v_diffuse_array)</a>
+   302) <a name="l302" style="background-color: #ffffff">      if (associated(cradscr%lw_v_array            )) deallocate(cradscr%lw_v_array       )</a>
+   303) <a name="l303" style="background-color: #ffffff">      if (associated(cradscr%radprof_array         )) deallocate(cradscr%radprof_array    )</a>
+   304) <a name="l304" style="background-color: #ffffff">      return</a>
+   305) <a name="l305" style="background-color: #ffffff">   end subroutine dealloc_radscratch</a>
+   306) <a name="l306" style="background-color: #ffffff">   !=======================================================================================!</a>
+   307) <a name="l307" style="background-color: #ffffff">   !=======================================================================================!</a>
+   308) <a name="l308" style="background-color: #ffffff"></a>
+   309) <a name="l309" style="background-color: #ffffff"></a>
+   310) <a name="l310" style="background-color: #ffffff"></a>
+   311) <a name="l311" style="background-color: #ffffff"></a>
+   312) <a name="l312" style="background-color: #ffffff"></a>
+   313) <a name="l313" style="background-color: #ffffff"></a>
+   314) <a name="l314" style="background-color: #ffffff">   !=======================================================================================!</a>
+   315) <a name="l315" style="background-color: #ffffff">   !=======================================================================================!</a>
+   316) <a name="l316" style="background-color: #ffffff">   !     This sub-routine nullifies the pointers, for a safe allocation.                   !</a>
+   317) <a name="l317" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+   318) <a name="l318" style="background-color: #ffffff">   subroutine nullify_radscratch(cradscr)</a>
+   319) <a name="l319" style="background-color: #ffffff"></a>
+   320) <a name="l320" style="background-color: #ffffff">      implicit none</a>
+   321) <a name="l321" style="background-color: #ffffff">      !----- Arguments --------------------------------------------------------------------!</a>
+   322) <a name="l322" style="background-color: #ffffff">      type(radscrtype), target :: cradscr</a>
+   323) <a name="l323" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+   324) <a name="l324" style="background-color: #ffffff"></a>
+   325) <a name="l325" style="background-color: #ffffff">      nullify(cradscr%pft_array                 )</a>
+   326) <a name="l326" style="background-color: #ffffff">      nullify(cradscr%leaf_temp_array           )</a>
+   327) <a name="l327" style="background-color: #ffffff">      nullify(cradscr%wood_temp_array           )</a>
+   328) <a name="l328" style="background-color: #ffffff">      nullify(cradscr%lai_array                 )</a>
+   329) <a name="l329" style="background-color: #ffffff">      nullify(cradscr%wai_array                 )</a>
+   330) <a name="l330" style="background-color: #ffffff">      nullify(cradscr%CA_array                  )</a>
+   331) <a name="l331" style="background-color: #ffffff">      nullify(cradscr%htop_array                )</a>
+   332) <a name="l332" style="background-color: #ffffff">      nullify(cradscr%hbot_array                )</a>
+   333) <a name="l333" style="background-color: #ffffff">      nullify(cradscr%par_level_beam            )</a>
+   334) <a name="l334" style="background-color: #ffffff">      nullify(cradscr%par_level_diffu           )</a>
+   335) <a name="l335" style="background-color: #ffffff">      nullify(cradscr%par_level_diffd           )</a>
+   336) <a name="l336" style="background-color: #ffffff">      nullify(cradscr%light_level_array         )</a>
+   337) <a name="l337" style="background-color: #ffffff">      nullify(cradscr%light_beam_level_array    )</a>
+   338) <a name="l338" style="background-color: #ffffff">      nullify(cradscr%light_diff_level_array    )</a>
+   339) <a name="l339" style="background-color: #ffffff">      nullify(cradscr%par_v_beam_array          )</a>
+   340) <a name="l340" style="background-color: #ffffff">      nullify(cradscr%rshort_v_beam_array       )</a>
+   341) <a name="l341" style="background-color: #ffffff">      nullify(cradscr%par_v_diffuse_array       )</a>
+   342) <a name="l342" style="background-color: #ffffff">      nullify(cradscr%rshort_v_diffuse_array    )</a>
+   343) <a name="l343" style="background-color: #ffffff">      nullify(cradscr%lw_v_array                )</a>
+   344) <a name="l344" style="background-color: #ffffff">      nullify(cradscr%radprof_array             )</a>
+   345) <a name="l345" style="background-color: #ffffff">      return</a>
+   346) <a name="l346" style="background-color: #ffffff">   end subroutine nullify_radscratch</a>
+   347) <a name="l347" style="background-color: #ffffff">   !=======================================================================================!</a>
+   348) <a name="l348" style="background-color: #ffffff">   !=======================================================================================!</a>
+   349) <a name="l349" style="background-color: #ffffff">end module canopy_radiation_coms</a>
+   350) <a name="l350" style="background-color: #ffffff">!==========================================================================================!</a>
+   351) <a name="l351" style="background-color: #ffffff">!==========================================================================================!</a>
+</pre>
+<hr size=1 noshade>
+<table border=0 cellpadding=3 cellspacing=0 width="100%" style="color:black;font-weight:normal;font-family:Verdana,Arial;font-size:xx-small">
+<td width="50%">
+<table border=0 cellpadding=3 cellspacing=0>
+<tr>
+<td>
+<a target="_new" href="http://www.intel.com"><img src="__IntelR.gif" border="0"></a>
+</td>
+<td style="font-size:xx-small">
+<i>generated by </i><BR><a target="_new" href="http://www.intel.com/software/products/compilers">Intel(R) C++/Fortran Compiler code-coverage tool</a>
+</td>
+</tr>
+</table>
+</td>
+<td>
+<table border=0 cellpadding=3 cellspacing=0 width="50%">
+<tr><a>Web-Page Owner: <a href="mailto:nobody">Nobody</a></tr>
+</table>
+</td>
+</table>
+</body>
+</html>

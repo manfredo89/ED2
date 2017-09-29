@@ -1,0 +1,12 @@
+#PBS -l walltime=02:00:00
+#PBS -l pvmem=3GB
+#PBS -N MAIN_gyf
+#PBS -e MAIN_gyf.$PBS_JOBID.err
+#PBS -o MAIN_gyf.$PBS_JOBID.out
+#PBS -V
+
+module load HDF5
+
+cd $PBS_O_WORKDIR
+
+./ed_2.1-main -f ED2IN-GYF-MAIN

@@ -1,0 +1,574 @@
+<html>
+<head>
+<title>Listing of landuse_init.f90</title>
+</head>
+<body bgcolor="FFFFFF">
+<h4>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;landuse_init.f90&#160;&#160;&#160;&#160;&#160;&#160;&#160;<font size=-1>coverage:&#160 50.00&#160;%func&#160;&#160;&#160;&#160;  8.12&#160;%block</font></h4>
+<hr size=1 noshade>
+<pre>
+     1) <a name="l1" style="background-color: #ffffff">module landuse_init_module</a>
+     2) <a name="l2" style="background-color: #ffffff">  contains</a>
+     3) <a name="l3" style="background-color: #ffffff"></a>
+     4) <a name="l4" style="background-color: #ffffff">!==========================================================================================!</a>
+     5) <a name="l5" style="background-color: #ffffff">!==========================================================================================!</a>
+     6) <a name="l6" style="background-color: #ffffff">!     This file will read the landuse files and assign the anthropogenic disturbance       !</a>
+     7) <a name="l7" style="background-color: #ffffff">! matrices.                                                                                !</a>
+     8) <a name="l8" style="background-color: #ffffff">!------------------------------------------------------------------------------------------!</a>
+     9) <a name="l9" style="background-color: #ffffff">subroutine landuse_init</a>
+    10) <a name="l10" style="background-color: #ffffff"></a>
+    11) <a name="l11" style="background-color: #ffffff">   use ed_state_vars , only : edtype          &amp; ! structure</a>
+    12) <a name="l12" style="background-color: #ffffff">                            , polygontype     &amp; ! structure</a>
+    13) <a name="l13" style="background-color: #ffffff">                            , sitetype        &amp; ! structure</a>
+    14) <a name="l14" style="background-color: #ffffff">                            , edgrid_g        ! ! structure</a>
+    15) <a name="l15" style="background-color: #ffffff">   use consts_coms   , only : erad            &amp; ! intent(in)</a>
+    16) <a name="l16" style="background-color: #ffffff">                            , pio180          ! ! intent(in)</a>
+    17) <a name="l17" style="background-color: #ffffff">   use disturb_coms  , only : lutime          &amp; ! intent(in)</a>
+    18) <a name="l18" style="background-color: #ffffff">                            , max_lu_years    &amp; ! intent(in)</a>
+    19) <a name="l19" style="background-color: #ffffff">                            , num_lu_trans    &amp; ! intent(in)</a>
+    20) <a name="l20" style="background-color: #ffffff">                            , ianth_disturb   &amp; ! intent(in)</a>
+    21) <a name="l21" style="background-color: #ffffff">                            , lu_database     ! ! intent(in)</a>
+    22) <a name="l22" style="background-color: #ffffff">   use ed_misc_coms  , only : iyeara          &amp; ! intent(in)</a>
+    23) <a name="l23" style="background-color: #ffffff">                            , iyearz          ! ! intent(in)</a>
+    24) <a name="l24" style="background-color: #ffffff">   use grid_coms     , only : ngrids          ! ! intent(in)</a>
+    25) <a name="l25" style="background-color: #ffffff">   use ed_max_dims   , only : str_len         &amp; ! intent(in)</a>
+    26) <a name="l26" style="background-color: #ffffff">                            , huge_lu         &amp; ! intent(in)</a>
+    27) <a name="l27" style="background-color: #ffffff">                            , n_pft           &amp; ! intent(in)</a>
+    28) <a name="l28" style="background-color: #ffffff">                            , maxlist         ! ! intent(in)</a>
+    29) <a name="l29" style="background-color: #ffffff"></a>
+    30) <a name="l30" style="background-color: #ffffff">   implicit none</a>
+    31) <a name="l31" style="background-color: #ffffff">   !----- Local variables -----------------------------------------------------------------!</a>
+    32) <a name="l32" style="background-color: #ffffff">   type(edtype)          , pointer            :: cgrid</a>
+    33) <a name="l33" style="background-color: #ffffff">   type(polygontype)     , pointer            :: cpoly</a>
+    34) <a name="l34" style="background-color: #ffffff">   type(sitetype)        , pointer            :: csite</a>
+    35) <a name="l35" style="background-color: #ffffff">   type(lutime)          , pointer            :: clutime</a>
+    36) <a name="l36" style="background-color: #ffffff">   type(lutime)          , pointer            :: onelutime</a>
+    37) <a name="l37" style="background-color: #ffffff">   character(len=str_len), dimension(maxlist) :: full_list</a>
+    38) <a name="l38" style="background-color: #ffffff">   character(len=str_len), dimension(maxlist) :: lu_list</a>
+    39) <a name="l39" style="background-color: #ffffff">   real                  , dimension(maxlist) :: llon_list</a>
+    40) <a name="l40" style="background-color: #ffffff">   real                  , dimension(maxlist) :: llat_list</a>
+    41) <a name="l41" style="background-color: #ffffff">   real                  , dimension(maxlist) :: file_ldist</a>
+    42) <a name="l42" style="background-color: #ffffff">   character(len=6)                           :: hform</a>
+    43) <a name="l43" style="background-color: #ffffff">   character(len=str_len)                     :: lu_name</a>
+    44) <a name="l44" style="background-color: #ffffff">   character(len=str_len)                     :: cdum</a>
+    45) <a name="l45" style="background-color: #ffffff">   integer                                    :: nharvest</a>
+    46) <a name="l46" style="background-color: #ffffff">   integer               , dimension(n_pft)   :: harvest_pft</a>
+    47) <a name="l47" style="background-color: #ffffff">   integer                                    :: nf</a>
+    48) <a name="l48" style="background-color: #ffffff">   integer                                    :: nflist</a>
+    49) <a name="l49" style="background-color: #ffffff">   integer                                    :: nfllu</a>
+    50) <a name="l50" style="background-color: #ffffff">   integer                                    :: ncl</a>
+    51) <a name="l51" style="background-color: #ffffff">   integer                                    :: iyear</a>
+    52) <a name="l52" style="background-color: #ffffff">   integer                                    :: igr</a>
+    53) <a name="l53" style="background-color: #ffffff">   integer                                    :: ipy</a>
+    54) <a name="l54" style="background-color: #ffffff">   integer                                    :: isi</a>
+    55) <a name="l55" style="background-color: #ffffff">   integer                                    :: ipft</a>
+    56) <a name="l56" style="background-color: #ffffff">   integer                                    :: h</a>
+    57) <a name="l57" style="background-color: #ffffff">   integer                                    :: sim_years</a>
+    58) <a name="l58" style="background-color: #ffffff">   integer                                    :: yd_1st</a>
+    59) <a name="l59" style="background-color: #ffffff">   integer                                    :: yd_this</a>
+    60) <a name="l60" style="background-color: #ffffff">   integer                                    :: yd_last</a>
+    61) <a name="l61" style="background-color: #ffffff">   logical                                    :: inside</a>
+    62) <a name="l62" style="background-color: #ffffff">   real                  , dimension(n_pft)   :: mindbh_1ary</a>
+    63) <a name="l63" style="background-color: #ffffff">   real                  , dimension(n_pft)   :: harvprob_1ary</a>
+    64) <a name="l64" style="background-color: #ffffff">   real                  , dimension(n_pft)   :: mindbh_2ary</a>
+    65) <a name="l65" style="background-color: #ffffff">   real                  , dimension(n_pft)   :: harvprob_2ary</a>
+    66) <a name="l66" style="background-color: #ffffff">   real                                       :: lu_area</a>
+    67) <a name="l67" style="background-color: #ffffff">   real                                       :: lu_area_i</a>
+    68) <a name="l68" style="background-color: #ffffff">   real                                       :: wlon</a>
+    69) <a name="l69" style="background-color: #ffffff">   real                                       :: elon</a>
+    70) <a name="l70" style="background-color: #ffffff">   real                                       :: slat</a>
+    71) <a name="l71" style="background-color: #ffffff">   real                                       :: nlat</a>
+    72) <a name="l72" style="background-color: #ffffff">   !----- Local constants. ----------------------------------------------------------------!</a>
+    73) <a name="l73" style="background-color: #ffffff">   character(len=12)    , parameter           :: fffmt    = '(a,1x,f12.5)'</a>
+    74) <a name="l74" style="background-color: #ffffff">   character(len=13)    , parameter           :: esfmt    = '(a,1x,es12.5)'</a>
+    75) <a name="l75" style="background-color: #ffffff">   integer              , parameter           :: hoff     = 18</a>
+    76) <a name="l76" style="background-color: #ffffff">   real                 , parameter           :: huge_dbh = huge(1.)</a>
+    77) <a name="l77" style="background-color: #ffffff">   !----- External function. --------------------------------------------------------------!</a>
+    78) <a name="l78" style="background-color: #ffffff">   real                 , external            :: dist_gc</a>
+    79) <a name="l79" style="background-color: #ffffff">   !---------------------------------------------------------------------------------------!</a>
+    80) <a name="l80" style="background-color: #ffffff"></a>
+    81) <a name="l81" style="background-color: #ffffff"></a>
+    82) <a name="l82" style="background-color: #ffffff">   !----- Finding number of simulation years ----------------------------------------------!</a>
+    83) <a name="l83" style="background-color: #ffffff">   sim_years = iyearz-iyeara+1</a>
+    84) <a name="l84" style="background-color: #ffffff"></a>
+    85) <a name="l85" style="background-color: #ffffff">   !----- Crashing the run if the user set up a very long run... --------------------------!</a>
+    86) <a name="l86" style="background-color: #ffffff">   if (ianth_disturb </a><a style="background-color: #ffff99">== 1 .and. sim_years &gt; max_lu_years) then</a>
+    87) <a name="l87" style="background-color: #ffff99">      write (unit=*,fmt='(a,1x,i5)') 'IYEARA       (From namelist)        :',iyeara</a>
+    88) <a name="l88" style="background-color: #ffff99">      write (unit=*,fmt='(a,1x,i5)') 'IYEARZ       (From namelist)        : ',iyearz</a>
+    89) <a name="l89" style="background-color: #ffff99">      write (unit=*,fmt='(a,1x,i5)') 'MAX_LU_YEARS (From disturb_coms.f90): ',max_lu_years</a>
+    90) <a name="l90" style="background-color: #ffff99">      write (unit=*,fmt='(a)') ' Your run is too long.  Try increasing max_lu_years,'</a>
+    91) <a name="l91" style="background-color: #ffff99">      write (unit=*,fmt='(a)') ' so MAX_LU_YEARS &gt;= IYEARZ-IYEARA+1, then recompile'</a>
+    92) <a name="l92" style="background-color: #ffff99">      write (unit=*,fmt='(a)') ' your model.'</a>
+    93) <a name="l93" style="background-color: #ffff99">      call fatal_error ('Simulation is too long for anthropogenic disturbance.'            &amp;</a>
+    94) <a name="l94" style="background-color: #ffff99">                       ,'landuse_init','landuse_init.f90')</a>
+    95) <a name="l95" style="background-color: #ffff99">   end if</a>
+    96) <a name="l96" style="background-color: #ffff99"></a>
+    97) <a name="l97" style="background-color: #ffff99"></a>
+    98) <a name="l98" style="background-color: #ffffff">   gridloop: do igr = 1,ngrids</a>
+    99) <a name="l99" style="background-color: #ffffff"></a>
+   100) <a name="l100" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+   101) <a name="l101" style="background-color: #ffffff">      !     Find the list of disturbance rate files.                                       !</a>
+   102) <a name="l102" style="background-color: #ffffff">      !------------------------------------------------------------------------------------!</a>
+   103) <a name="l103" style="background-color: #ffffff">      if (ianth_disturb == 1) then</a>
+   104) <a name="l104" style="background-color: #ffffff">         call </a><a style="background-color: #ffff99">ed_filelist(full_list,lu_database(igr),nflist)</a>
+   105) <a name="l105" style="background-color: #ffff99">         call ed1_fileinfo('.lu',nflist,full_list,nfllu,lu_list,llon_list,llat_list)</a>
+   106) <a name="l106" style="background-color: #ffff99">      end if</a>
+   107) <a name="l107" style="background-color: #ffff99">      !------------------------------------------------------------------------------------!</a>
+   108) <a name="l108" style="background-color: #ffff99"></a>
+   109) <a name="l109" style="background-color: #ffffff">      cgrid=&gt;edgrid_g(igr)</a>
+   110) <a name="l110" style="background-color: #ffffff"></a>
+   111) <a name="l111" style="background-color: #ffffff">      polyloop: do ipy = 1,</a><a style="background-color: #fafad2">cgrid%npolygons</a>
+   112) <a name="l112" style="background-color: #ffffff">         cpoly =&gt; cgrid%polygon(ipy)</a>
+   113) <a name="l113" style="background-color: #ffffff"></a>
+   114) <a name="l114" style="background-color: #ffffff">         select case (ianth_disturb)</a>
+   115) <a name="l115" style="background-color: #ffffff">         case (1)</a>
+   116) <a name="l116" style="background-color: #ffffff"></a>
+   117) <a name="l117" style="background-color: #ffffff">            !------------------------------------------------------------------------------!</a>
+   118) <a name="l118" style="background-color: #ffffff">            !     Comput the distance between the current polygon and all the files.       !</a>
+   119) <a name="l119" style="background-color: #ffffff">            !------------------------------------------------------------------------------!</a>
+   120) <a name="l120" style="background-color: #ffff99">            do nf=1,nfllu</a>
+   121) <a name="l121" style="background-color: #ffff99">               file_ldist(nf) = dist_gc(cgrid%lon(ipy),llon_list(nf)                       &amp;</a>
+   122) <a name="l122" style="background-color: #ffff99">                                       ,cgrid%lat(ipy),llat_list(nf) )</a>
+   123) <a name="l123" style="background-color: #ffff99">            end do</a>
+   124) <a name="l124" style="background-color: #ffff99"></a>
+   125) <a name="l125" style="background-color: #ffff99">            !------------------------------------------------------------------------------!</a>
+   126) <a name="l126" style="background-color: #ffff99">            !    Pick the closest file.  This is not a guarantee that it will be used      !</a>
+   127) <a name="l127" style="background-color: #ffff99">            ! because the closest polygon area must contain the point associated to the    !</a>
+   128) <a name="l128" style="background-color: #ffff99">            ! current polygon.                                                             !</a>
+   129) <a name="l129" style="background-color: #ffff99">            !------------------------------------------------------------------------------!</a>
+   130) <a name="l130" style="background-color: #ffff99">            ncl     = minloc(file_ldist(1:nfllu),dim=1)</a>
+   131) <a name="l131" style="background-color: #ffff99">            lu_name = lu_list(ncl)</a>
+   132) <a name="l132" style="background-color: #ffff99">            write (unit=*,fmt='(2a)') 'Using land use file: ',trim(lu_name)</a>
+   133) <a name="l133" style="background-color: #ffff99"></a>
+   134) <a name="l134" style="background-color: #ffff99">            !------------------------------------------------------------------------------!</a>
+   135) <a name="l135" style="background-color: #ffff99">            !    Open the patch file and read in all patches.                              !</a>
+   136) <a name="l136" style="background-color: #ffff99">            !------------------------------------------------------------------------------!</a>
+   137) <a name="l137" style="background-color: #ffff99">            open(unit=12,file=trim(lu_name),form='formatted',status='old',action='read')</a>
+   138) <a name="l138" style="background-color: #ffff99"></a>
+   139) <a name="l139" style="background-color: #ffff99">            !------------------------------------------------------------------------------!</a>
+   140) <a name="l140" style="background-color: #ffff99">            !     Initialise the temporary arrays with data that will not cause any        !</a>
+   141) <a name="l141" style="background-color: #ffff99">            ! harvesting.  The actual variables will be read in the following block.       !</a>
+   142) <a name="l142" style="background-color: #ffff99">            !------------------------------------------------------------------------------!</a>
+   143) <a name="l143" style="background-color: #ffff99">            harvest_pft(1:n_pft)   = -1</a>
+   144) <a name="l144" style="background-color: #ffff99">            mindbh_1ary(1:n_pft)   = huge_dbh</a>
+   145) <a name="l145" style="background-color: #ffff99">            harvprob_1ary(1:n_pft) = 0.</a>
+   146) <a name="l146" style="background-color: #ffff99">            mindbh_2ary(1:n_pft)   = huge_dbh</a>
+   147) <a name="l147" style="background-color: #ffff99">            harvprob_2ary(1:n_pft) = 0.</a>
+   148) <a name="l148" style="background-color: #ffff99"></a>
+   149) <a name="l149" style="background-color: #ffff99">            !----- Define the format for the header. --------------------------------------!</a>
+   150) <a name="l150" style="background-color: #ffff99">            write(hform,fmt='(a,i3.3,a)') '(a',str_len,')'</a>
+   151) <a name="l151" style="background-color: #ffff99"></a>
+   152) <a name="l152" style="background-color: #ffff99">            !----- Read the header. -------------------------------------------------------!</a>
+   153) <a name="l153" style="background-color: #ffff99">            read (unit=12,fmt=hform) cdum</a>
+   154) <a name="l154" style="background-color: #ffff99">            cdum = cdum(hoff:)</a>
+   155) <a name="l155" style="background-color: #ffff99">            read (cdum, fmt=*) wlon</a>
+   156) <a name="l156" style="background-color: #ffff99"></a>
+   157) <a name="l157" style="background-color: #ffff99">            read (unit=12,fmt=hform) cdum</a>
+   158) <a name="l158" style="background-color: #ffff99">            cdum = cdum(hoff:)</a>
+   159) <a name="l159" style="background-color: #ffff99">            read (cdum, fmt=*) elon</a>
+   160) <a name="l160" style="background-color: #ffff99"></a>
+   161) <a name="l161" style="background-color: #ffff99">            read (unit=12,fmt=hform) cdum</a>
+   162) <a name="l162" style="background-color: #ffff99">            cdum = cdum(hoff:)</a>
+   163) <a name="l163" style="background-color: #ffff99">            read (cdum, fmt=*) slat</a>
+   164) <a name="l164" style="background-color: #ffff99"></a>
+   165) <a name="l165" style="background-color: #ffff99">            read (unit=12,fmt=hform) cdum</a>
+   166) <a name="l166" style="background-color: #ffff99">            cdum = cdum(hoff:)</a>
+   167) <a name="l167" style="background-color: #ffff99">            read (cdum, fmt=*) nlat</a>
+   168) <a name="l168" style="background-color: #ffff99"></a>
+   169) <a name="l169" style="background-color: #ffff99">            read (unit=12,fmt=hform) cdum</a>
+   170) <a name="l170" style="background-color: #ffff99">            cdum = cdum(hoff:)</a>
+   171) <a name="l171" style="background-color: #ffff99">            read (cdum, fmt=*) lu_area</a>
+   172) <a name="l172" style="background-color: #ffff99"></a>
+   173) <a name="l173" style="background-color: #ffff99">            read (unit=12,fmt=hform) cdum</a>
+   174) <a name="l174" style="background-color: #ffff99">            cdum = cdum(hoff:)</a>
+   175) <a name="l175" style="background-color: #ffff99">            read (cdum, fmt=*) yd_1st</a>
+   176) <a name="l176" style="background-color: #ffff99"></a>
+   177) <a name="l177" style="background-color: #ffff99">            read (unit=12,fmt=hform) cdum</a>
+   178) <a name="l178" style="background-color: #ffff99">            cdum = cdum(hoff:)</a>
+   179) <a name="l179" style="background-color: #ffff99">            read (cdum, fmt=*) yd_last</a>
+   180) <a name="l180" style="background-color: #ffff99"></a>
+   181) <a name="l181" style="background-color: #ffff99">            read (unit=12,fmt=hform) cdum</a>
+   182) <a name="l182" style="background-color: #ffff99">            cdum = cdum(hoff:)</a>
+   183) <a name="l183" style="background-color: #ffff99">            read (cdum, fmt=*) nharvest</a>
+   184) <a name="l184" style="background-color: #ffff99"></a>
+   185) <a name="l185" style="background-color: #ffff99">            if (nharvest &gt; 0 ) then</a>
+   186) <a name="l186" style="background-color: #ffff99">               !---------------------------------------------------------------------------!</a>
+   187) <a name="l187" style="background-color: #ffff99">               !     If nharvest is not 0, then the harvesting is not PFT-blind, read the  !</a>
+   188) <a name="l188" style="background-color: #ffff99">               ! PFT information in the file.                                              !</a>
+   189) <a name="l189" style="background-color: #ffff99">               !---------------------------------------------------------------------------!</a>
+   190) <a name="l190" style="background-color: #ffff99">               read (unit=12,fmt=hform)  cdum</a>
+   191) <a name="l191" style="background-color: #ffff99">               cdum = cdum(hoff:)</a>
+   192) <a name="l192" style="background-color: #ffff99">               read (cdum, fmt=*) (harvest_pft(h)  ,h=1,nharvest)</a>
+   193) <a name="l193" style="background-color: #ffff99"></a>
+   194) <a name="l194" style="background-color: #ffff99">               read (unit=12,fmt=hform)  cdum</a>
+   195) <a name="l195" style="background-color: #ffff99">               cdum = cdum(hoff:)</a>
+   196) <a name="l196" style="background-color: #ffff99">               read (cdum, fmt=*) (mindbh_1ary(h)  ,h=1,nharvest)</a>
+   197) <a name="l197" style="background-color: #ffff99"></a>
+   198) <a name="l198" style="background-color: #ffff99">               read (unit=12,fmt=hform)  cdum</a>
+   199) <a name="l199" style="background-color: #ffff99">               cdum = cdum(hoff:)</a>
+   200) <a name="l200" style="background-color: #ffff99">               read (cdum, fmt=*) (harvprob_1ary(h)  ,h=1,nharvest)</a>
+   201) <a name="l201" style="background-color: #ffff99"></a>
+   202) <a name="l202" style="background-color: #ffff99">               read (unit=12,fmt=hform)  cdum</a>
+   203) <a name="l203" style="background-color: #ffff99">               cdum = cdum(hoff:)</a>
+   204) <a name="l204" style="background-color: #ffff99">               read (cdum, fmt=*) (mindbh_2ary(h)  ,h=1,nharvest)</a>
+   205) <a name="l205" style="background-color: #ffff99"></a>
+   206) <a name="l206" style="background-color: #ffff99">               read (unit=12,fmt=hform)  cdum</a>
+   207) <a name="l207" style="background-color: #ffff99">               cdum = cdum(hoff:)</a>
+   208) <a name="l208" style="background-color: #ffff99">               read (cdum, fmt=*) (harvprob_2ary(h)  ,h=1,nharvest)</a>
+   209) <a name="l209" style="background-color: #ffff99">            else</a>
+   210) <a name="l210" style="background-color: #ffff99">               !---------------------------------------------------------------------------!</a>
+   211) <a name="l211" style="background-color: #ffff99">               !     No specific PFT information was given, this is likely to be a case in !</a>
+   212) <a name="l212" style="background-color: #ffff99">               ! which the logging is based on absolute target biomass (PFT- and           !</a>
+   213) <a name="l213" style="background-color: #ffff99">               ! DBH-blind).                                                               !</a>
+   214) <a name="l214" style="background-color: #ffff99">               !---------------------------------------------------------------------------!</a>
+   215) <a name="l215" style="background-color: #ffff99">               h = 0</a>
+   216) <a name="l216" style="background-color: #ffff99">               nopftloop: do ipft=1,n_pft</a>
+   217) <a name="l217" style="background-color: #ffff99">                  h=h+1</a>
+   218) <a name="l218" style="background-color: #ffff99">                  harvest_pft(h)       = ipft</a>
+   219) <a name="l219" style="background-color: #ffff99">                  mindbh_1ary(1:n_pft) = 0.</a>
+   220) <a name="l220" style="background-color: #ffff99">                  mindbh_2ary(1:n_pft) = 0.</a>
+   221) <a name="l221" style="background-color: #ffff99">               end do nopftloop</a>
+   222) <a name="l222" style="background-color: #ffff99">            end if</a>
+   223) <a name="l223" style="background-color: #ffff99">            read (unit=12,fmt=*) </a>
+   224) <a name="l224" style="background-color: #ffff99"></a>
+   225) <a name="l225" style="background-color: #ffff99">            !----- Use file_lat to compute the physical area sampled by the file. ---------!</a>
+   226) <a name="l226" style="background-color: #ffff99">            if (lu_area == 0.) then</a>
+   227) <a name="l227" style="background-color: #ffff99">               write (unit=*,fmt='(a)')           '---------------------------------------'</a>
+   228) <a name="l228" style="background-color: #ffff99">               write (unit=*,fmt='(2(a,1x))')     ' - File:    ',trim(lu_name)</a>
+   229) <a name="l229" style="background-color: #ffff99">               write (unit=*,fmt='(a,1x,es12.5)') ' - Wlon:    ',wlon</a>
+   230) <a name="l230" style="background-color: #ffff99">               write (unit=*,fmt='(a,1x,es12.5)') ' - Elon:    ',elon</a>
+   231) <a name="l231" style="background-color: #ffff99">               write (unit=*,fmt='(a,1x,es12.5)') ' - Slat:    ',slat</a>
+   232) <a name="l232" style="background-color: #ffff99">               write (unit=*,fmt='(a,1x,es12.5)') ' - Nlat:    ',nlat</a>
+   233) <a name="l233" style="background-color: #ffff99">               write (unit=*,fmt='(a,1x,es12.5)') ' - Lu_area: ',lu_area</a>
+   234) <a name="l234" style="background-color: #ffff99">               write (unit=*,fmt='(a,1x,i6)')     ' - Yd_1st:  ',yd_1st</a>
+   235) <a name="l235" style="background-color: #ffff99">               write (unit=*,fmt='(a,1x,i6)')     ' - Yd_last: ',yd_last</a>
+   236) <a name="l236" style="background-color: #ffff99">               write (unit=*,fmt='(a,1x,i6)')     ' - Nharvest:',nharvest</a>
+   237) <a name="l237" style="background-color: #ffff99">               write (unit=*,fmt='(a)')           '---------------------------------------'</a>
+   238) <a name="l238" style="background-color: #ffff99">               call fatal_error('Land use area is zero, it doesn''t make any sense!'       &amp;</a>
+   239) <a name="l239" style="background-color: #ffff99">                               ,'landuse_init','landuse_init.f90')</a>
+   240) <a name="l240" style="background-color: #ffff99">            else</a>
+   241) <a name="l241" style="background-color: #ffff99">               lu_area_i = 1. / lu_area</a>
+   242) <a name="l242" style="background-color: #ffff99">            end if</a>
+   243) <a name="l243" style="background-color: #ffff99"></a>
+   244) <a name="l244" style="background-color: #ffff99">            !----- Determine whether this block contains the current polygon. -------------!</a>
+   245) <a name="l245" style="background-color: #ffff99">            inside = cgrid%lon(ipy) &gt;= wlon .and. cgrid%lon(ipy) &lt;= elon .and.             &amp;</a>
+   246) <a name="l246" style="background-color: #ffff99">                     cgrid%lat(ipy) &gt;= slat .and. cgrid%lat(ipy) &lt;= nlat</a>
+   247) <a name="l247" style="background-color: #ffff99"></a>
+   248) <a name="l248" style="background-color: #ffff99"></a>
+   249) <a name="l249" style="background-color: #ffff99">            !------------------------------------------------------------------------------!</a>
+   250) <a name="l250" style="background-color: #ffff99">            !     Here we will only use the land information if the polygon centre is      !</a>
+   251) <a name="l251" style="background-color: #ffff99">            ! inside the block of land use disturbance we are about to read.               !</a>
+   252) <a name="l252" style="background-color: #ffff99">            !------------------------------------------------------------------------------!</a>
+   253) <a name="l253" style="background-color: #ffff99">            if (inside) then</a>
+   254) <a name="l254" style="background-color: #ffff99">               !----- File exists, allocate the maximum number of years. ------------------!</a>
+   255) <a name="l255" style="background-color: #ffff99">               allocate(cpoly%clutimes(max_lu_years,cpoly%nsites))</a>
+   256) <a name="l256" style="background-color: #ffff99"></a>
+   257) <a name="l257" style="background-color: #ffff99"></a>
+   258) <a name="l258" style="background-color: #ffff99">               !----- Copy the file information to the first site. ------------------------!</a>
+   259) <a name="l259" style="background-color: #ffff99">               isi = 1</a>
+   260) <a name="l260" style="background-color: #ffff99">               csite =&gt; cpoly%site(isi)</a>
+   261) <a name="l261" style="background-color: #ffff99"></a>
+   262) <a name="l262" style="background-color: #ffff99"></a>
+   263) <a name="l263" style="background-color: #ffff99">               !----- Determine the number of disturbance years. --------------------------!</a>
+   264) <a name="l264" style="background-color: #ffff99">               cpoly%num_landuse_years(isi) = max(yd_last,iyearz)-min(yd_1st,iyeara) + 1</a>
+   265) <a name="l265" style="background-color: #ffff99"></a>
+   266) <a name="l266" style="background-color: #ffff99"></a>
+   267) <a name="l267" style="background-color: #ffff99">               !----- Initialise the PFT-dependent arrays. --------------------------------!</a>
+   268) <a name="l268" style="background-color: #ffff99">               cpoly%mindbh_primary    (1:n_pft,isi) = huge_dbh</a>
+   269) <a name="l269" style="background-color: #ffff99">               cpoly%probharv_primary  (1:n_pft,isi) = 0.</a>
+   270) <a name="l270" style="background-color: #ffff99">               cpoly%mindbh_secondary  (1:n_pft,isi) = huge_dbh</a>
+   271) <a name="l271" style="background-color: #ffff99">               cpoly%probharv_secondary(1:n_pft,isi) = 0.</a>
+   272) <a name="l272" style="background-color: #ffff99"></a>
+   273) <a name="l273" style="background-color: #ffff99">               !----- Fill the arrays with the appropriate PFT. ---------------------------!</a>
+   274) <a name="l274" style="background-color: #ffff99">               do ipft=1,n_pft</a>
+   275) <a name="l275" style="background-color: #ffff99">                  harvloop: do h=1,nharvest</a>
+   276) <a name="l276" style="background-color: #ffff99">                     if (harvest_pft(h) == ipft) then</a>
+   277) <a name="l277" style="background-color: #ffff99">                        cpoly%mindbh_primary    (ipft,isi) = mindbh_1ary  (h)</a>
+   278) <a name="l278" style="background-color: #ffff99">                        cpoly%probharv_primary  (ipft,isi) = harvprob_1ary(h)</a>
+   279) <a name="l279" style="background-color: #ffff99">                        cpoly%mindbh_secondary  (ipft,isi) = mindbh_2ary  (h)</a>
+   280) <a name="l280" style="background-color: #ffff99">                        cpoly%probharv_secondary(ipft,isi) = harvprob_2ary(h)</a>
+   281) <a name="l281" style="background-color: #ffff99">                        exit harvloop</a>
+   282) <a name="l282" style="background-color: #ffff99">                     end if</a>
+   283) <a name="l283" style="background-color: #ffff99">                  end do harvloop</a>
+   284) <a name="l284" style="background-color: #ffff99">               end do</a>
+   285) <a name="l285" style="background-color: #ffff99"></a>
+   286) <a name="l286" style="background-color: #ffff99"></a>
+   287) <a name="l287" style="background-color: #ffff99">               !----- Padding disturbances with zero before first available lu year. ------!</a>
+   288) <a name="l288" style="background-color: #ffff99">               iyear = 0</a>
+   289) <a name="l289" style="background-color: #ffff99">               do yd_this = iyeara,(yd_1st-1)</a>
+   290) <a name="l290" style="background-color: #ffff99">                  iyear = iyear + 1</a>
+   291) <a name="l291" style="background-color: #ffff99">                  clutime =&gt; cpoly%clutimes(iyear,isi)</a>
+   292) <a name="l292" style="background-color: #ffff99"></a>
+   293) <a name="l293" style="background-color: #ffff99">                  clutime%landuse_year            = yd_this</a>
+   294) <a name="l294" style="background-color: #ffff99">                  clutime%landuse(1:num_lu_trans) = 0.0</a>
+   295) <a name="l295" style="background-color: #ffff99">               end do</a>
+   296) <a name="l296" style="background-color: #ffff99"></a>
+   297) <a name="l297" style="background-color: #ffff99">               !---- Reading the years that have data -------------------------------------!</a>
+   298) <a name="l298" style="background-color: #ffff99">               do yd_this = yd_1st,yd_last</a>
+   299) <a name="l299" style="background-color: #ffff99">                  iyear = iyear + 1</a>
+   300) <a name="l300" style="background-color: #ffff99">                  clutime =&gt; cpoly%clutimes(iyear,isi)</a>
+   301) <a name="l301" style="background-color: #ffff99"></a>
+   302) <a name="l302" style="background-color: #ffff99">                  read(unit=12,fmt=*) clutime%landuse_year, clutime%landuse(1:num_lu_trans)</a>
+   303) <a name="l303" style="background-color: #ffff99">                  </a>
+   304) <a name="l304" style="background-color: #ffff99">                  !------------------------------------------------------------------------!</a>
+   305) <a name="l305" style="background-color: #ffff99">                  !    Here we normalise by the area, except when landuse(12) and/or       !</a>
+   306) <a name="l306" style="background-color: #ffff99">                  ! landuse(14) are negative (a special flag to use the selective logging. !</a>
+   307) <a name="l307" style="background-color: #ffff99">                  !------------------------------------------------------------------------!</a>
+   308) <a name="l308" style="background-color: #ffff99">                  if ( clutime%landuse(12) &gt; 0. ) then</a>
+   309) <a name="l309" style="background-color: #ffff99">                     clutime%landuse(12) = lu_area_i * clutime%landuse(12)</a>
+   310) <a name="l310" style="background-color: #ffff99">                  end if</a>
+   311) <a name="l311" style="background-color: #ffff99">                  if ( clutime%landuse(14) &gt; 0. ) then</a>
+   312) <a name="l312" style="background-color: #ffff99">                     clutime%landuse(14) = lu_area_i * clutime%landuse(14) </a>
+   313) <a name="l313" style="background-color: #ffff99">                  end if</a>
+   314) <a name="l314" style="background-color: #ffff99">                  clutime%landuse(16) = lu_area_i * clutime%landuse(16)</a>
+   315) <a name="l315" style="background-color: #ffff99">                  clutime%landuse(18) = lu_area_i * clutime%landuse(18)</a>
+   316) <a name="l316" style="background-color: #ffff99">               end do</a>
+   317) <a name="l317" style="background-color: #ffff99"></a>
+   318) <a name="l318" style="background-color: #ffff99">               !----- Padding disturbances with zero after last available lu year. --------!</a>
+   319) <a name="l319" style="background-color: #ffff99">               do yd_this = (yd_last+1),iyearz</a>
+   320) <a name="l320" style="background-color: #ffff99">                  iyear = iyear + 1</a>
+   321) <a name="l321" style="background-color: #ffff99">                  clutime =&gt; cpoly%clutimes(iyear,isi)</a>
+   322) <a name="l322" style="background-color: #ffff99">                  clutime%landuse_year            = yd_this</a>
+   323) <a name="l323" style="background-color: #ffff99">                  clutime%landuse(1:num_lu_trans) = 0.0</a>
+   324) <a name="l324" style="background-color: #ffff99">               end do</a>
+   325) <a name="l325" style="background-color: #ffff99"></a>
+   326) <a name="l326" style="background-color: #ffff99"></a>
+   327) <a name="l327" style="background-color: #ffff99">               !---------------------------------------------------------------------------!</a>
+   328) <a name="l328" style="background-color: #ffff99">               !      Copy the information from the first site to the other, if they       !</a>
+   329) <a name="l329" style="background-color: #ffff99">               ! exist.                                                                    !</a>
+   330) <a name="l330" style="background-color: #ffff99">               !---------------------------------------------------------------------------!</a>
+   331) <a name="l331" style="background-color: #ffff99">               siteloop: do isi = 2,cpoly%nsites</a>
+   332) <a name="l332" style="background-color: #ffff99">                  csite =&gt; cpoly%site(isi)</a>
+   333) <a name="l333" style="background-color: #ffff99"></a>
+   334) <a name="l334" style="background-color: #ffff99">                  !----- Determine the number of disturbance years. -----------------------!</a>
+   335) <a name="l335" style="background-color: #ffff99">                  cpoly%num_landuse_years(isi) = cpoly%num_landuse_years(1)</a>
+   336) <a name="l336" style="background-color: #ffff99"></a>
+   337) <a name="l337" style="background-color: #ffff99"></a>
+   338) <a name="l338" style="background-color: #ffff99">                  !----- Disturbances. ----------------------------------------------------!</a>
+   339) <a name="l339" style="background-color: #ffff99">                  do iyear = 1,cpoly%num_landuse_years(isi)</a>
+   340) <a name="l340" style="background-color: #ffff99">                     clutime   =&gt; cpoly%clutimes(iyear,isi)</a>
+   341) <a name="l341" style="background-color: #ffff99">                     onelutime =&gt; cpoly%clutimes(iyear,1)</a>
+   342) <a name="l342" style="background-color: #ffff99">                     clutime%landuse_year            = onelutime%landuse_year </a>
+   343) <a name="l343" style="background-color: #ffff99">                     clutime%landuse(1:num_lu_trans) = onelutime%landuse(1:num_lu_trans)</a>
+   344) <a name="l344" style="background-color: #ffff99">                  end do</a>
+   345) <a name="l345" style="background-color: #ffff99"></a>
+   346) <a name="l346" style="background-color: #ffff99">               end do siteloop</a>
+   347) <a name="l347" style="background-color: #ffff99">            else</a>
+   348) <a name="l348" style="background-color: #ffff99">               !---------------------------------------------------------------------------!</a>
+   349) <a name="l349" style="background-color: #ffff99">               !      No GLU data for this site.  Probably water.                          !</a>
+   350) <a name="l350" style="background-color: #ffff99">               !---------------------------------------------------------------------------!</a>
+   351) <a name="l351" style="background-color: #ffff99">               write (unit=*,fmt='(a)') '-------------------------------------------------'</a>
+   352) <a name="l352" style="background-color: #ffff99">               write (unit=*,fmt='(a)') ' The closest land use point is too far away...'</a>
+   353) <a name="l353" style="background-color: #ffff99">               write (unit=*,fmt='(a)') ' - File:                        ',trim(lu_name)</a>
+   354) <a name="l354" style="background-color: #ffff99">               write (unit=*,fmt=fffmt) ' - Polygon longitude:           ',cgrid%lon(ipy)</a>
+   355) <a name="l355" style="background-color: #ffff99">               write (unit=*,fmt=fffmt) ' - Polygon latitude:            ',cgrid%lat(ipy)</a>
+   356) <a name="l356" style="background-color: #ffff99">               write (unit=*,fmt=fffmt) ' - Closest LU central longitude:',llon_list(ncl)</a>
+   357) <a name="l357" style="background-color: #ffff99">               write (unit=*,fmt=fffmt) ' - Closest LU central latitude: ',llat_list(ncl)</a>
+   358) <a name="l358" style="background-color: #ffff99">               write (unit=*,fmt=fffmt) ' - Closest LU western edge:     ',wlon</a>
+   359) <a name="l359" style="background-color: #ffff99">               write (unit=*,fmt=fffmt) ' - Closest LU eastern edge:     ',elon</a>
+   360) <a name="l360" style="background-color: #ffff99">               write (unit=*,fmt=fffmt) ' - Closest LU southern edge:    ',slat</a>
+   361) <a name="l361" style="background-color: #ffff99">               write (unit=*,fmt=fffmt) ' - Closest LU northern edge:    ',nlat</a>
+   362) <a name="l362" style="background-color: #ffff99">               write (unit=*,fmt=esfmt) ' - Distance:                    ',file_ldist(ncl)</a>
+   363) <a name="l363" style="background-color: #ffff99">               write (unit=*,fmt=*)     ' '</a>
+   364) <a name="l364" style="background-color: #ffff99">               write (unit=*,fmt='(a)') ' We will assign no land use disturbance rate.'</a>
+   365) <a name="l365" style="background-color: #ffff99">               write (unit=*,fmt='(a)') '-------------------------------------------------'</a>
+   366) <a name="l366" style="background-color: #ffff99"></a>
+   367) <a name="l367" style="background-color: #ffff99">               !----- Allocate just 1 landuse year. ---------------------------------------!</a>
+   368) <a name="l368" style="background-color: #ffff99">               allocate(cpoly%clutimes(1,cpoly%nsites))</a>
+   369) <a name="l369" style="background-color: #ffff99"></a>
+   370) <a name="l370" style="background-color: #ffff99">               !----- Set the parameters in a way that no logging/ploughing will happen. --!</a>
+   371) <a name="l371" style="background-color: #ffff99">               do isi = 1,cpoly%nsites</a>
+   372) <a name="l372" style="background-color: #ffff99">                  cpoly%num_landuse_years(isi)                  = 1</a>
+   373) <a name="l373" style="background-color: #ffff99">                  cpoly%mindbh_primary    (1:n_pft,isi)         = huge_dbh</a>
+   374) <a name="l374" style="background-color: #ffff99">                  cpoly%probharv_primary  (1:n_pft,isi)         = 0.</a>
+   375) <a name="l375" style="background-color: #ffff99">                  cpoly%mindbh_secondary  (1:n_pft,isi)         = huge_dbh</a>
+   376) <a name="l376" style="background-color: #ffff99">                  cpoly%probharv_secondary(1:n_pft,isi)         = 0.</a>
+   377) <a name="l377" style="background-color: #ffff99">                  cpoly%clutimes(1,isi)%landuse_year            = iyeara</a>
+   378) <a name="l378" style="background-color: #ffff99">                  cpoly%clutimes(1,isi)%landuse(1:num_lu_trans) = 0.0</a>
+   379) <a name="l379" style="background-color: #ffff99">               end do</a>
+   380) <a name="l380" style="background-color: #ffff99">            end if</a>
+   381) <a name="l381" style="background-color: #ffff99">            !------------------------------------------------------------------------------!</a>
+   382) <a name="l382" style="background-color: #ffff99"></a>
+   383) <a name="l383" style="background-color: #ffff99"></a>
+   384) <a name="l384" style="background-color: #ffff99">            !----- Close the land use file, outside the if statement. ---------------------!</a>
+   385) <a name="l385" style="background-color: #ffff99">            close(unit=12,status='keep')</a>
+   386) <a name="l386" style="background-color: #ffff99">            !------------------------------------------------------------------------------!</a>
+   387) <a name="l387" style="background-color: #ffff99"></a>
+   388) <a name="l388" style="background-color: #ffff99">            !----- Initialise plantation patches if plantation information is available. --!</a>
+   389) <a name="l389" style="background-color: #ffff99">            cpoly%plantation(:) = 0</a>
+   390) <a name="l390" style="background-color: #ffff99">            call read_plantation_fractions(cpoly,cgrid%lon(ipy),cgrid%lat(ipy),igr)</a>
+   391) <a name="l391" style="background-color: #ffff99">         case (0)</a>
+   392) <a name="l392" style="background-color: #ffff99">            !------------------------------------------------------------------------------!</a>
+   393) <a name="l393" style="background-color: #ffff99">            !      Anthropogenic disturbance is not used this time, allocate only a single !</a>
+   394) <a name="l394" style="background-color: #ffff99">            ! landuse year.                                                                !</a>
+   395) <a name="l395" style="background-color: #ffff99">            !------------------------------------------------------------------------------!</a>
+   396) <a name="l396" style="background-color: #fafad2">            allocate(</a><a style="background-color: #ffffff">cpoly%clutimes(1,cpoly%nsites))</a>
+   397) <a name="l397" style="background-color: #ffffff">            !------------------------------------------------------------------------------!</a>
+   398) <a name="l398" style="background-color: #ffffff"></a>
+   399) <a name="l399" style="background-color: #ffffff">            !----- Set the parameters in a way that no logging/ploughing will happen. -----!</a>
+   400) <a name="l400" style="background-color: #ffffff">            do isi = 1,cpoly%nsites</a>
+   401) <a name="l401" style="background-color: #ffffff">               cpoly%num_landuse_years(isi)                  = 1</a>
+   402) <a name="l402" style="background-color: #ffffff">               cpoly%mindbh_primary    (1:n_pft,isi)         = huge_dbh</a>
+   403) <a name="l403" style="background-color: #ffffff">               cpoly%probharv_primary  (1:n_pft,isi)         = 0.</a>
+   404) <a name="l404" style="background-color: #ffffff">               cpoly%mindbh_secondary  (1:n_pft,isi)         = huge_dbh</a>
+   405) <a name="l405" style="background-color: #ffffff">               cpoly%probharv_secondary(1:n_pft,isi)         = 0.</a>
+   406) <a name="l406" style="background-color: #ffffff">               cpoly%clutimes(1,isi)%landuse_year            = iyeara</a>
+   407) <a name="l407" style="background-color: #ffffff">               cpoly%clutimes(1,isi)%landuse(1:num_lu_trans) = 0.0</a>
+   408) <a name="l408" style="background-color: #ffffff">            end do</a>
+   409) <a name="l409" style="background-color: #ffffff">            !------------------------------------------------------------------------------!</a>
+   410) <a name="l410" style="background-color: #ffffff"></a>
+   411) <a name="l411" style="background-color: #ffffff"></a>
+   412) <a name="l412" style="background-color: #ffffff">            !----- No plantations. --------------------------------------------------------!</a>
+   413) <a name="l413" style="background-color: #ffffff">            cpoly%plantation(:) = 0</a>
+   414) <a name="l414" style="background-color: #ffffff">            !------------------------------------------------------------------------------!</a>
+   415) <a name="l415" style="background-color: #ffffff">         end select</a>
+   416) <a name="l416" style="background-color: #ffffff">         </a>
+   417) <a name="l417" style="background-color: #ffffff">      end do polyloop</a>
+   418) <a name="l418" style="background-color: #ffffff">   end do gridloop</a>
+   419) <a name="l419" style="background-color: #ffffff"></a>
+   420) <a name="l420" style="background-color: #ffffff">   return</a>
+   421) <a name="l421" style="background-color: #ffffff">end subroutine landuse_init</a>
+   422) <a name="l422" style="background-color: #ffffff">!==========================================================================================!</a>
+   423) <a name="l423" style="background-color: #ffffff">!==========================================================================================!</a>
+   424) <a name="l424" style="background-color: #ffffff"></a>
+   425) <a name="l425" style="background-color: #ffffff"></a>
+   426) <a name="l426" style="background-color: #ffffff"></a>
+   427) <a name="l427" style="background-color: #ffffff"></a>
+   428) <a name="l428" style="background-color: #ffffff"></a>
+   429) <a name="l429" style="background-color: #ffffff"></a>
+   430) <a name="l430" style="background-color: #ffffff">!==========================================================================================!</a>
+   431) <a name="l431" style="background-color: #ffffff">!==========================================================================================!</a>
+   432) <a name="l432" style="background-color: #ffffff">!     This subroutine reads the plantation fraction.                                       !</a>
+   433) <a name="l433" style="background-color: #ffffff">!------------------------------------------------------------------------------------------!</a>
+   434) <a name="l434" style="background-color: #ffffff">subroutine </a><a style="background-color: #ffcccc">read_plantation_fractions(cpoly,polylon,polylat,igr)</a>
+   435) <a name="l435" style="background-color: #ffcccc">   use ed_state_vars , only : polygontype         ! ! structure</a>
+   436) <a name="l436" style="background-color: #ffcccc">   use ed_max_dims   , only : str_len             ! ! intent(in)</a>
+   437) <a name="l437" style="background-color: #ffcccc">   use disturb_coms  , only : plantation_file     &amp; ! intent(in)</a>
+   438) <a name="l438" style="background-color: #ffcccc">                            , max_plantation_dist &amp; ! intent(in)</a>
+   439) <a name="l439" style="background-color: #ffcccc">                            , min_plantation_frac ! ! intent(in)</a>
+   440) <a name="l440" style="background-color: #ffcccc"></a>
+   441) <a name="l441" style="background-color: #ffcccc">   implicit none</a>
+   442) <a name="l442" style="background-color: #ffcccc">   !----- Arguments -----------------------------------------------------------------------!</a>
+   443) <a name="l443" style="background-color: #ffcccc">   type(polygontype)     , target      :: cpoly</a>
+   444) <a name="l444" style="background-color: #ffcccc">   real                  , intent(in)  :: polylon</a>
+   445) <a name="l445" style="background-color: #ffcccc">   real                  , intent(in)  :: polylat</a>
+   446) <a name="l446" style="background-color: #ffcccc">   integer               , intent(in)  :: igr</a>
+   447) <a name="l447" style="background-color: #ffcccc">   !----- Local variables -----------------------------------------------------------------!</a>
+   448) <a name="l448" style="background-color: #ffcccc">   logical                             :: exans</a>
+   449) <a name="l449" style="background-color: #ffcccc">   integer                             :: ierr</a>
+   450) <a name="l450" style="background-color: #ffcccc">   integer                             :: isi</a>
+   451) <a name="l451" style="background-color: #ffcccc">   real, dimension(:)    , allocatable :: plantlon</a>
+   452) <a name="l452" style="background-color: #ffcccc">   real, dimension(:)    , allocatable :: plantlat</a>
+   453) <a name="l453" style="background-color: #ffcccc">   real, dimension(:)    , allocatable :: plantdist</a>
+   454) <a name="l454" style="background-color: #ffcccc">   real, dimension(:)    , allocatable :: fracplant</a>
+   455) <a name="l455" style="background-color: #ffcccc">   real                                :: rdum</a>
+   456) <a name="l456" style="background-color: #ffcccc">   integer                             :: ndat</a>
+   457) <a name="l457" style="background-color: #ffcccc">   integer                             :: n</a>
+   458) <a name="l458" style="background-color: #ffcccc">   !----- Local constants. ----------------------------------------------------------------!</a>
+   459) <a name="l459" style="background-color: #ffcccc">   character(len=12)    , parameter    :: fffmt='(a,1x,f12.5)'</a>
+   460) <a name="l460" style="background-color: #ffcccc">   character(len=13)    , parameter    :: esfmt='(a,1x,es12.5)'</a>
+   461) <a name="l461" style="background-color: #ffcccc">   !----- External functions. -------------------------------------------------------------!</a>
+   462) <a name="l462" style="background-color: #ffcccc">   real                  , external    :: dist_gc</a>
+   463) <a name="l463" style="background-color: #ffcccc">   !---------------------------------------------------------------------------------------!</a>
+   464) <a name="l464" style="background-color: #ffcccc"></a>
+   465) <a name="l465" style="background-color: #ffcccc"></a>
+   466) <a name="l466" style="background-color: #ffcccc">   !---------------------------------------------------------------------------------------!</a>
+   467) <a name="l467" style="background-color: #ffcccc">   !     If the user left the plantation file empty, it means that they don't want to      !</a>
+   468) <a name="l468" style="background-color: #ffcccc">   ! use plantation files, skip the subroutine and don't print any warnings.               !</a>
+   469) <a name="l469" style="background-color: #ffcccc">   !---------------------------------------------------------------------------------------!</a>
+   470) <a name="l470" style="background-color: #ffcccc">   if (len_trim(plantation_file(igr)) == 0) then</a>
+   471) <a name="l471" style="background-color: #ffcccc">      return</a>
+   472) <a name="l472" style="background-color: #ffcccc">   else</a>
+   473) <a name="l473" style="background-color: #ffcccc">      !----- Check whether plantation file exists. ----------------------------------------!</a>
+   474) <a name="l474" style="background-color: #ffcccc">      inquire(file=trim(plantation_file(igr)),exist=exans)</a>
+   475) <a name="l475" style="background-color: #ffcccc">      if (.not.exans)then</a>
+   476) <a name="l476" style="background-color: #ffcccc">         write (unit=*,fmt='(a)') '-------------------------------------------------------'</a>
+   477) <a name="l477" style="background-color: #ffcccc">         write (unit=*,fmt='(a)') 'File :'//trim(plantation_file(igr))//' not found...'</a>
+   478) <a name="l478" style="background-color: #ffcccc">         write (unit=*,fmt='(a)') 'Assuming that there are no plantations'</a>
+   479) <a name="l479" style="background-color: #ffcccc">         write (unit=*,fmt='(a)') '-------------------------------------------------------'</a>
+   480) <a name="l480" style="background-color: #ffcccc">         return</a>
+   481) <a name="l481" style="background-color: #ffcccc">      end if</a>
+   482) <a name="l482" style="background-color: #ffcccc">   end if</a>
+   483) <a name="l483" style="background-color: #ffcccc">   !---------------------------------------------------------------------------------------!</a>
+   484) <a name="l484" style="background-color: #ffcccc"></a>
+   485) <a name="l485" style="background-color: #ffcccc"></a>
+   486) <a name="l486" style="background-color: #ffcccc"></a>
+   487) <a name="l487" style="background-color: #ffcccc">   !---------------------------------------------------------------------------------------!</a>
+   488) <a name="l488" style="background-color: #ffcccc">   !     If we reach this point, then there is a plantation file. Open it.                 !</a>
+   489) <a name="l489" style="background-color: #ffcccc">   !---------------------------------------------------------------------------------------!</a>
+   490) <a name="l490" style="background-color: #ffcccc">   open (unit=12, file=trim(plantation_file(igr)), form='formatted', status='old')</a>
+   491) <a name="l491" style="background-color: #ffcccc">   !----- The first loop will determine how many points are available. --------------------!</a>
+   492) <a name="l492" style="background-color: #ffcccc">   ndat = 0</a>
+   493) <a name="l493" style="background-color: #ffcccc">   countloop: do</a>
+   494) <a name="l494" style="background-color: #ffcccc">      read (unit=12,fmt=*,iostat=ierr) rdum</a>
+   495) <a name="l495" style="background-color: #ffcccc">      if (ierr /= 0) exit countloop</a>
+   496) <a name="l496" style="background-color: #ffcccc">      </a>
+   497) <a name="l497" style="background-color: #ffcccc">      ndat = ndat + 1</a>
+   498) <a name="l498" style="background-color: #ffcccc">   end do countloop</a>
+   499) <a name="l499" style="background-color: #ffcccc">   rewind(unit=12)</a>
+   500) <a name="l500" style="background-color: #ffcccc"></a>
+   501) <a name="l501" style="background-color: #ffcccc">   !----- Now that we know the number of lines, allocate the temporary vectors. -----------!</a>
+   502) <a name="l502" style="background-color: #ffcccc">   allocate (plantlon(ndat),plantlat(ndat),plantdist(ndat),fracplant(ndat))</a>
+   503) <a name="l503" style="background-color: #ffcccc"></a>
+   504) <a name="l504" style="background-color: #ffcccc">   !----- Now we read the data. -----------------------------------------------------------!</a>
+   505) <a name="l505" style="background-color: #ffcccc">   read_plantation: do n=1,ndat</a>
+   506) <a name="l506" style="background-color: #ffcccc">      read (unit=12,fmt=*) plantlat(n), plantlon(n), fracplant(n)</a>
+   507) <a name="l507" style="background-color: #ffcccc">      plantdist(n) = dist_gc(polylon,plantlon(n),polylat,plantlat(n))</a>
+   508) <a name="l508" style="background-color: #ffcccc">   end do read_plantation</a>
+   509) <a name="l509" style="background-color: #ffcccc">   close(unit=12,status='keep')</a>
+   510) <a name="l510" style="background-color: #ffcccc"></a>
+   511) <a name="l511" style="background-color: #ffcccc">   !----- Determine which point was the closest one. --------------------------------------!</a>
+   512) <a name="l512" style="background-color: #ffcccc">   n = minloc(plantdist,dim=1)</a>
+   513) <a name="l513" style="background-color: #ffcccc"></a>
+   514) <a name="l514" style="background-color: #ffcccc">   !----- Check whether the distance is not too large.  If it is, don't use it. -----------!</a>
+   515) <a name="l515" style="background-color: #ffcccc">   if (plantdist(n) &gt; max_plantation_dist) then</a>
+   516) <a name="l516" style="background-color: #ffcccc">      write (unit=*,fmt='(a)') '----------------------------------------------------------'</a>
+   517) <a name="l517" style="background-color: #ffcccc">      write (unit=*,fmt=*)     ' The closest plantation point is too far away...'</a>
+   518) <a name="l518" style="background-color: #ffcccc">      write (unit=*,fmt=fffmt) ' - Polygon longitude:                       ',polylon</a>
+   519) <a name="l519" style="background-color: #ffcccc">      write (unit=*,fmt=fffmt) ' - Polygon latitude:                        ',polylat</a>
+   520) <a name="l520" style="background-color: #ffcccc">      write (unit=*,fmt=fffmt) ' - Plantation closest longitude:            ',plantlon(n)</a>
+   521) <a name="l521" style="background-color: #ffcccc">      write (unit=*,fmt=fffmt) ' - Plantation closest latitude:             ',plantlat(n)</a>
+   522) <a name="l522" style="background-color: #ffcccc">      write (unit=*,fmt=esfmt) ' - Distance between polygon and plantation: ',plantdist(n)</a>
+   523) <a name="l523" style="background-color: #ffcccc">      write (unit=*,fmt=esfmt) ' - Maximum accepted distance:               '              &amp;</a>
+   524) <a name="l524" style="background-color: #ffcccc">                                  ,max_plantation_dist</a>
+   525) <a name="l525" style="background-color: #ffcccc">      write (unit=*,fmt=*)     ' '</a>
+   526) <a name="l526" style="background-color: #ffcccc">      write (unit=*,fmt='(a)') ' We will assume no plantations in this polygon.'</a>
+   527) <a name="l527" style="background-color: #ffcccc">      write (unit=*,fmt='(a)') '----------------------------------------------------------'</a>
+   528) <a name="l528" style="background-color: #ffcccc"></a>
+   529) <a name="l529" style="background-color: #ffcccc">   elseif (fracplant(n) &gt; min_plantation_frac) then</a>
+   530) <a name="l530" style="background-color: #ffcccc">      !----- Assume that all sites are plantation sites. ----------------------------------!</a>
+   531) <a name="l531" style="background-color: #ffcccc">      do isi = 1,cpoly%nsites</a>
+   532) <a name="l532" style="background-color: #ffcccc">         cpoly%plantation(isi) = 1</a>
+   533) <a name="l533" style="background-color: #ffcccc">      end do</a>
+   534) <a name="l534" style="background-color: #ffcccc">   end if</a>
+   535) <a name="l535" style="background-color: #ffcccc">   !---------------------------------------------------------------------------------------!</a>
+   536) <a name="l536" style="background-color: #ffcccc"></a>
+   537) <a name="l537" style="background-color: #ffcccc">   deallocate(plantlon,plantlat,fracplant,plantdist)</a>
+   538) <a name="l538" style="background-color: #ffcccc"></a>
+   539) <a name="l539" style="background-color: #ffcccc">   return</a>
+   540) <a name="l540" style="background-color: #ffcccc">end subroutine read_plantation_fractions</a>
+   541) <a name="l541" style="background-color: #ffffff">!==========================================================================================!</a>
+   542) <a name="l542" style="background-color: #ffffff">!==========================================================================================!</a>
+   543) <a name="l543" style="background-color: #ffffff"></a>
+   544) <a name="l544" style="background-color: #ffffff">end module landuse_init_module</pre>
+<hr size=1 noshade>
+<table border=0 cellpadding=3 cellspacing=0 width="100%" style="color:black;font-weight:normal;font-family:Verdana,Arial;font-size:xx-small">
+<td width="50%">
+<table border=0 cellpadding=3 cellspacing=0>
+<tr>
+<td>
+<a target="_new" href="http://www.intel.com"><img src="__IntelR.gif" border="0"></a>
+</td>
+<td style="font-size:xx-small">
+<i>generated by </i><BR><a target="_new" href="http://www.intel.com/software/products/compilers">Intel(R) C++/Fortran Compiler code-coverage tool</a>
+</td>
+</tr>
+</table>
+</td>
+<td>
+<table border=0 cellpadding=3 cellspacing=0 width="50%">
+<tr><a>Web-Page Owner: <a href="mailto:nobody">Nobody</a></tr>
+</table>
+</td>
+</table>
+</body>
+</html>

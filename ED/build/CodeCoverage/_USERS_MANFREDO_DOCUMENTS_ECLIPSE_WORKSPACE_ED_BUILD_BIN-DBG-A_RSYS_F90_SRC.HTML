@@ -1,0 +1,136 @@
+<html>
+<head>
+<title>Listing of rsys.F90</title>
+</head>
+<body bgcolor="FFFFFF">
+<h4>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;rsys.F90&#160;&#160;&#160;&#160;&#160;&#160;&#160;<font size=-1>coverage:&#160 100.00&#160;%func&#160;&#160;&#160;&#160; 100.00&#160;%block</font></h4>
+<hr size=1 noshade>
+<pre>
+     1) <a name="l1" style="background-color: #ffffff">!===================================== Change Log =========================================!</a>
+     2) <a name="l2" style="background-color: #ffffff">! 2.0.0                                                                                    !</a>
+     3) <a name="l3" style="background-color: #ffffff">!                                                                                          !</a>
+     4) <a name="l4" style="background-color: #ffffff">!==========================================================================================!</a>
+     5) <a name="l5" style="background-color: #ffffff">!  Copyright (C)  1990, 1995, 1999, 2000, 2003 - All Rights Reserved                       !</a>
+     6) <a name="l6" style="background-color: #ffffff">!  Regional Atmospheric Modeling System - RAMS                                             !</a>
+     7) <a name="l7" style="background-color: #ffffff">!==========================================================================================!</a>
+     8) <a name="l8" style="background-color: #ffffff">!                      SYSTEM DEPENDENT ROUTINES                                           !</a>
+     9) <a name="l9" style="background-color: #ffffff">!                                                                                          !</a>
+    10) <a name="l10" style="background-color: #ffffff">!    This module contains short utility routines that are not of the FORTRAN 77 standard   !</a>
+    11) <a name="l11" style="background-color: #ffffff">! and may differ from system to system.  These include bit manipulation, I/O, JCL calls,   !</a>
+    12) <a name="l12" style="background-color: #ffffff">! and vector functions.                                                                    !</a>
+    13) <a name="l13" style="background-color: #ffffff">!==========================================================================================!</a>
+    14) <a name="l14" style="background-color: #ffffff">!==========================================================================================!</a>
+    15) <a name="l15" style="background-color: #ffffff"></a>
+    16) <a name="l16" style="background-color: #ffffff"></a>
+    17) <a name="l17" style="background-color: #ffffff"></a>
+    18) <a name="l18" style="background-color: #ffffff"></a>
+    19) <a name="l19" style="background-color: #ffffff"></a>
+    20) <a name="l20" style="background-color: #ffffff"></a>
+    21) <a name="l21" style="background-color: #ffffff">!==========================================================================================!</a>
+    22) <a name="l22" style="background-color: #ffffff">!==========================================================================================!</a>
+    23) <a name="l23" style="background-color: #ffffff">!     Routine to get command line argument.                                                !</a>
+    24) <a name="l24" style="background-color: #ffffff">!------------------------------------------------------------------------------------------!</a>
+    25) <a name="l25" style="background-color: #ffffff">subroutine ugetarg(i,arg)</a>
+    26) <a name="l26" style="background-color: #ffffff">   implicit none</a>
+    27) <a name="l27" style="background-color: #ffffff">   integer          :: i</a>
+    28) <a name="l28" style="background-color: #ffffff">   character(len=*) :: arg</a>
+    29) <a name="l29" style="background-color: #ffffff">       </a>
+    30) <a name="l30" style="background-color: #ffffff"></a>
+    31) <a name="l31" style="background-color: #ffffff">#if defined(HP)</a>
+    32) <a name="l32" style="background-color: #ffffff">   call getarg(i+1,arg)</a>
+    33) <a name="l33" style="background-color: #ffffff">#else</a>
+    34) <a name="l34" style="background-color: #ffffff">   call getarg(i,arg)</a>
+    35) <a name="l35" style="background-color: #ffffff">#endif</a>
+    36) <a name="l36" style="background-color: #ffffff"></a>
+    37) <a name="l37" style="background-color: #ffffff">   return</a>
+    38) <a name="l38" style="background-color: #ffffff">end subroutine ugetarg</a>
+    39) <a name="l39" style="background-color: #ffffff">!==========================================================================================!</a>
+    40) <a name="l40" style="background-color: #ffffff">!==========================================================================================!</a>
+    41) <a name="l41" style="background-color: #ffffff"></a>
+    42) <a name="l42" style="background-color: #ffffff"></a>
+    43) <a name="l43" style="background-color: #ffffff">!==========================================================================================!</a>
+    44) <a name="l44" style="background-color: #ffffff">!==========================================================================================!</a>
+    45) <a name="l45" style="background-color: #ffffff">!     Routine returns CPU time.  Called with ICALL=1 at beginning of timestep, ICALL=2 at  !</a>
+    46) <a name="l46" style="background-color: #ffffff">! end of timestep.                                                                         !</a>
+    47) <a name="l47" style="background-color: #ffffff">!------------------------------------------------------------------------------------------!</a>
+    48) <a name="l48" style="background-color: #ffffff">subroutine timing(icall,t1)</a>
+    49) <a name="l49" style="background-color: #ffffff">   implicit none</a>
+    50) <a name="l50" style="background-color: #ffffff">   integer, intent(in)   :: icall</a>
+    51) <a name="l51" style="background-color: #ffffff">   real   , intent(out)  :: t1</a>
+    52) <a name="l52" style="background-color: #ffffff">   real   , dimension(2) :: et(2)</a>
+    53) <a name="l53" style="background-color: #ffffff"></a>
+    54) <a name="l54" style="background-color: #ffffff">#if defined(VAX)</a>
+    55) <a name="l55" style="background-color: #ffffff">   integer :: iad0</a>
+    56) <a name="l56" style="background-color: #ffffff">#endif</a>
+    57) <a name="l57" style="background-color: #ffffff"></a>
+    58) <a name="l58" style="background-color: #ffffff">#if defined(IBM)</a>
+    59) <a name="l59" style="background-color: #ffffff">   real   , external     :: mclock</a>
+    60) <a name="l60" style="background-color: #ffffff">#elif defined(CRAY)</a>
+    61) <a name="l61" style="background-color: #ffffff">   real   , external     :: cputime</a>
+    62) <a name="l62" style="background-color: #ffffff">#elif defined(__APPLE__)</a>
+    63) <a name="l63" style="background-color: #ffffff">   real                  :: etime</a>
+    64) <a name="l64" style="background-color: #ffffff">#elif defined(PC_GFORTRAN)</a>
+    65) <a name="l65" style="background-color: #ffffff">   real                  :: etime</a>
+    66) <a name="l66" style="background-color: #ffffff">#elif defined(__GFORTRAN__)</a>
+    67) <a name="l67" style="background-color: #ffffff">   real                  :: etime</a>
+    68) <a name="l68" style="background-color: #ffffff">#else</a>
+    69) <a name="l69" style="background-color: #ffffff">   real   ,external      :: etime</a>
+    70) <a name="l70" style="background-color: #ffffff">#endif</a>
+    71) <a name="l71" style="background-color: #ffffff"></a>
+    72) <a name="l72" style="background-color: #ffffff">   select case (icall)</a>
+    73) <a name="l73" style="background-color: #ffffff">   !----- Start call. ---------------------------------------------------------------------!</a>
+    74) <a name="l74" style="background-color: #ffffff">   case (1)</a>
+    75) <a name="l75" style="background-color: #ffffff">#if defined(CRAY)</a>
+    76) <a name="l76" style="background-color: #ffffff">      call cpu_time(T1)</a>
+    77) <a name="l77" style="background-color: #ffffff">#elif defined(VAX)</a>
+    78) <a name="l78" style="background-color: #ffffff">      iad0=0</a>
+    79) <a name="l79" style="background-color: #ffffff">      call lib$init_timer(iad0)</a>
+    80) <a name="l80" style="background-color: #ffffff">#elif defined(IBM)</a>
+    81) <a name="l81" style="background-color: #ffffff">      T1=mclock(et)/100.</a>
+    82) <a name="l82" style="background-color: #ffffff">#else</a>
+    83) <a name="l83" style="background-color: #ffffff">      T1=ETIME(et)</a>
+    84) <a name="l84" style="background-color: #ffffff">#endif</a>
+    85) <a name="l85" style="background-color: #ffffff"></a>
+    86) <a name="l86" style="background-color: #ffffff">   !----- End call. -----------------------------------------------------------------------!</a>
+    87) <a name="l87" style="background-color: #ffffff">   case (2)</a>
+    88) <a name="l88" style="background-color: #ffffff">#if defined(VAX)</a>
+    89) <a name="l89" style="background-color: #ffffff">      call LIB$SHOW_TIMER(IAD0,2)</a>
+    90) <a name="l90" style="background-color: #ffffff">#elif defined(CRAY)</a>
+    91) <a name="l91" style="background-color: #ffffff">      call cpu_time(T1)</a>
+    92) <a name="l92" style="background-color: #ffffff">#elif defined(IBM)</a>
+    93) <a name="l93" style="background-color: #ffffff">      T1=mclock(et)/100.</a>
+    94) <a name="l94" style="background-color: #ffffff">#else</a>
+    95) <a name="l95" style="background-color: #ffffff">      T1=ETIME(et)</a>
+    96) <a name="l96" style="background-color: #ffffff">#endif</a>
+    97) <a name="l97" style="background-color: #ffffff"></a>
+    98) <a name="l98" style="background-color: #ffffff">   end select</a>
+    99) <a name="l99" style="background-color: #ffffff"></a>
+   100) <a name="l100" style="background-color: #ffffff">   return</a>
+   101) <a name="l101" style="background-color: #ffffff">end subroutine timing</a>
+   102) <a name="l102" style="background-color: #ffffff">!==========================================================================================!</a>
+   103) <a name="l103" style="background-color: #ffffff">!==========================================================================================!</a>
+   104) <a name="l104" style="background-color: #ffffff"></a>
+   105) <a name="l105" style="background-color: #ffffff"></a>
+</pre>
+<hr size=1 noshade>
+<table border=0 cellpadding=3 cellspacing=0 width="100%" style="color:black;font-weight:normal;font-family:Verdana,Arial;font-size:xx-small">
+<td width="50%">
+<table border=0 cellpadding=3 cellspacing=0>
+<tr>
+<td>
+<a target="_new" href="http://www.intel.com"><img src="__IntelR.gif" border="0"></a>
+</td>
+<td style="font-size:xx-small">
+<i>generated by </i><BR><a target="_new" href="http://www.intel.com/software/products/compilers">Intel(R) C++/Fortran Compiler code-coverage tool</a>
+</td>
+</tr>
+</table>
+</td>
+<td>
+<table border=0 cellpadding=3 cellspacing=0 width="50%">
+<tr><a>Web-Page Owner: <a href="mailto:nobody">Nobody</a></tr>
+</table>
+</td>
+</table>
+</body>
+</html>
