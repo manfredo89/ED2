@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['zcol2array',['zcol2array',['../numutils_8f90.html#a1c3b4e4df696e6580d47ec58fdd5ca66',1,'numutils.f90']]],
   ['zero_5fbdf2_5fpatch',['zero_bdf2_patch',['../namespacerk4__coms.html#a4dc0257365f3ec4614c2e41451517e28',1,'rk4_coms']]],
   ['zero_5fcanopy_5flayer',['zero_canopy_layer',['../namespacecanopy__layer__coms.html#a35bc9ed614af3affcdbfe5b81f97bb12',1,'canopy_layer_coms']]],
   ['zero_5fed_5fdmean_5fvars',['zero_ed_dmean_vars',['../namespaceaverage__utils.html#af1a2224da3c590c5645db8efa5c16c9f',1,'average_utils']]],

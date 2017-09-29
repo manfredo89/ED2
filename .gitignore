@@ -159,3 +159,5 @@ ED/build/thermal_sums/*
 ED/build/ED2IN*
 ED/build/allom_param.txt
 ED/build/pft_sizes.txt
+Doc/html
+Doc/latex
