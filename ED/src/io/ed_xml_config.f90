@@ -1692,10 +1692,11 @@ end subroutine write_ed_xml_config
 
 
 subroutine putConfigSTRING(tag,value)
-  character(*),intent(in) :: tag 
+  character(*),intent(in) :: tag
   character(*),intent(in) :: value
   integer :: lenval 
   lenval = len(value)
+
   call libxml2f90_ll_opentag(tag)
   call libxml2f90_ll_addid(trim(tag),lenval,trim(value))
   call libxml2f90_ll_closetag(tag)

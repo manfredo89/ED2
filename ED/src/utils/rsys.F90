@@ -57,8 +57,6 @@ subroutine timing(icall,t1)
 
 #if defined(IBM)
    real   , external     :: mclock
-#elif defined(CRAY)
-   real   , external     :: cputime
 #elif defined(__APPLE__)
    real                  :: etime
 #elif defined(PC_GFORTRAN)

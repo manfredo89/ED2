@@ -29,7 +29,6 @@ subroutine copy_patch_init(sourcesite,ipa,targetp,vels)
    use ed_max_dims           , only : n_pft                  ! ! intent(in)
    use therm_lib8            , only : uextcm2tl8             & ! subroutine
                                     , cmtl2uext8             & ! function
-                                    , thetaeiv8              & ! function
                                     , idealdenssh8           & ! function
                                     , rehuil8                & ! function
                                     , qslif8                 & ! function
@@ -579,12 +578,10 @@ subroutine update_diagnostic_vars(initp, csite,ipa)
                                     , uint2tl8              & ! subroutine
                                     , tl2uint8              & ! function
                                     , cmtl2uext8            & ! function
-                                    , thetaeiv8             & ! function
                                     , rehuil8               & ! function
                                     , qslif8                & ! function
                                     , hq2temp8              & ! function
-                                    , extemp2theta8         & ! function
-                                    , thil2tqall8           ! ! function
+                                    , extemp2theta8         ! ! function
    use consts_coms           , only : t3ple8                & ! intent(in)
                                     , cpdry8                & ! intent(in)
                                     , cph2o8                & ! intent(in)
@@ -3616,8 +3613,8 @@ subroutine print_rk4patch(y,csite,ipa)
    use grid_coms             , only : nzg                   ! ! intent(in)
    use ed_misc_coms          , only : current_time          ! ! intent(in)
    use consts_coms           , only : pio1808               ! ! intent(in)
-   use therm_lib8            , only : thetaeiv8             & ! function
-                                    , vpdefil8              ! ! function
+!   use therm_lib8            , only : thetaeiv8             & ! function
+!                                    , vpdefil8              ! ! function
    implicit none
    !----- Arguments -----------------------------------------------------------------------!
    type(rk4patchtype) , target     :: y
@@ -3628,8 +3625,8 @@ subroutine print_rk4patch(y,csite,ipa)
    integer                         :: k
    integer                         :: ico
    real(kind=8)                    :: y_can_rvap
-   real(kind=8)                    :: y_can_theiv
-   real(kind=8)                    :: y_can_vpdef
+!   real(kind=8)                    :: y_can_theiv
+!   real(kind=8)                    :: y_can_vpdef
    real(kind=4)                    :: pss_lai
    real(kind=4)                    :: pss_wai
    !---------------------------------------------------------------------------------------!
@@ -3654,8 +3651,8 @@ subroutine print_rk4patch(y,csite,ipa)
    ! (output only).                                                                        !
    !---------------------------------------------------------------------------------------!
    y_can_rvap  = y%can_shv / (1.d0 - y%can_shv)
-   y_can_theiv = thetaeiv8(y%can_theta,y%can_prss,y%can_temp,y_can_rvap,y_can_rvap)
-   y_can_vpdef = vpdefil8 (y%can_prss,y%can_temp,y%can_shv,.true.)
+!   y_can_theiv = thetaeiv8(y%can_theta,y%can_prss,y%can_temp,y_can_rvap,y_can_rvap)
+!   y_can_vpdef = vpdefil8 (y%can_prss,y%can_temp,y%can_shv,.true.)
    !---------------------------------------------------------------------------------------!
 
    write(unit=*,fmt='(80a)') ('=',k=1,80)
@@ -3838,10 +3835,9 @@ subroutine print_rk4patch(y,csite,ipa)
                                     ,'    CAN_RVAP','   CAN_VPDEF','     CAN_RHV'          &
                                     ,'CAN_ENTHALPY'
 
-   write (unit=*,fmt='(10(es12.4,1x))')  y%can_rhos     , y_can_theiv    , y%can_theta     &
+   write (unit=*,fmt='(8(es12.4,1x))')  y%can_rhos      , y%can_theta     &
                                        , y%can_temp     , y%can_shv      , y%can_ssh       &
-                                       , y_can_rvap     , y_can_vpdef    , y%can_rhv       &
-                                       , y%can_enthalpy
+                                       , y_can_rvap     , y%can_rhv      , y%can_enthalpy
                                        
 
    write (unit=*,fmt='(80a)') ('-',k=1,80)
@@ -3927,9 +3923,7 @@ subroutine print_rk4_state(initp,fluxp,csite,ipa,isi,elapsed,hdid)
    use rk4_coms     , only : rk4patchtype  & ! structure
                            , rk4site       & ! intent(in)
                            , detail_pref   ! ! intent(in)
-   use therm_lib8   , only : uextcm2tl8    & ! sub-routine
-                           , thetaeiv8     & ! function
-                           , vpdefil8      ! ! function
+   use therm_lib8   , only : uextcm2tl8    ! ! function
    use soil_coms    , only : soil8         ! ! intent(in)
    implicit none
    !----- Arguments. ----------------------------------------------------------------------!
@@ -4040,9 +4034,9 @@ subroutine print_rk4_state(initp,fluxp,csite,ipa,isi,elapsed,hdid)
    !     Find the ice-vapour equivalent potential temperature of the canopy air space.     !
    !---------------------------------------------------------------------------------------!
    can_rvap   = initp%can_shv / (1.d0 - initp%can_shv)
-   can_theiv  = thetaeiv8( initp%can_theta , initp%can_prss  , initp%can_temp              &
-                         , can_rvap        , can_rvap        )
-   can_vpdef  = vpdefil8 ( initp%can_prss  , initp%can_temp  , initp%can_shv , .true. )
+!   can_theiv  = thetaeiv8( initp%can_theta , initp%can_prss  , initp%can_temp              &
+!                         , can_rvap        , can_rvap        )
+!   can_vpdef  = vpdefil8 ( initp%can_prss  , initp%can_temp  , initp%can_shv , .true. )
    !---------------------------------------------------------------------------------------!
 
    par_b_beam = dble(csite%par_b_beam   (ipa))

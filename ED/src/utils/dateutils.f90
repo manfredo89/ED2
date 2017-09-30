@@ -216,30 +216,6 @@ end subroutine date_add_to
 
 
 
-
-
-!==========================================================================================!
-!==========================================================================================!
-subroutine date_unmake_big (inyear,inmonth,indate,inhour,outdate)
-   implicit none
-   integer :: inyear,inmonth,indate,inhour
-   character(len=14) :: outdate
-
-   read(outdate(1:4),fmt='(i4)') inyear
-   read(outdate(5:6),fmt='(i2)') inmonth
-   read(outdate(7:8),fmt='(i2)') indate
-   read(outdate(9:14),fmt='(i6)') inhour
-
-   return
-end subroutine date_unmake_big
-!==========================================================================================!
-!==========================================================================================!
-
-
-
-
-
-
 !==========================================================================================!
 !==========================================================================================!
 integer function julday (imonth,iday,iyear)
@@ -275,66 +251,6 @@ integer function julday (imonth,iday,iyear)
 end function julday
 !==========================================================================================!
 !==========================================================================================!
-
-
-
-
-
-
-!==========================================================================================!
-!==========================================================================================!
-integer function julday1000 (imonth,iday,iyear)
-   implicit none
-   integer :: imonth,iday,iyear
-
-   integer :: i,imm,idd,jd
-   
-   integer           :: febdays
-   logical, external :: isleap
-
-   ! compute the julian day (from 1000) from a normal date w/4 digit yr
-   ! 1583 is the first full year with Gregorian calendar, but we may want to do historical
-   ! runs that predate the calandar so 1000 was chosen instead
-
-   julday1000=0
-   do i=1000,iyear
-
-      imm=12
-      idd=31
-      if(i==iyear)then
-         imm=imonth
-         idd=iday
-      endif
-      
-      if (isleap(i)) then
-         febdays=29
-      else
-         febdays=28
-      end if
-
-      jd= idd  &
-         + min(1,max(0,imm-1))*31  &
-         + min(1,max(0,imm-2))*febdays  &
-         + min(1,max(0,imm-3))*31  &
-         + min(1,max(0,imm-4))*30  &
-         + min(1,max(0,imm-5))*31  &
-         + min(1,max(0,imm-6))*30  &
-         + min(1,max(0,imm-7))*31  &
-         + min(1,max(0,imm-8))*31  &
-         + min(1,max(0,imm-9))*30  &
-         + min(1,max(0,imm-10))*31  &
-         + min(1,max(0,imm-11))*30  &
-         + min(1,max(0,imm-12))*31
-
-      julday1000=julday1000+jd
-
-   enddo    
-
-   return
-end function julday1000
-!==========================================================================================!
-!==========================================================================================!
-
 
 
 

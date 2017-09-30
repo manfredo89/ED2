@@ -694,57 +694,9 @@ module soil_coms
 
 
 
-
    !=======================================================================================!
    !=======================================================================================!
    !      This function converts soil moisture to hydraulic conductivity.                  !
-   !---------------------------------------------------------------------------------------!
-   real(kind=4) function hydr_conduct(k,nsoil,soil_water,soil_fracliq)
-      use consts_coms, only : lnexp_min ! ! intent(in)
-      implicit none
-      !----- Arguments. -------------------------------------------------------------------!
-      integer     , intent(in) :: k            ! Layer index                        [  idx]
-      integer     , intent(in) :: nsoil        ! Soil texture                       [  idx]
-      real(kind=4), intent(in) :: soil_water   ! Soil moisture                      [m3/m3]
-      real(kind=4), intent(in) :: soil_fracliq ! Liquid fraction                    [  ---]
-      !----- Internal variables. ----------------------------------------------------------!
-      real(kind=4)             :: relmoist     ! Relative soil moisture             [  ---]
-      real(kind=4)             :: fzcorr       ! Freezing correction                [  ---]
-      !------------------------------------------------------------------------------------!
-
-
-
-      !------ Find correction for frozen soils. -------------------------------------------!
-      fzcorr = exp( max( lnexp_min, - freezecoef * (1.0 - soil_fracliq) ) )
-      !------------------------------------------------------------------------------------!
-
-
-
-      !------ Find relative soil moisture. ------------------------------------------------!
-      relmoist = min(soil_water/soil(nsoil)%slmsts,1.0)
-      !------------------------------------------------------------------------------------!
-
-
-
-      !----- Find the hydraulic conductivity. ---------------------------------------------!
-      hydr_conduct = fzcorr * slcons1(k,nsoil) * relmoist ** (2. * soil(nsoil)%slbs + 3.)
-      !------------------------------------------------------------------------------------!
-
-
-      return
-   end function hydr_conduct
-   !=======================================================================================!
-   !=======================================================================================!
-
-
-
-
-
-
-   !=======================================================================================!
-   !=======================================================================================!
-   !      This function is the double precision version of the function above, so it also  !
-   ! converts soil moisture to hydraulic conductivity.                                     !
    !---------------------------------------------------------------------------------------!
    real(kind=8) function hydr_conduct8(k,nsoil,soil_water,soil_fracliq)
       use consts_coms, only : lnexp_min8 ! ! intent(in)

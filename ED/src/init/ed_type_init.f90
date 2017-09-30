@@ -1,3 +1,6 @@
+module ed_type_init
+contains
+
 !==========================================================================================!
 !==========================================================================================!
 !     This subroutine assigns an initial value of zero for most cohort-level variables.    !
@@ -2248,3 +2251,5 @@ subroutine new_patch_sfc_props(csite,ipa,mzg,mzs,ntext_soil)
 end subroutine new_patch_sfc_props
 !==========================================================================================!
 !==========================================================================================!
+
+end module ed_type_init

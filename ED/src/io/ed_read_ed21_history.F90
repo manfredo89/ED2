@@ -9,7 +9,7 @@ subroutine read_ed21_history_file
 #if USE_HDF5
    use hdf5
 #endif
-   use ed_init_full_history
+   use ed_init_full_hist
    use ed_init        , only : soil_default_fill
    use ed_max_dims    , only : n_pft                   & ! intent(in)
                              , huge_polygon            & ! intent(in)
@@ -58,6 +58,7 @@ subroutine read_ed21_history_file
                              , dbh2bd                  ! ! function
    use fuse_fiss_utils, only : terminate_cohorts       ! ! subroutine
    use disturb_coms   , only : ianth_disturb           ! ! intent(in)
+   use ed_type_init
 
    implicit none
 #if USE_HDF5
@@ -863,7 +864,7 @@ subroutine read_ed21_history_unstruct
 #if USE_HDF5
    use hdf5
 #endif
-   use ed_init_full_history
+   use ed_init_full_hist
    use ed_max_dims    , only : n_pft                   & ! intent(in)
                              , huge_polygon            & ! intent(in)
                              , str_len                 & ! intent(in)
@@ -914,6 +915,7 @@ subroutine read_ed21_history_unstruct
                              , lu_rescale_file         & ! intent(in)
                              , min_patch_area          ! ! intent(in)
    use soil_coms      , only : soil                    ! ! intent(in)
+   use ed_type_init
 
    implicit none
 
@@ -2069,7 +2071,7 @@ subroutine read_ed21_polyclone
    use hdf5
 #endif
    use ed_init
-   use ed_init_full_history
+   use ed_init_full_hist
    use ed_max_dims    , only : n_pft                   & ! intent(in)
                              , huge_polygon            & ! intent(in)
                              , str_len                 & ! intent(in)
@@ -2121,6 +2123,7 @@ subroutine read_ed21_polyclone
    use soil_coms      , only : soil                    & ! intent(in)
                              , slzt                    &
                              , isoilcol
+   use ed_type_init
 
    implicit none
 

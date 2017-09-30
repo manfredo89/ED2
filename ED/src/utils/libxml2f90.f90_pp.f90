@@ -1,4 +1,3 @@
-
 !===========================================================================
 ! Copyright (C) 2005, Alexander Poddey <alexander.poddey@gmx.net>
 !===========================================================================
@@ -64,7 +63,7 @@ module libxml2f90_strings_module
   INTERFACE OPERATOR (-)
      MODULE PROCEDURE lowercase
   END INTERFACE
-  INTERFACE OPERATOR (+) 
+  INTERFACE OPERATOR (+)
      MODULE PROCEDURE uppercase
   END INTERFACE
 
@@ -81,7 +80,7 @@ contains
     character(len(old))     :: new
     integer(4)              :: i,isvar
     !.......................................
-    new=old 
+    new=old
     do i=1,len(trim(old))
        isvar=iachar(old(i:i))
        if(isvar.ge.65.and.isvar.le.90) new(i:i)=achar(isvar+32)
@@ -93,8 +92,8 @@ contains
     character(*), intent(in):: old
     character(len(old))     :: new
     integer(4)              :: i,isvar
-    !............................................ 
-    new=old 
+    !............................................
+    new=old
     do i=1,len(trim(old))
        isvar=iachar(old(i:i))
        if(isvar.ge.97.and.isvar.le.122) new(i:i)=achar(isvar-32)
@@ -130,7 +129,7 @@ contains
        iwrite=2
     end if
     
-    do ibase=1,ibasemax 
+    do ibase=1,ibasemax
        rbj=rbase**(ibasemax-ibase)
        ifl=floor(iact/rbj)
        iact=iact-real(ifl,kind=8)*rbj
@@ -216,7 +215,7 @@ contains
        iwrite=2
     end if
     
-    do ibase=1,ibasemax 
+    do ibase=1,ibasemax
        rbj=rbase**(ibasemax-ibase)
        ifl=floor(iact/rbj)
        iact=iact-real(ifl,kind=8)*rbj
@@ -441,8 +440,8 @@ module ll_module
      type(ll_type),pointer    :: UP_TAG
      type(ll_type),pointer    :: DOWN_TAG
      type(ll_type),pointer    :: FIRST_ID
-     type(ll_type),pointer    :: NEXT_ID   
-     type(ll_type),pointer    :: NEXT_PID   
+     type(ll_type),pointer    :: NEXT_ID
+     type(ll_type),pointer    :: NEXT_PID
   end type ll_type
 
   type(ll_type),pointer       :: LL_ROOT
@@ -481,7 +480,7 @@ module libxml2f90_interface_module
      module procedure libxml2f90_ll_addidr8a
   end interface
 
-  
+
   interface libxml2f90__getid
      subroutine libxml2f90__ll_getr8(id,size_,val)
        implicit none
@@ -599,31 +598,31 @@ module libxml2f90_interface_module
   end interface
 
 contains
-    
+
   subroutine libxml2f90_ll_addidr8(id,value)
     use libxml2f90_strings_module
     implicit none
     character(*),intent(in)        :: id
     real(8),intent(in)             :: value
-    integer(4)                     :: size_ 
+    integer(4)                     :: size_
     character(32)                  :: ch
     character, dimension(32)       :: chvec
     integer                        :: s
     !............................................
-    
+
     !convert the value to a string
     ch=r_2_s(value)
-    
+
     size_=len(trim(adjustl(ch)))
     do s=1,size_
       chvec(s)=ch(s:s)
     end do
     call libxml2f90_ll_addid(id,size_,chvec)
-    
+
     return
   end subroutine libxml2f90_ll_addidr8
-  
-  
+
+
   subroutine libxml2f90_ll_addidr8a(id,n,value)
     use libxml2f90_strings_module
     implicit none
@@ -641,9 +640,9 @@ contains
        ch(i)=r_2_s(value(i))
        l=l+len(trim(adjustl(ch(i))))
     end do
-    
+
     allocate(ch1(l+n))!n: a blank between the numbers
-    
+
     do i=1,n
        do l=1,len(trim(adjustl(ch(i))))
           ipos=ipos+1
@@ -652,7 +651,7 @@ contains
        ipos=ipos+1 !a blank between the numbers
        ch1(ipos)=' '
     end do
-    
+
     call libxml2f90_ll_addid(id,l+n,ch1)
     deallocate(ch1)
     return
@@ -677,13 +676,6 @@ subroutine how_to_read_a_file()
   call libxml2f90__ll_selecttag('DOWN','tag1',2)
 
 end subroutine how_to_read_a_file
-
-
-subroutine test()
-!this is for testing purpose
-implicit none
-call how_to_read_a_file()
-end subroutine test
 
 
 
@@ -738,7 +730,7 @@ subroutine libxml2f90__getunit(nfil)
   end do
   if(nfil.eq.nfilmax) then
      print*,"ERROR STOP IN LIBXML2F90 - GETUNIT: REACHED MAXIMUM AVAILABLE # OF FILEUNITS"
-     stop  
+     stop
   end if
   
   if(nfil.gt.nfilmaxused)nfilmaxused=nfil
@@ -749,8 +741,8 @@ end subroutine libxml2f90__getunit
      subroutine libxml2f90__openfile(id,file,nfil)
        use libxml2f90_module
        IMPLICIT NONE
-       character(*),intent(in)           :: id! 
-       character(*),intent(in)           :: file 
+       character(*),intent(in)           :: id!
+       character(*),intent(in)           :: file
        
        integer(4),intent(out)              :: nfil ! file id
        logical(4)                          :: EX !does the file exist
@@ -786,7 +778,7 @@ end subroutine libxml2f90__getunit
           call libxml2f90__getunit(nfil)
           
           OPEN (nfil, FILE=trim(adjustl(file)), STATUS="UNKNOWN", &
-               &ACCESS="SEQUENTIAL", ACTION="WRITE", POSITION="APPEND")         
+               &ACCESS="SEQUENTIAL", ACTION="WRITE", POSITION="APPEND")
 
        else
           print*, 'ID not recognized in libxml2f90__openfile: ',trim(adjustl(id))
@@ -794,7 +786,7 @@ end subroutine libxml2f90__getunit
        end if
        return
      end subroutine libxml2f90__openfile
-        
+
      subroutine libxml2f90__closeall()
        use libxml2f90_module
        IMPLICIT NONE
@@ -879,7 +871,7 @@ end subroutine libxml2f90__set_default_ll_id
 !=========================================================
 subroutine libxml2f90__readin_file(file,ll_id)
   !=======================================================
-  !===== READS THE FILE INTO 
+  !===== READS THE FILE INTO
   !===== READINSTRING,a character(1) array
   !===== INDEPENDENT FROM THE ACTUAL LINELENGTH!
   !===== CUTS TABS AND UNNECESSARY BLANKS ETC.
@@ -906,7 +898,7 @@ subroutine libxml2f90__readin_nfil(nfil,ll_id)
   integer(4),intent(in)        :: nfil
   character(*),intent(in)       :: ll_id
   !.................................
-  
+
   call libxml2f90_readin_file(nfil,ll_id)
 
 end subroutine libxml2f90__readin_nfil
@@ -916,7 +908,7 @@ end subroutine libxml2f90__readin_nfil
 !=========================================================
 subroutine libxml2f90_readin_file(nfil,ll_id)
   !=======================================================
-  !===== READS THE FILE INTO 
+  !===== READS THE FILE INTO
   !===== READINSTRING,a character(1) array
   !===== INDEPENDENT FROM THE ACTUAL LINELENGTH!
   !===== CUTS TABS AND UNNECESSARY BLANKS ETC.
@@ -967,22 +959,22 @@ subroutine libxml2f90_readin_file(nfil,ll_id)
         ! we also skip lines containing <?xml and <!DOCTYPE
         if(tnewline) then
            tnewline=.false.
-           !find first nonblank 
+           !find first nonblank
            i=verify(string,' ')
            if(i.gt.0) then
               if(string(i:i).eq.'<'.and.(string(i+1:i+1).eq.'#'&
                    &.or.+string(i+1:i+4).eq.'?XML'&
                    &.or.+string(i+1:i+8).eq.'!DOCTYPE')) then
                  do
-                    if(eos.eq.-1.or.eos.eq.-2) exit !end of line (-2) or file (-1) reached 
+                    if(eos.eq.-1.or.eos.eq.-2) exit !end of line (-2) or file (-1) reached
                     READ (nfil, FMT="(A)" , ADVANCE="NO" ,SIZE=is,IOSTAT= eos) string !read a chunk
                  end do
                  tnewline=.true. !we skip the whole line --> the next read uses a new line
                  !remember the lineposition (for the comment lines also!)
                  !----------------
                  filelines=filelines+1
-                 !keep the information about how many character(1) 
-                 !entries come from which line. this allows us to 
+                 !keep the information about how many character(1)
+                 !entries come from which line. this allows us to
                  !inform the user in which line syntax errors occur
                  
                  !check the size of the array
@@ -1018,11 +1010,11 @@ subroutine libxml2f90_readin_file(nfil,ll_id)
            if(iachar(string(i:i)).lt.33.or.&
                 &(trmquotes.and.iachar(string(i:i)).eq.34).or.&
                 &(trmquotes.and.iachar(string(i:i)).eq.39).or.&
-                &(trmcomma.and.iachar(string(i:i)).eq.44)) then 
+                &(trmcomma.and.iachar(string(i:i)).eq.44)) then
               !special characters including blank or "/' if should be removed or 
               if(xmlformat.eq.1.or.xmlformat.eq.3) then !blank removal
                  if(.not.tblank) then
-                    !write a blank instead if we do not have a blank at the last position 
+                    !write a blank instead if we do not have a blank at the last position
                     readstring(nwrite)=' '
                     nwrite=nwrite+1
                     tblank=.true.
@@ -1035,7 +1027,7 @@ subroutine libxml2f90_readin_file(nfil,ll_id)
            else if(string(i:i).eq.'=') then != corresponds to a blank on the left side
               !we do not need blanks left of a = if we use blankremoval:
               if(readstring(nwrite-1).eq.' '&
-                   &.and.(xmlformat.eq.1.or.xmlformat.eq.3)) then 
+                   &.and.(xmlformat.eq.1.or.xmlformat.eq.3)) then
                  !we can remove a blank to the left of a =
                  readstring(nwrite-1)=string(i:i)
                  !nwrite has to stay the same!
@@ -1052,7 +1044,7 @@ subroutine libxml2f90_readin_file(nfil,ll_id)
               nwrite=nwrite+1
            else if(nwrite.gt.1) then
               if(string(i:i).eq.'<'.and.readstring(nwrite-1).eq.' '&
-                   &.and.(xmlformat.eq.1.or.xmlformat.eq.3)) then 
+                   &.and.(xmlformat.eq.1.or.xmlformat.eq.3)) then
                  !we can remove a blank to the left of a <
                  readstring(nwrite-1)=string(i:i)
                  !nwrite has to stay the same!
@@ -1079,8 +1071,8 @@ subroutine libxml2f90_readin_file(nfil,ll_id)
         end if
      end do
      filelines=filelines+1
-     !keep the information about how many character(1) 
-     !entries come from which line. this allows us to 
+     !keep the information about how many character(1)
+     !entries come from which line. this allows us to
      !inform the user in which line syntax errors occur
      
      !check the size of the array
@@ -1095,7 +1087,7 @@ subroutine libxml2f90_readin_file(nfil,ll_id)
 
      lineposa(filelines)=nwrite
      
-     if(eos.eq.-1) exit 
+     if(eos.eq.-1) exit
   end do
 
   !cut the unneeded rest
@@ -1191,7 +1183,7 @@ subroutine libxml2f90_parse_file()
   !=======================================================
   !===== PARSES THE readstring INTO A LINKLIST REFERENCED
   !===== BY DEFAULT_LLID
-  !===== depends on xmlformat 
+  !===== depends on xmlformat
   !=======================================================
   use libxml2f90_module
   use ll_module
@@ -1238,7 +1230,7 @@ subroutine libxml2f90_parse_file()
         !Did we have intermediate text without = ? keep it!
          !deleted the +1 for both pcl at 10.10.2005 because the diference was length-1!!!
          if(.not.tflex.and.(((fp-1)-(pcl)).gt.1.or.(((fp-1)-(pcl)).eq.1&
-             &.and.(readstring(pcl+1).ne.' ')))) then 
+             &.and.(readstring(pcl+1).ne.' ')))) then
            if(allocated(val)) deallocate(val)
            allocate(val((fp)-(pcl+1)))
            do j=1,(fp)-(pcl+1)          !rb-1-(lb+1)+1
@@ -1279,7 +1271,7 @@ subroutine libxml2f90_parse_file()
               pcl=fp
               tflex=.false.
               p=rb  !for the next loop;remember, we do one step at the beginning of the search
-              if(readstring(lb+1).eq.'/') then 
+              if(readstring(lb+1).eq.'/') then
                  !we have a closing tag
                  !transfer it into a character(32) variable
                  dummy32=''
@@ -1288,7 +1280,7 @@ subroutine libxml2f90_parse_file()
                  end do
                  lbact=lb !for the line information
                  call libxml2f90_ll_closetag(trim(adjustl(dummy32)))
-              else  
+              else
                  !we have an opening tag that can contain pid's!
                  
                  ! do we have pid's inside?
@@ -1301,7 +1293,7 @@ subroutine libxml2f90_parse_file()
 
                     if(tsh) sh32=dummy32 !keep the tag for sh notation
                     call libxml2f90_ll_opentag(trim(adjustl(dummy32)))
-                 else if(isign.eq.1) then !pid's inside 
+                 else if(isign.eq.1) then !pid's inside
                     !=== seperate the tag from the pid's ===
                     call libxml2f90__findinchara(e,readstring,lb,.true.,1,ctmp_sp,fp,isign)
                     if(isign.eq.0) then
@@ -1317,7 +1309,7 @@ subroutine libxml2f90_parse_file()
                        end do
                        if(tsh) sh32=dummy32 !keep the tag for sh notation
                        call libxml2f90_ll_opentag(trim(adjustl(dummy32)))
-                       lb=fp-1 !think about this!!! 
+                       lb=fp-1 !think about this!!!
                     end if
                     
                     !=== process the pid's ====
@@ -1326,7 +1318,7 @@ subroutine libxml2f90_parse_file()
                     do
                        call libxml2f90__findinchara(rb,readstring(1:rb),plb,.true.,1,ctmp_sp,fp,isign)
                        if(isign.eq.0) exit !no pid's left,exit the loop
-                       !we have found another pid 
+                       !we have found another pid
                        !=============================
                        !=
                        lb=fp
@@ -1375,13 +1367,13 @@ subroutine libxml2f90_parse_file()
                           print*,'(line ',line,')!'
                           stop
                        end if
-                       !keep the lb for the value in lbv because lb can move to the left if 
+                       !keep the lb for the value in lbv because lb can move to the left if
                        !we have a ' ' left of the =
                        lbv=lb
 
                        !+++ let's find the id +++
 !++++++++++++++++
-                       !cut the ' ' left of the '='               
+                       !cut the ' ' left of the '='
                        do
                           if(readstring(lb-1).eq.' ') then !lb-1 because the search starts one position to the left
                              lb=lb-1
@@ -1432,7 +1424,7 @@ subroutine libxml2f90_parse_file()
                     end do!from process pid's
                  end if !from pid's inside
                  !close the shorthand notation tag <tag pid=val /> if necessary
-                 if(tsh) then 
+                 if(tsh) then
                     call libxml2f90_ll_closetag(trim(adjustl(sh32)))
                     tsh=.false.
                  end if
@@ -1490,13 +1482,13 @@ subroutine libxml2f90_parse_file()
               print*,'(line ',line,')!'
            stop
         end if
-        !keep the lb for the value in lbv because lb can move to the left if 
+        !keep the lb for the value in lbv because lb can move to the left if
         !we have a ' ' left of the =
         lbv=lb
 
         !+++ let's find the id +++
 !++++++++++++++++
-        !cut the ' ' left of the '='               
+        !cut the ' ' left of the '='
         do
            if(readstring(lb-1).eq.' ') then !lb-1 because the search starts one position to the left
               lb=lb-1
@@ -1551,13 +1543,13 @@ end subroutine libxml2f90_parse_file
 
 recursive subroutine find_closing_comment(e,readstring,lb,lbact,p,pcl,tflex)
   implicit none
-  integer(4),intent(in)                  :: e 
+  integer(4),intent(in)                  :: e
   character(1),intent(in)                :: readstring(e)
   integer(4),intent(inout)               :: lb
   integer(4),intent(inout)               :: lbact
   integer(4),intent(inout)               :: p
   integer(4),intent(inout)               :: pcl
-  logical(4),intent(inout)               :: tflex 
+  logical(4),intent(inout)               :: tflex
   integer(4)                             :: isign
   integer(4)                             :: lbact_used
   integer(4)                             :: fp
@@ -1573,7 +1565,7 @@ recursive subroutine find_closing_comment(e,readstring,lb,lbact,p,pcl,tflex)
         call libxml2f90_getline(lbact,line)
         print*,'ERROR STOP IN PARSING: CANNOT FIND A CLOSING --> (line',line,')!'
         stop
-     else if(isign.eq.1.and.readstring(fp-1).eq.'-'.and.readstring(fp-2).eq.'-') then    
+     else if(isign.eq.1.and.readstring(fp-1).eq.'-'.and.readstring(fp-2).eq.'-') then
         !found the closing --> with no intermediate <!--
         p=fp
         pcl=fp
@@ -1587,7 +1579,7 @@ recursive subroutine find_closing_comment(e,readstring,lb,lbact,p,pcl,tflex)
         call find_closing_comment(e,readstring,lb,lbact_used,p,pcl,tflex) !recursion
      end if
   end do
-  
+
   return
 end subroutine find_closing_comment
 
@@ -1648,16 +1640,16 @@ integer(4),intent(out)          :: count !how often is the tag present in the !n
 count=0
 thistemp=>this
 if(layer.eq.'UP') then
-   if(.not.associated(this%first_id%up_tag)) return 
-       !note: this%uptag is not associated for 
+   if(.not.associated(this%first_id%up_tag)) return
+       !note: this%uptag is not associated for
        !the first layer beneath the linklistlayer
        !why do we not test up_tag%next_tag? read the comment
        !for down_tag
    this=>this%first_id%up_tag%first_tag%next_tag
 else if(layer.eq.'DOWN') then
    if(.not.associated(this%first_id%down_tag)) return !just test
-   !just test %down_tag here because %down_tag%next_tag 
-   !exists if %down_tag exists, but test %down_tag%next_tag will 
+   !just test %down_tag here because %down_tag%next_tag
+   !exists if %down_tag exists, but test %down_tag%next_tag will
    !give an addresserror if down_tag does not exist!
    this=>this%first_id%down_tag%next_tag
 else if(layer.eq.'ACT') then
@@ -1697,7 +1689,7 @@ use ll_module
 implicit none
 character(*),intent(in)         :: layer
 character(*),intent(in)         :: tag
-integer(4),intent(in)           :: count 
+integer(4),intent(in)           :: count
 !logical(4),intent(out)          :: tselect=.false. !did we manage to select the tag
 integer(4)                      :: count_
 !........................................
@@ -1712,7 +1704,7 @@ if(layer.eq.'DOWN') then
       print*, 'ERROR STOP IN LINKLIST SELECTTAG: NO LAYER BELOW THE ACTUAL!'
       stop
    else
-      this=>this%first_id%down_tag%next_tag 
+      this=>this%first_id%down_tag%next_tag
       do
          if(this%tag.xmleq.tag) then
             count_=count_+1
@@ -1732,7 +1724,7 @@ else if(layer.eq.'ACT') then !read the comment @ exist code
       print*, 'ERROR STOP IN LINKLIST SELECTTAG: NO TAG IN THE ACTUAL LAYER!'
       stop
    else
-      this=>this%first_id%first_tag%next_tag 
+      this=>this%first_id%first_tag%next_tag
       do
          if(this%tag.xmleq.tag) then
             count_=count_+1
@@ -1749,13 +1741,13 @@ else if(layer.eq.'ACT') then !read the comment @ exist code
 else if(layer.eq.'UP') then
    !the layer above the actual
    if(.not.associated(this%first_id%up_tag).or.&
-        &.not.associated(this%first_id%up_tag%first_tag)) then 
+        &.not.associated(this%first_id%up_tag%first_tag)) then
       !read the comment @ exist code
-      print*, 'ERROR STOP IN LINKLIST SELECTTAG: NO TAG IN THE LAYER ABOVE THE ACTUAL!' 
+      print*, 'ERROR STOP IN LINKLIST SELECTTAG: NO TAG IN THE LAYER ABOVE THE ACTUAL!'
       !this should not happen ;-)
       stop
    else
-      this=>this%first_id%up_tag%first_tag%next_tag 
+      this=>this%first_id%up_tag%first_tag%next_tag
       do
          if(this%tag.xmleq.tag) then
             count_=count_+1
@@ -2163,14 +2155,14 @@ end subroutine libxml2f90_existid
 subroutine libxml2f90_getsafer8(id,csize,chara,size_,value)
   implicit none
   character(*),intent(in)        :: id
-  integer(4),intent(in)          :: csize    
+  integer(4),intent(in)          :: csize
   character(1),intent(in)        :: chara(csize)
   integer(4),intent(in)          :: size_
-  real(8),intent(out)            :: value(size_) 
+  real(8),intent(out)            :: value(size_)
   integer(4)                     :: i,isign,blocks,left,right
   character(256)                 :: string
   integer(4)                     :: stringsize=256
-  character,dimension(1)         :: ctmp_sp 
+  character,dimension(1)         :: ctmp_sp
   ctmp_sp = (/' '/)
 
   !=======================================
@@ -2193,7 +2185,7 @@ subroutine libxml2f90_getsafer8(id,csize,chara,size_,value)
   left=1
   right=1
   blocks=0
- 
+
   do
      !find the first non blank
      do
@@ -2203,14 +2195,14 @@ subroutine libxml2f90_getsafer8(id,csize,chara,size_,value)
            exit
         end if
      end do
-     
+
      call libxml2f90__findinchara(csize,chara,left,.true.,1,ctmp_sp,right,isign)
      if(isign.eq.0) right=csize !no blank found - we use the right bound
      if(right.lt.left) then
         print*,'ERROR STOP IN LINKELIST: GETSAFE: RIGHTBOUND IS SMALLER THAN LEFTBOUND'
         stop
      end if
-     
+
      if(left.eq.right.and.scan(chara(left),' .dD eE+-').eq.1) then
         if(chara(left).eq.' ') then
            !we skip the blank
@@ -2253,16 +2245,16 @@ end subroutine libxml2f90_getsafer8
 subroutine libxml2f90_getsafec8(id,csize,chara,size_,value)
   implicit none
   character(*),intent(in)        :: id
-  integer(4),intent(in)          :: csize    
+  integer(4),intent(in)          :: csize
   character(1),intent(in)        :: chara(csize)
   integer(4),intent(in)          :: size_
-  complex(8),intent(out)         :: value(size_) 
+  complex(8),intent(out)         :: value(size_)
   integer(4)                     :: i,isign,blocks,left,right
   character(256)                 :: string
   integer(4)                     :: stringsize=256
-  character, dimension(1)        :: ctmp_sp 
+  character, dimension(1)        :: ctmp_sp
   ctmp_sp = (/' '/)
-  
+
   !=======================================
   !        check for unallowed signs
   !=======================================
@@ -2283,7 +2275,7 @@ subroutine libxml2f90_getsafec8(id,csize,chara,size_,value)
   left=1
   right=1
   blocks=0
- 
+
   do
      !find the first non blank
      do
@@ -2293,14 +2285,14 @@ subroutine libxml2f90_getsafec8(id,csize,chara,size_,value)
            exit
         end if
      end do
-     
+
      call libxml2f90__findinchara(csize,chara,left,.true.,1,ctmp_sp,right,isign)
      if(isign.eq.0) right=csize !no blank found - we use the right bound
      if(right.lt.left) then
         print*,'ERROR STOP IN LINKELIST: GETSAFE: RIGHTBOUND IS SMALLER THAN LEFTBOUND'
         stop
      end if
-     
+
      if(left.eq.right.and.scan(chara(left),' .dD eE+-').eq.1) then
         if(chara(left).eq.' ') then
            !we skip the blank
@@ -2343,16 +2335,16 @@ end subroutine libxml2f90_getsafec8
 subroutine libxml2f90_getsafei4(id,csize,chara,size_,value)
   implicit none
   character(*),intent(in)        :: id
-  integer(4),intent(in)          :: csize    
+  integer(4),intent(in)          :: csize
   character(1),intent(in)        :: chara(csize)
   integer(4),intent(in)          :: size_
-  integer(4),intent(out)         :: value(size_) 
+  integer(4),intent(out)         :: value(size_)
   integer(4)                     :: i,isign,blocks,left,right
   character(256)                 :: string
   integer(4)                     :: stringsize=256
-  character,dimension(1)         :: ctmp_sp 
+  character,dimension(1)         :: ctmp_sp
   ctmp_sp = (/' '/)
-  
+
   !=======================================
   !        check for unallowed signs
   !=======================================
@@ -2371,7 +2363,7 @@ subroutine libxml2f90_getsafei4(id,csize,chara,size_,value)
   left=1
   right=1
   blocks=0
- 
+
   do
      !find the first non blank
      do
@@ -2381,14 +2373,14 @@ subroutine libxml2f90_getsafei4(id,csize,chara,size_,value)
            exit
         end if
      end do
-     
+
      call libxml2f90__findinchara(csize,chara,left,.true.,1,ctmp_sp,right,isign)
      if(isign.eq.0) right=csize !no blank found - we use the right bound
      if(right.lt.left) then
         print*,'ERROR STOP IN LINKELIST: GETSAFE: RIGHTBOUND IS SMALLER THAN LEFTBOUND'
         stop
      end if
-     
+
      if(left.eq.right.and.scan(chara(left),' +-').eq.1) then
         if(chara(left).eq.' ') then
            !we skip the blank
@@ -2431,16 +2423,16 @@ end subroutine libxml2f90_getsafei4
 subroutine libxml2f90_getsafel4(id,csize,chara,size_,value)
   implicit none
   character(*),intent(in)        :: id
-  integer(4),intent(in)          :: csize    
+  integer(4),intent(in)          :: csize
   character(1),intent(in)        :: chara(csize)
   integer(4),intent(in)          :: size_
-  logical(4),intent(out)         :: value(size_) 
+  logical(4),intent(out)         :: value(size_)
   integer(4)                     :: i,isign,blocks,left,right
   character(256)                 :: string
   integer(4)                     :: stringsize=256
-  character, dimension(1)        :: ctmp_sp 
+  character, dimension(1)        :: ctmp_sp
   ctmp_sp = (/' '/)
-  
+
   !=======================================
   !        check for unallowed signs
   !=======================================
@@ -2469,14 +2461,14 @@ subroutine libxml2f90_getsafel4(id,csize,chara,size_,value)
            exit
         end if
      end do
-     
+
      call libxml2f90__findinchara(csize,chara,left,.true.,1,ctmp_sp,right,isign)
      if(isign.eq.0) right=csize !no blank found - we use the right bound
      if(right.lt.left) then
         print*,'ERROR STOP IN LINKELIST: GETSAFE: RIGHTBOUND IS SMALLER THAN LEFTBOUND'
         stop
      end if
-     
+
      if(left.eq.right.and.scan(chara(left),' .RUEALSrueals').eq.1) then
         if(chara(left).eq.' ') then
            !we skip the blank
@@ -3002,11 +2994,11 @@ subroutine libxml2f90_ll_add_list(ll_id)
         THIS%LL_ID=ll_ID
         THIS%FIRST_ID=>THIS
 
-        NULLIFY(THIS%NEXT_LL)   
-        NULLIFY(THIS%FIRST_TAG) 
-        NULLIFY(THIS%NEXT_TAG)  
-        NULLIFY(THIS%UP_TAG)    
-        NULLIFY(THIS%DOWN_TAG)  
+        NULLIFY(THIS%NEXT_LL)
+        NULLIFY(THIS%FIRST_TAG)
+        NULLIFY(THIS%NEXT_TAG)
+        NULLIFY(THIS%UP_TAG)
+        NULLIFY(THIS%DOWN_TAG)
         NULLIFY(THIS%NEXT_ID)
         NULLIFY(THIS%NEXT_PID)
         exit
@@ -3027,14 +3019,14 @@ subroutine libxml2f90_ll_initlist(ll_id)
   THIS%LL_ID=ll_ID
   THIS%FIRST_ID=>THIS
 
-  NULLIFY(THIS%NEXT_LL)   
-  NULLIFY(THIS%FIRST_TAG) 
-  NULLIFY(THIS%NEXT_TAG)  
-  NULLIFY(THIS%UP_TAG)    
-  NULLIFY(THIS%DOWN_TAG)  
+  NULLIFY(THIS%NEXT_LL)
+  NULLIFY(THIS%FIRST_TAG)
+  NULLIFY(THIS%NEXT_TAG)
+  NULLIFY(THIS%UP_TAG)
+  NULLIFY(THIS%DOWN_TAG)
   NULLIFY(THIS%NEXT_ID)
   NULLIFY(THIS%NEXT_PID)
-    INITIALIZED=.true.  
+    INITIALIZED=.true.
 end subroutine libxml2f90_ll_initlist
 
 
@@ -3053,14 +3045,14 @@ subroutine libxml2f90_ll_inittag()
   THIS%FIRST_TAG=>THIS
   THIS%FIRST_ID=>THIS
   
-  NULLIFY(THIS%NEXT_LL)   
-  NULLIFY(THIS%NEXT_TAG)  
-  NULLIFY(THIS%DOWN_TAG)  
-  NULLIFY(THIS%NEXT_ID)  
+  NULLIFY(THIS%NEXT_LL)
+  NULLIFY(THIS%NEXT_TAG)
+  NULLIFY(THIS%DOWN_TAG)
+  NULLIFY(THIS%NEXT_ID)
   NULLIFY(THIS%NEXT_PID)
 
   THIS%LL_ID=THIS%UP_TAG%LL_ID
-  THIS%TAG='' 
+  THIS%TAG=''
 
   !JUMP ONE UP, BECAUSE THE OPEN_TAG JUMPS ONE DOWN!!!
   THIS=>THIS%UP_TAG
@@ -3109,9 +3101,9 @@ subroutine libxml2f90_ll_opentag(tag)
         THIS%TAG=TAG
 
 
-        NULLIFY(THIS%NEXT_LL)   
-        NULLIFY(THIS%NEXT_TAG)  
-        NULLIFY(THIS%DOWN_TAG)  
+        NULLIFY(THIS%NEXT_LL)
+        NULLIFY(THIS%NEXT_TAG)
+        NULLIFY(THIS%DOWN_TAG)
         NULLIFY(THIS%NEXT_ID)
         NULLIFY(THIS%NEXT_PID)
         exit
@@ -3186,11 +3178,11 @@ subroutine libxml2f90_ll_addid(id,size_,value)
         allocate(THIS%VALUE(size_))
         THIS%VALUE(:)=VALUE(:)
   
-        NULLIFY(THIS%NEXT_LL)   
+        NULLIFY(THIS%NEXT_LL)
         NULLIFY(THIS%FIRST_TAG)
-        NULLIFY(THIS%NEXT_TAG)  
-        NULLIFY(THIS%UP_TAG)  
-        NULLIFY(THIS%DOWN_TAG)  
+        NULLIFY(THIS%NEXT_TAG)
+        NULLIFY(THIS%UP_TAG)
+        NULLIFY(THIS%DOWN_TAG)
         NULLIFY(THIS%NEXT_ID)
         NULLIFY(THIS%NEXT_PID)
         exit
@@ -3219,7 +3211,7 @@ subroutine libxml2f90__ll_edit_id(id,new_id,value)
 end subroutine libxml2f90__ll_edit_id
 
 
-!====================================================================  
+!====================================================================
 subroutine libxml2f90_ll_edit_id(id,new_id,size_,value)
   !===============================================
   !edit the id or the vale; keep the value for size_=0
@@ -3233,7 +3225,7 @@ subroutine libxml2f90_ll_edit_id(id,new_id,size_,value)
   logical(4)                          :: tfound=.false.
   !...........................
 
-  if(id.ne.new_id) then !we change the id -> 
+  if(id.ne.new_id) then !we change the id ->
      ! check if the new one's already used
        THIS=>THIS%FIRST_ID
        do
@@ -3278,7 +3270,7 @@ end subroutine libxml2f90_ll_edit_id
 
 
 
-!====================================================================  
+!====================================================================
 subroutine libxml2f90__ll_edit_pid(id,new_id,value)
   implicit none
   character(*),intent(in)             :: id !
@@ -3301,7 +3293,7 @@ subroutine libxml2f90__ll_edit_pid(id,new_id,value)
 end subroutine libxml2f90__ll_edit_pid
 
 
-!====================================================================  
+!====================================================================
 subroutine libxml2f90_ll_edit_pid(id,new_id,size_,value)
   !===============================================
   !edit the id or the vale; keep the value for size_=0
@@ -3315,7 +3307,7 @@ subroutine libxml2f90_ll_edit_pid(id,new_id,size_,value)
   logical(4)                          :: tfound=.false.
   !...........................
 
-  if(id.ne.new_id) then !we change the id -> 
+  if(id.ne.new_id) then !we change the id ->
      ! check if the new one's already used
        THIS=>THIS%FIRST_ID
        do
@@ -3359,7 +3351,7 @@ subroutine libxml2f90_ll_edit_pid(id,new_id,size_,value)
 end subroutine libxml2f90_ll_edit_pid
 
 
-!====================================================================  
+!====================================================================
 subroutine libxml2f90_ll_addpureid(size_,value)
   use ll_module
   implicit none
@@ -3381,7 +3373,7 @@ subroutine libxml2f90_ll_addpureid(size_,value)
               !print line information only if it makes sense
               print *, '(line ',line,')!'
            end if
-           
+
            stop
         end if
      else
@@ -3395,12 +3387,12 @@ subroutine libxml2f90_ll_addpureid(size_,value)
         THIS%ID=ID
         allocate(THIS%VALUE(size_))
         THIS%VALUE(:)=VALUE(:)
-  
-        NULLIFY(THIS%NEXT_LL)   
+
+        NULLIFY(THIS%NEXT_LL)
         NULLIFY(THIS%FIRST_TAG)
-        NULLIFY(THIS%NEXT_TAG)  
-        NULLIFY(THIS%UP_TAG)  
-        NULLIFY(THIS%DOWN_TAG)  
+        NULLIFY(THIS%NEXT_TAG)
+        NULLIFY(THIS%UP_TAG)
+        NULLIFY(THIS%DOWN_TAG)
         NULLIFY(THIS%NEXT_ID)
         NULLIFY(THIS%NEXT_PID)
         exit
@@ -3411,12 +3403,12 @@ end subroutine libxml2f90_ll_addpureid
 
 
 
-!====================================================================  
+!====================================================================
 subroutine libxml2f90_ll_addpid(id,size_,value)
 !==================================================
 !===== add a 'property' id/value pair to the list.
-!===== property means that this pair belongs inside 
-!===== a tag 
+!===== property means that this pair belongs inside
+!===== a tag
 !==================================================
   use ll_module
   implicit none
@@ -3454,12 +3446,12 @@ subroutine libxml2f90_ll_addpid(id,size_,value)
         THIS%ID=ID
         allocate(THIS%VALUE(size_))
         THIS%VALUE(:)=VALUE(:)
-  
-        NULLIFY(THIS%NEXT_LL)   
+
+        NULLIFY(THIS%NEXT_LL)
         NULLIFY(THIS%FIRST_TAG)
-        NULLIFY(THIS%NEXT_TAG)  
-        NULLIFY(THIS%UP_TAG)  
-        NULLIFY(THIS%DOWN_TAG)  
+        NULLIFY(THIS%NEXT_TAG)
+        NULLIFY(THIS%UP_TAG)
+        NULLIFY(THIS%DOWN_TAG)
         NULLIFY(THIS%NEXT_ID)
         NULLIFY(THIS%NEXT_PID)
         exit
@@ -3541,10 +3533,10 @@ subroutine libxml2f90__ll_closetag(tag)
 end subroutine libxml2f90__ll_closetag
 
 
-!====================================================================  
+!====================================================================
 subroutine libxml2f90__ll_report(ll_id,nfil,theader)
   use ll_module
-  use libxml2f90_module, only: twrite_paw 
+  use libxml2f90_module, only: twrite_paw
   implicit none
   character(*),intent(in)       :: ll_id !the id of the linklist
   integer(4),intent(in)         :: nfil !the file unit we report to
@@ -3552,7 +3544,7 @@ subroutine libxml2f90__ll_report(ll_id,nfil,theader)
   integer(4)                    :: nind  !indentation
 
   !...........................
-  ! 
+  !
   if(.NOT.INITIALIZED) then
      print*,'ERROR STOP IN LINKLIST REPORT: THERE IS NO LIST AT ALL!'
      stop
@@ -3625,7 +3617,7 @@ end subroutine libxml2f90_ll_report_rec_wrap
 
 subroutine libxml2f90_ll_report_rec(LL_ID,nfil,nind)
   use ll_module
-  use libxml2f90_module, only: twrite_paw,indstep 
+  use libxml2f90_module, only: twrite_paw,indstep
   implicit none
   character(*),intent(in)       :: ll_id !the id of the linklist
   integer(4),intent(in)         :: nfil !the file unit we report to
@@ -3704,7 +3696,7 @@ subroutine libxml2f90_ll_report_rec(LL_ID,nfil,nind)
            if(twrite_paw) then
               !we need ' around the strings
               call libxml2f90__findinchara(size(THIS%VALUE),THIS%VALUE,0,.true.,53,ctmp_alpha,pos,sign)
-              if(pos.gt.0.and.(THIS%VALUE(1).ne."'".and.THIS%VALUE(size(THIS%VALUE)).ne."'")) then    
+              if(pos.gt.0.and.(THIS%VALUE(1).ne."'".and.THIS%VALUE(size(THIS%VALUE)).ne."'")) then
                  write(nfil,*)indch(1:nind),trim(adjustl(THIS%ID)),'=',"'",THIS%VALUE,"'"
               else
                  write(nfil,*)indch(1:nind),trim(adjustl(THIS%ID)),'=',THIS%VALUE
@@ -3748,7 +3740,7 @@ subroutine libxml2f90_ll_report_rec(LL_ID,nfil,nind)
 
   !the next tag on this layer
    if(.not.associated(this%next_tag)) then
-     !we have no next tag 
+     !we have no next tag
   else
      this=>this%next_tag%first_id
      call libxml2f90_ll_report_rec_wrap(LL_ID,nfil,nind)
@@ -3772,7 +3764,7 @@ subroutine libxml2f90__ll_up(tjump)
 end subroutine libxml2f90__ll_up
 
 
-!====================================================================  
+!====================================================================
 subroutine libxml2f90__ll_down(tjump)
   use ll_module
   implicit none
@@ -3824,14 +3816,14 @@ subroutine libxml2f90_parse_find_char(charstart,linestart,charend,lineend,char2f
      if(line.eq.linestart) then
         ichar=scan(stringa(line)(charstart:charend),char2find)
         if(ichar.ne.0) then
-           !we found 
+           !we found
            ichar=charstart-1+ichar
            exit
         end if
      else
         ichar=scan(stringa(line)(1:charend),char2find)
         if(ichar.ne.0) then
-           !we found 
+           !we found
            exit
         end if
      end if
@@ -3865,7 +3857,7 @@ subroutine libxml2f90_transform_paw()
   newstringa(:)='o'
   iwrite=1
   iread=1
-  do 
+  do
      !cases:
      !exlamation mark
      if(readstring(iread).eq.'!') then
@@ -3878,12 +3870,12 @@ subroutine libxml2f90_transform_paw()
            !---skip this tag (closes the file in paw files)
            !-------------------------------
            iread=iread+3
- 
+
         else if(tmpch.eq.'END') then
            !-------------------------------
            !---write a closing tag
            !-------------------------------
-           
+
            !check wheter we have an opening tag left
            if(iid.lt.1) then
               print*,'ERROR STOP IN LBXML2F90: TRANSFORM_PAW:'
@@ -3925,7 +3917,7 @@ subroutine libxml2f90_transform_paw()
                  if(i.eq.size(readstring)) c=-1
 !                 if(readstring(i).eq.'!') c=1
                  !we have the tag @ iread+1:i
-  !check the c and '!'            
+  !check the c and '!'
 
                  !---check writestringa's size
                  if(size(newstringa).lt.(iwrite+i-iread+2)) then
@@ -3959,17 +3951,17 @@ subroutine libxml2f90_transform_paw()
            iread=iread-1
       !  if(readstring())
         end if !from '!'
-     else if(readstring(iread).eq."'".and.tpaw) then 
+     else if(readstring(iread).eq."'".and.tpaw) then
         !---------------------------
         !remove "'"
         !---------------------------
         iread=iread+1
-     else if(((readstring(iread).eq.">").or.(readstring(iread).eq."<")).and.tpaw) then 
+     else if(((readstring(iread).eq.">").or.(readstring(iread).eq."<")).and.tpaw) then
         !---------------------------
-        !remove 
+        !remove
         !---------------------------
         iread=iread+1
-     else 
+     else
         !---------------------------
         !just a normal character
         !---------------------------
@@ -3984,7 +3976,7 @@ subroutine libxml2f90_transform_paw()
            newstringa(1:size(tempstringa))=tempstringa(:)
            deallocate(tempstringa)
         end if
-        
+
         newstringa(iwrite)=readstring(iread)
         iread=iread+1
         iwrite=iwrite+1
@@ -4062,9 +4054,9 @@ subroutine libxml2f90__set_casesensitive(tcasesensitive_)
   logical(4),intent(in)          :: tcasesensitive_
   !.................................................
   tcasesensitive=tcasesensitive_
-  
+
   !comment:
-  !tcasesensitive is kept in ll_module and not in libxml2f90_module 
+  !tcasesensitive is kept in ll_module and not in libxml2f90_module
   !because it is solely used in ll routines
   return
 end subroutine libxml2f90__set_casesensitive

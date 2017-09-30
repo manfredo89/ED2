@@ -27,55 +27,6 @@ return
 end
 !***************************************************************************
 
-subroutine parse(str,tokens,ntok)
-implicit none
-integer :: ntok
-character(len=*) :: str,tokens(*)
-character(len=1) :: sep
-integer, parameter :: ntokmax=100
-
-integer :: n,nc,npt,nch,ntbeg,ntend
-
-! this routine "parses" character string str into different pieces
-! or tokens by looking for  possible token separators (toks
-! str contains nch characters.  the number of tokens identified is nto
-! the character string tokens are stored in tokens.
-
-sep=' '
-ntok=0
-npt=1
-nch=len_trim(str)
-nc=1
-do ntok=1,ntokmax
-   do n=nc,nch
-      if(str(n:n).ne.sep) then
-         ntbeg=n
-         goto 21
-      endif
-   enddo
-   21 continue
-   do n=ntbeg,nch
-      if(str(n:n).eq.sep) then
-         ntend=n-1
-         goto 22
-      endif
-      if(n.eq.nch) then
-         ntend=n
-         goto 22
-      endif
-   enddo
-   22 continue
-   tokens(ntok)=str(ntbeg:ntend)
-   nc=ntend+1
-   if(nc.ge.nch) goto 25
-enddo
-
-25 continue
-
-
-return
-end
-
 !***************************************************************************
 
 subroutine tokenize1(str1,tokens,ntok,toksep)

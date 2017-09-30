@@ -8,19 +8,6 @@ real function walltime(wstart)
   return
 end function walltime
 
-real function cputime(w1)
-  implicit none
-  real :: w1
-  real :: cc,fsecs
-  real, external :: walltime
-
-  call timing(2,cc)
-  cputime=cc
-  fsecs=72559200.
-  w1=walltime(fsecs)
-  return
-end function cputime
-
 !***************************************************************************
 
 subroutine makefnam (fname,prefix,tinc,iyr,imn,idy,itm,type,post,fmt)

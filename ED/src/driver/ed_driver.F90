@@ -9,7 +9,7 @@ subroutine ed_driver()
    use update_derived_props_module
    use ism_hyd
    use ed_met_driver
-   use ed_init_full_history
+   use ed_init_full_hist
    use ed_init
    use grid_coms         , only : ngrids              & ! intent(in)
                                 , time                & ! intent(inout)
@@ -135,7 +135,7 @@ subroutine ed_driver()
 #else
       write (unit=*,fmt='(a)') ' [+] Init_Full_History_Restart...'
 #endif
-      call init_full_history_restart()
+      call init_fullh_restart()
 
 #if defined(RAMS_MPI)
       if (mynum < nnodetot ) then

@@ -80,7 +80,6 @@ subroutine lw_two_stream(grnd_emiss4,grnd_temp4,rlong_top4,ncoh,pft,lai,wai,cai,
    real(kind=8)                                              :: black_g
    real(kind=8)                                              :: down_sky
    !----- External functions. -------------------------------------------------------------!
-   real(kind=8)                              , external      :: eifun8
    real(kind=4)                              , external      :: sngloff
    !---------------------------------------------------------------------------------------!
 

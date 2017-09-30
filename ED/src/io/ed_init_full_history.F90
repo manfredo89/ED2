@@ -1,4 +1,4 @@
-module ed_init_full_history
+module ed_init_full_hist
   contains
 
 !==========================================================================================!
@@ -17,7 +17,7 @@ module ed_init_full_history
 ! polygons in the file.  Nonetheless, it will traverse the tree from these polygons and    !
 ! populate the model states with what is found in the files tree.                          !
 !------------------------------------------------------------------------------------------!
-subroutine init_full_history_restart()
+subroutine init_fullh_restart()
    use landuse_init_module
    use ed_max_dims      , only : n_pft                 & ! intent(in)
                                , str_len               ! ! intent(in)
@@ -118,14 +118,14 @@ subroutine init_full_history_restart()
       if (.not.exists) then
          !----- History couldn't be found.  Stop the run. ---------------------------------!
          call fatal_error ('File '//trim(hnamel)//' not found.'                            &
-                          ,'init_full_history_restart','ed_init_full_history.F90')
+                          ,'init_fullh_restart','ed_init_full_hist.F90')
       else
          call h5fopen_f(hnamel, H5F_ACC_RDONLY_F, file_id, hdferr)
          if (hdferr < 0) then
             write(unit=*,fmt='(a,1x,i8)') 'Error opening HDF5 file - error - ',hdferr
             write(unit=*,fmt='(a,1x,a)' ) '- Filename: ',trim(hnamel)
             call fatal_error('Error opening HDF5 file - error - '//trim(hnamel)            &
-                            ,'init_full_history_restart','ed_init_full_history.F90')
+                            ,'init_fullh_restart','ed_init_full_hist.F90')
          end if
       end if
 
@@ -281,7 +281,7 @@ subroutine init_full_history_restart()
             write (unit=*,fmt='(a)'          ) '------------------------------------------'
 
             call fatal_error('Mismatch between polygon and dataset'                        &
-                            ,'init_full_history_restart','ed_init_full_history.F90')
+                            ,'init_fullh_restart','ed_init_full_hist.F90')
          end if
          !---------------------------------------------------------------------------------!
 
@@ -289,7 +289,7 @@ subroutine init_full_history_restart()
          !      Get all necessary polygon variables associated with this index for the     !
          ! current polygon.                                                                !
          !---------------------------------------------------------------------------------!
-         call fill_history_grid(cgrid,ipy,py_index)
+         call fillh_grid(cgrid,ipy,py_index)
 
          if (pysi_n(py_index) > 0) then
             !----- Allocate the polygontype structure (site level). -----------------------!
@@ -304,7 +304,7 @@ subroutine init_full_history_restart()
             !------------------------------------------------------------------------------!
             allocate (is_burnt(pysi_n(py_index)))
             is_burnt(:) = .false.
-            call fill_history_polygon(cpoly,pysi_id(py_index),cgrid%nsites_global          &
+            call fillh_polygon(cpoly,pysi_id(py_index),cgrid%nsites_global          &
                                      ,pysi_n(py_index),is_burnt)
 
             siteloop: do isi = 1,cpoly%nsites
@@ -321,7 +321,7 @@ subroutine init_full_history_restart()
                   !     Get all necessary site variables associated with this index for    !
                   ! the current site.                                                      !
                   !------------------------------------------------------------------------!
-                  call fill_history_site(csite,sipa_id(si_index),cgrid%npatches_global     &
+                  call fillh_site(csite,sipa_id(si_index),cgrid%npatches_global     &
                                         ,is_burnt(isi))
 
                   patchloop: do ipa = 1,csite%npatches
@@ -336,7 +336,7 @@ subroutine init_full_history_restart()
                         !     Get all necessary site variables associated with this index  !
                         ! for the current patch.                                           !
                         !------------------------------------------------------------------!
-                        call fill_history_patch(cpatch,paco_id(pa_index)                   &
+                        call fillh_patch(cpatch,paco_id(pa_index)                   &
                                                ,cgrid%ncohorts_global)
                         !------------------------------------------------------------------!
                      else
@@ -354,7 +354,7 @@ subroutine init_full_history_restart()
                   write (unit=*,fmt='(a,1x,es12.5)') ' - Latitude  :',cgrid%lat(ipy)
                   write (unit=*,fmt='(a)'          ) '------------------------------------'
                   call fatal_error('Attempted to load an empty site.'                      &
-                                  ,'init_full_history_restart','ed_init_full_history.F90')
+                                  ,'init_fullh_restart','ed_init_full_hist.F90')
                end if
 
             end do siteloop
@@ -370,7 +370,7 @@ subroutine init_full_history_restart()
             write (unit=*,fmt='(a,1x,es12.5)') ' - Latitude  :',cgrid%lat(ipy)
             write (unit=*,fmt='(a)'          ) '------------------------------------'
             call fatal_error('Attempted to load an empty polygon.'                         &
-                            ,'init_full_history_restart','ed_init_full_history.F90')
+                            ,'init_fullh_restart','ed_init_full_hist.F90')
          end if
       end do polyloop
 
@@ -379,7 +379,7 @@ subroutine init_full_history_restart()
       if (hdferr /= 0) then
           print*,hdferr
           call fatal_error('Could not close the HDF file'                                  &
-                          ,'init_full_history_restart','ed_init_full_history.F90')
+                          ,'init_fullh_restart','ed_init_full_hist.F90')
 
       end if
 
@@ -420,7 +420,7 @@ subroutine init_full_history_restart()
    call phenology_init()
 
    return
-end subroutine init_full_history_restart
+end subroutine init_fullh_restart
 !==========================================================================================!
 !==========================================================================================!
 
@@ -431,7 +431,7 @@ end subroutine init_full_history_restart
 
 !==========================================================================================!
 !==========================================================================================!
-subroutine fill_history_grid(cgrid,ipy,py_index)
+subroutine fillh_grid(cgrid,ipy,py_index)
    use ed_state_vars, only : edtype        & ! structure
                            , polygontype   ! ! structure
    use ed_max_dims  , only : n_pft         & ! intent(in)
@@ -456,18 +456,18 @@ subroutine fill_history_grid(cgrid,ipy,py_index)
    !---------------------------------------------------------------------------------------!
    !      Split the routine into smaller routines to avoid segmentation violation.         !
    !---------------------------------------------------------------------------------------!
-   call fill_history_grid_p11     (cgrid,ipy,py_index)
-   call fill_history_grid_p11dmean(cgrid,ipy,py_index)
-   call fill_history_grid_p11mmean(cgrid,ipy,py_index)
-   call fill_history_grid_p12     (cgrid,ipy,py_index)
-   call fill_history_grid_m11     (cgrid,ipy,py_index)
-   call fill_history_grid_p19     (cgrid,ipy,py_index)
-   call fill_history_grid_m12     (cgrid,ipy,py_index)
-   call fill_history_grid_p146    (cgrid,ipy,py_index)
+   call fillh_grid_p11     (cgrid,ipy,py_index)
+   call fillh_grid_p11dmean(cgrid,ipy,py_index)
+   call fillh_grid_p11mmean(cgrid,ipy,py_index)
+   call fillh_grid_p12     (cgrid,ipy,py_index)
+   call fillh_grid_m11     (cgrid,ipy,py_index)
+   call fillh_grid_p19     (cgrid,ipy,py_index)
+   call fillh_grid_m12     (cgrid,ipy,py_index)
+   call fillh_grid_p146    (cgrid,ipy,py_index)
    !---------------------------------------------------------------------------------------!
 
    return
-end subroutine fill_history_grid
+end subroutine fillh_grid
 !==========================================================================================!
 !==========================================================================================!
 
@@ -478,7 +478,7 @@ end subroutine fill_history_grid
 
 !==========================================================================================!
 !==========================================================================================!
-subroutine fill_history_grid_p11(cgrid,ipy,py_index)
+subroutine fillh_grid_p11(cgrid,ipy,py_index)
    use ed_state_vars, only : edtype        & ! structure
                            , polygontype   ! ! structure
    use ed_max_dims  , only : n_pft         & ! intent(in)
@@ -653,7 +653,7 @@ subroutine fill_history_grid_p11(cgrid,ipy,py_index)
                      ,'CWD_N_PY '                 ,dsetrank,iparallel,.false.,foundvar)
    !---------------------------------------------------------------------------------------!
    return
-end subroutine fill_history_grid_p11
+end subroutine fillh_grid_p11
 !==========================================================================================!
 !==========================================================================================!
 
@@ -664,7 +664,7 @@ end subroutine fill_history_grid_p11
 
 !==========================================================================================!
 !==========================================================================================!
-subroutine fill_history_grid_p11dmean(cgrid,ipy,py_index)
+subroutine fillh_grid_p11dmean(cgrid,ipy,py_index)
    use ed_state_vars, only : edtype        & ! structure
                            , polygontype   ! ! structure
    use ed_max_dims  , only : n_pft         & ! intent(in)
@@ -1019,7 +1019,7 @@ subroutine fill_history_grid_p11dmean(cgrid,ipy,py_index)
                         ,'DMEAN_DPCPG_PY            ',dsetrank,iparallel,.false.,foundvar)
    end if
    return
-end subroutine fill_history_grid_p11dmean
+end subroutine fillh_grid_p11dmean
 !==========================================================================================!
 !==========================================================================================!
 
@@ -1030,7 +1030,7 @@ end subroutine fill_history_grid_p11dmean
 
 !==========================================================================================!
 !==========================================================================================!
-subroutine fill_history_grid_p11mmean(cgrid,ipy,py_index)
+subroutine fillh_grid_p11mmean(cgrid,ipy,py_index)
    use ed_state_vars, only : edtype        & ! structure
                            , polygontype   ! ! structure
    use ed_max_dims  , only : n_pft         & ! intent(in)
@@ -1464,7 +1464,7 @@ subroutine fill_history_grid_p11mmean(cgrid,ipy,py_index)
    !---------------------------------------------------------------------------------------!
    !---------------------------------------------------------------------------------------!
    return
-end subroutine fill_history_grid_p11mmean
+end subroutine fillh_grid_p11mmean
 !==========================================================================================!
 !==========================================================================================!
 
@@ -1475,7 +1475,7 @@ end subroutine fill_history_grid_p11mmean
 
 !==========================================================================================!
 !==========================================================================================!
-subroutine fill_history_grid_p12(cgrid,ipy,py_index)
+subroutine fillh_grid_p12(cgrid,ipy,py_index)
    use ed_state_vars, only : edtype        & ! structure
                            , polygontype   ! ! structure
    use grid_coms    , only : nzg           ! ! intent(in)
@@ -1609,7 +1609,7 @@ subroutine fill_history_grid_p12(cgrid,ipy,py_index)
    !---------------------------------------------------------------------------------------!
    !---------------------------------------------------------------------------------------!
    return
-end subroutine fill_history_grid_p12
+end subroutine fillh_grid_p12
 !==========================================================================================!
 !==========================================================================================!
 
@@ -1620,7 +1620,7 @@ end subroutine fill_history_grid_p12
 
 !==========================================================================================!
 !==========================================================================================!
-subroutine fill_history_grid_m11(cgrid,ipy,py_index)
+subroutine fillh_grid_m11(cgrid,ipy,py_index)
    use ed_state_vars, only : edtype        & ! structure
                            , polygontype   ! ! structure
    use ed_max_dims  , only : n_pft         & ! intent(in)
@@ -2005,7 +2005,7 @@ subroutine fill_history_grid_m11(cgrid,ipy,py_index)
    !---------------------------------------------------------------------------------------!
    !---------------------------------------------------------------------------------------!
    return
-end subroutine fill_history_grid_m11
+end subroutine fillh_grid_m11
 !==========================================================================================!
 !==========================================================================================!
 
@@ -2016,7 +2016,7 @@ end subroutine fill_history_grid_m11
 
 !==========================================================================================!
 !==========================================================================================!
-subroutine fill_history_grid_p19(cgrid,ipy,py_index)
+subroutine fillh_grid_p19(cgrid,ipy,py_index)
    use ed_state_vars, only : edtype        & ! structure
                            , polygontype   ! ! structure
    use ed_max_dims  , only : n_pft         & ! intent(in)
@@ -2111,7 +2111,7 @@ subroutine fill_history_grid_p19(cgrid,ipy,py_index)
    !---------------------------------------------------------------------------------------!
    !---------------------------------------------------------------------------------------!
    return
-end subroutine fill_history_grid_p19
+end subroutine fillh_grid_p19
 !==========================================================================================!
 !==========================================================================================!
 
@@ -2122,7 +2122,7 @@ end subroutine fill_history_grid_p19
 
 !==========================================================================================!
 !==========================================================================================!
-subroutine fill_history_grid_m12(cgrid,ipy,py_index)
+subroutine fillh_grid_m12(cgrid,ipy,py_index)
    use ed_state_vars, only : edtype        & ! structure
                            , polygontype   ! ! structure
    use grid_coms    , only : nzg           ! ! intent(in)
@@ -2240,7 +2240,7 @@ subroutine fill_history_grid_m12(cgrid,ipy,py_index)
    !---------------------------------------------------------------------------------------!
    !---------------------------------------------------------------------------------------!
    return
-end subroutine fill_history_grid_m12
+end subroutine fillh_grid_m12
 !==========================================================================================!
 !==========================================================================================!
 
@@ -2251,7 +2251,7 @@ end subroutine fill_history_grid_m12
 
 !==========================================================================================!
 !==========================================================================================!
-subroutine fill_history_grid_p146(cgrid,ipy,py_index)
+subroutine fillh_grid_p146(cgrid,ipy,py_index)
    use ed_state_vars, only : edtype        & ! structure
                            , polygontype   ! ! structure
    use ed_max_dims  , only : n_pft         & ! intent(in)
@@ -2419,7 +2419,7 @@ subroutine fill_history_grid_p146(cgrid,ipy,py_index)
    !---------------------------------------------------------------------------------------!
    !---------------------------------------------------------------------------------------!
    return
-end subroutine fill_history_grid_p146
+end subroutine fillh_grid_p146
 !==========================================================================================!
 !==========================================================================================!
 
@@ -2433,7 +2433,7 @@ end subroutine fill_history_grid_p146
 !==========================================================================================!
 !      This sub-routine loads all site-level variables from the history file.              !
 !------------------------------------------------------------------------------------------!
-subroutine fill_history_polygon(cpoly,pysi_index,nsites_global,nsites_now,is_burnt)
+subroutine fillh_polygon(cpoly,pysi_index,nsites_global,nsites_now,is_burnt)
    use ed_state_vars, only : polygontype   ! ! structure
    use grid_coms    , only : nzg           ! ! intent(in)
    use ed_max_dims  , only : n_pft         & ! intent(in)
@@ -3094,7 +3094,7 @@ subroutine fill_history_polygon(cpoly,pysi_index,nsites_global,nsites_now,is_bur
    deallocate(nat_dist_type)
    !---------------------------------------------------------------------------------------!
    return
-end subroutine fill_history_polygon
+end subroutine fillh_polygon
 !==========================================================================================!
 !==========================================================================================!
 
@@ -3105,7 +3105,7 @@ end subroutine fill_history_polygon
 
 !==========================================================================================!
 !==========================================================================================!
-subroutine fill_history_site(csite,sipa_index,npatches_global,is_burnt)
+subroutine fillh_site(csite,sipa_index,npatches_global,is_burnt)
    use ed_state_vars      , only : sitetype      ! ! structure
    use grid_coms          , only : nzg           & ! intent(in)
                                  , nzs           ! ! intent(in)
@@ -4164,46 +4164,8 @@ subroutine fill_history_site(csite,sipa_index,npatches_global,is_burnt)
    !---------------------------------------------------------------------------------------!
    !---------------------------------------------------------------------------------------!
 
-
-
-   !---------------------------------------------------------------------------------------!
-   !     Once upon a time, soil water was double precision, but after the Runge-Kutta      !
-   ! integrator was entirely converted to double precision, we reverted back to single and !
-   ! converted everything just for the Runge-Kutta.  Of course, nothing in life is certain !
-   ! but death and taxes, so we kept the recipe on how to read a double precision if we    !
-   ! ever change our minds again.                                                          !
-   !                                                                                       !
-   !   call h5dopen_f(file_id,'SOIL_WATER_PA ', dset_id, hdferr)                           !
-   !   if (hdferr /= 0 ) then                                                              !
-   !      call fatal_error('Dataset did not have soil water?' &                            !
-   !           ,'fill_history_site','ed_init_full_history.F90')                            !
-   !   endif                                                                               !
-   !                                                                                       !
-   !------ These lines are useful for determining data size of any given object in a set.--!
-   !  call h5dget_type_f(dset_id,datatype_id,hdferr)                                       !
-   !  call h5tget_size_f(datatype_id,setsize,hdferr)                                       !
-   !  call h5dclose_f(dset_id  , hdferr)                                                   !
-   !                                                                                       !
-   !------ Check precision. ---------------------------------------------------------------!
-   !   if (setsize==4_8) then  ! Single precision                                          !
-   !      call hdf_getslab_r(csite%soil_water                                            & !
-   !                        ,'SOIL_WATER_PA ',dsetrank,iparallel,.true.,foundvar)          !
-   !   else if (setsize==8_8) then ! Double precision                                      !
-   !      allocate(buff(nzg,csite%npatches))                                               !
-   !      write (unit=*,fmt='(a)') '----------------------------------------------------'  !
-   !      write (unit=*,fmt='(a)') '  Load 8-byte precision, and convert to 4-byte'        !
-   !      write (unit=*,fmt='(a)') '----------------------------------------------------'  !
-   !      call hdf_getslab_d(buff,'SOIL_WATER_PA ',dsetrank,iparallel,.true.,foundvar)     !
-   !      csite%soil_water(1:nzg,1:csite%npatches) = sngl(buff(1:nzg,1:csite%npatches))    !
-   !      deallocate(buff)                                                                 !
-   !  else                                                                                 !
-   !     call fatal_error('Soil water dataset is not real nor double?'                   & !
-   !                     ,'fill_history_site','ed_init_full_history.F90')                  !
-   !  end if                                                                               !
-   !---------------------------------------------------------------------------------------!
-
    return
-end subroutine fill_history_site
+end subroutine fillh_site
 !==========================================================================================!
 !==========================================================================================!
 
@@ -4217,7 +4179,7 @@ end subroutine fill_history_site
 !     This sub-routine loads all state variables and partial integrations at the cohort    !
 ! level.                                                                                   !
 !------------------------------------------------------------------------------------------!
-subroutine fill_history_patch(cpatch,paco_index,ncohorts_global)
+subroutine fillh_patch(cpatch,paco_index,ncohorts_global)
    use ed_state_vars      , only : patchtype     ! ! structure
    use ed_max_dims        , only : n_pft         & ! intent(in)
                                  , n_mort        & ! intent(in)
@@ -5213,7 +5175,7 @@ subroutine fill_history_patch(cpatch,paco_index,ncohorts_global)
 
 
   return
-end subroutine fill_history_patch
+end subroutine fillh_patch
 !==========================================================================================!
 !==========================================================================================!
 
@@ -5286,7 +5248,7 @@ subroutine hdf_getslab_r(buff,varn,dsetrank,iparallel,required,foundvar)
       write(unit=*,fmt=*) 'File_ID = ',file_id
       write(unit=*,fmt=*) 'Dset_ID = ',dset_id
       call fatal_error('Could not get the dataset for '//trim(varn)//'!!!' &
-           ,'hdf_getslab_r','ed_init_full_history.F90')
+           ,'hdf_getslab_r','ed_init_full_hist.F90')
       !------------------------------------------------------------------------------------!
 
    else if ((.not. foundvar) .and. (.not.required) ) then
@@ -5324,14 +5286,14 @@ subroutine hdf_getslab_r(buff,varn,dsetrank,iparallel,required,foundvar)
       call h5dget_space_f(dset_id,filespace,hdferr)
       if (hdferr /= 0) then
          call fatal_error('Could not get the hyperslabs filespace for '//trim(varn)//'!'   &
-              ,'hdf_getslab_r','ed_init_full_history.F90')
+              ,'hdf_getslab_r','ed_init_full_hist.F90')
       end if
 
       call h5sselect_hyperslab_f(filespace,H5S_SELECT_SET_F,chnkoffs, &
            chnkdims,hdferr)
       if (hdferr /= 0) then
          call fatal_error('Couldn''t assign the hyperslab filespace for '//trim(varn)//'!' &
-              ,'hdf_getslab_r','ed_init_full_history.F90')
+              ,'hdf_getslab_r','ed_init_full_hist.F90')
       end if
 
       call h5screate_simple_f(dsetrank,memsize,memspace,hdferr)
@@ -5339,14 +5301,14 @@ subroutine hdf_getslab_r(buff,varn,dsetrank,iparallel,required,foundvar)
          write(unit=*,fmt=*) 'Chnkdims = ',chnkdims
          write(unit=*,fmt=*) 'Dsetrank = ',dsetrank
          call fatal_error('Couldn''t create the hyperslab memspace for '//trim(varn)//'!'  &
-                         ,'hdf_getslab_r','ed_init_full_history.F90')
+                         ,'hdf_getslab_r','ed_init_full_hist.F90')
       end if
 
       call h5sselect_hyperslab_f(memspace,H5S_SELECT_SET_F,memoffs, &
            memdims,hdferr)
       if (hdferr /= 0) then
          call fatal_error('Couldn''t assign the hyperslab filespace for '//trim(varn)//'!' &
-              ,'hdf_getslab_r','ed_init_full_history.F90')
+              ,'hdf_getslab_r','ed_init_full_hist.F90')
       end if
 
       if (iparallel == 1) then
@@ -5357,7 +5319,7 @@ subroutine hdf_getslab_r(buff,varn,dsetrank,iparallel,required,foundvar)
 
          if (hdferr /= 0) then
             call fatal_error('Couldn''t read in hyperslab dataset for '//trim(varn)//'!'   &
-                 ,'hdf_getslab_r','ed_init_full_history.F90')
+                 ,'hdf_getslab_r','ed_init_full_hist.F90')
          end if
 
       else
@@ -5367,7 +5329,7 @@ subroutine hdf_getslab_r(buff,varn,dsetrank,iparallel,required,foundvar)
 
          if (hdferr /= 0) then
             call fatal_error('Couldn''t read in hyperslab dataset for '//trim(varn)//'!'   &
-                 ,'hdf_getslab_r','ed_init_full_history.F90')
+                 ,'hdf_getslab_r','ed_init_full_hist.F90')
          end if
 
       end if
@@ -5453,7 +5415,7 @@ subroutine hdf_getslab_d(buff,varn,dsetrank,iparallel,required,foundvar)
       write(unit=*,fmt=*) 'File_ID = ',file_id
       write(unit=*,fmt=*) 'Dset_ID = ',dset_id
       call fatal_error('Could not get the dataset for '//trim(varn)//'!!!' &
-           ,'hdf_getslab_d','ed_init_full_history.F90')
+           ,'hdf_getslab_d','ed_init_full_hist.F90')
       !------------------------------------------------------------------------------------!
 
    else if ((.not. foundvar) .and. (.not.required) ) then
@@ -5489,14 +5451,14 @@ subroutine hdf_getslab_d(buff,varn,dsetrank,iparallel,required,foundvar)
       call h5dget_space_f(dset_id,filespace,hdferr)
       if (hdferr /= 0) then
          call fatal_error('Could not get the hyperslabs filespace for '//trim(varn)//'!'   &
-              ,'hdf_getslab_d','ed_init_full_history.F90')
+              ,'hdf_getslab_d','ed_init_full_hist.F90')
       end if
 
       call h5sselect_hyperslab_f(filespace,H5S_SELECT_SET_F,chnkoffs, &
            chnkdims,hdferr)
       if (hdferr /= 0) then
          call fatal_error('Couldn''t assign the hyperslab filespace for '//trim(varn)//'!' &
-              ,'hdf_getslab_d','ed_init_full_history.F90')
+              ,'hdf_getslab_d','ed_init_full_hist.F90')
       end if
 
       call h5screate_simple_f(dsetrank,memsize,memspace,hdferr)
@@ -5504,14 +5466,14 @@ subroutine hdf_getslab_d(buff,varn,dsetrank,iparallel,required,foundvar)
          write(unit=*,fmt=*) 'Chnkdims = ',chnkdims
          write(unit=*,fmt=*) 'Dsetrank = ',dsetrank
          call fatal_error('Couldn''t create the hyperslab memspace for '//trim(varn)//'!'  &
-                         ,'hdf_getslab_d','ed_init_full_history.F90')
+                         ,'hdf_getslab_d','ed_init_full_hist.F90')
       end if
 
       call h5sselect_hyperslab_f(memspace,H5S_SELECT_SET_F,memoffs, &
            memdims,hdferr)
       if (hdferr /= 0) then
          call fatal_error('Couldn''t assign the hyperslab filespace for '//trim(varn)//'!' &
-              ,'hdf_getslab_d','ed_init_full_history.F90')
+              ,'hdf_getslab_d','ed_init_full_hist.F90')
       end if
 
       if (iparallel == 1) then
@@ -5522,7 +5484,7 @@ subroutine hdf_getslab_d(buff,varn,dsetrank,iparallel,required,foundvar)
 
          if (hdferr /= 0) then
             call fatal_error('Couldn''t read in hyperslab dataset for '//trim(varn)//'!'   &
-                 ,'hdf_getslab_d','ed_init_full_history.F90')
+                 ,'hdf_getslab_d','ed_init_full_hist.F90')
          end if
 
       else
@@ -5532,7 +5494,7 @@ subroutine hdf_getslab_d(buff,varn,dsetrank,iparallel,required,foundvar)
 
          if (hdferr /= 0) then
             call fatal_error('Couldn''t read in hyperslab dataset for '//trim(varn)//'!'   &
-                 ,'hdf_getslab_d','ed_init_full_history.F90')
+                 ,'hdf_getslab_d','ed_init_full_hist.F90')
          end if
 
       end if
@@ -5617,7 +5579,7 @@ subroutine hdf_getslab_i(buff,varn,dsetrank,iparallel,required,foundvar)
       write(unit=*,fmt=*) 'File_ID = ',file_id
       write(unit=*,fmt=*) 'Dset_ID = ',dset_id
       call fatal_error('Could not get the dataset for '//trim(varn)//'!!!' &
-           ,'hdf_getslab_i','ed_init_full_history.F90')
+           ,'hdf_getslab_i','ed_init_full_hist.F90')
       !------------------------------------------------------------------------------------!
 
    else if ((.not. foundvar) .and. (.not.required) ) then
@@ -5653,14 +5615,14 @@ subroutine hdf_getslab_i(buff,varn,dsetrank,iparallel,required,foundvar)
       call h5dget_space_f(dset_id,filespace,hdferr)
       if (hdferr /= 0) then
          call fatal_error('Could not get the hyperslabs filespace for '//trim(varn)//'!'   &
-              ,'hdf_getslab_i','ed_init_full_history.F90')
+              ,'hdf_getslab_i','ed_init_full_hist.F90')
       end if
 
       call h5sselect_hyperslab_f(filespace,H5S_SELECT_SET_F,chnkoffs, &
            chnkdims,hdferr)
       if (hdferr /= 0) then
          call fatal_error('Couldn''t assign the hyperslab filespace for '//trim(varn)//'!' &
-              ,'hdf_getslab_i','ed_init_full_history.F90')
+              ,'hdf_getslab_i','ed_init_full_hist.F90')
       end if
 
       call h5screate_simple_f(dsetrank,memsize,memspace,hdferr)
@@ -5668,14 +5630,14 @@ subroutine hdf_getslab_i(buff,varn,dsetrank,iparallel,required,foundvar)
          write(unit=*,fmt=*) 'Chnkdims = ',chnkdims
          write(unit=*,fmt=*) 'Dsetrank = ',dsetrank
          call fatal_error('Couldn''t create the hyperslab memspace for '//trim(varn)//'!'  &
-                         ,'hdf_getslab_i','ed_init_full_history.F90')
+                         ,'hdf_getslab_i','ed_init_full_hist.F90')
       end if
 
       call h5sselect_hyperslab_f(memspace,H5S_SELECT_SET_F,memoffs, &
            memdims,hdferr)
       if (hdferr /= 0) then
          call fatal_error('Couldn''t assign the hyperslab filespace for '//trim(varn)//'!' &
-              ,'hdf_getslab_i','ed_init_full_history.F90')
+              ,'hdf_getslab_i','ed_init_full_hist.F90')
       end if
 
       if (iparallel == 1) then
@@ -5686,7 +5648,7 @@ subroutine hdf_getslab_i(buff,varn,dsetrank,iparallel,required,foundvar)
 
          if (hdferr /= 0) then
             call fatal_error('Couldn''t read in hyperslab dataset for '//trim(varn)//'!'   &
-                 ,'hdf_getslab_i','ed_init_full_history.F90')
+                 ,'hdf_getslab_i','ed_init_full_hist.F90')
          end if
 
       else
@@ -5696,7 +5658,7 @@ subroutine hdf_getslab_i(buff,varn,dsetrank,iparallel,required,foundvar)
 
          if (hdferr /= 0) then
             call fatal_error('Couldn''t read in hyperslab dataset for '//trim(varn)//'!'   &
-                 ,'hdf_getslab_i','ed_init_full_history.F90')
+                 ,'hdf_getslab_i','ed_init_full_hist.F90')
          end if
 
       end if
@@ -5713,4 +5675,4 @@ end subroutine hdf_getslab_i
 !==========================================================================================!
 !==========================================================================================!
 
-end module ed_init_full_history
+end module ed_init_full_hist

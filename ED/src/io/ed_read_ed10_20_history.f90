@@ -47,6 +47,7 @@ subroutine read_ed10_ed20_history_file
    use fuse_fiss_utils, only : sort_cohorts        & ! subroutine
                              , sort_patches        ! ! subroutine
    use disturb_coms   , only : ianth_disturb       ! ! intent(in)
+   use ed_type_init
    implicit none
 
    !----- Local constants. ----------------------------------------------------------------!
@@ -904,7 +905,7 @@ subroutine read_ed10_ed20_history_file
          end do
 
          !----- Initialise site-level variables. ------------------------------------------!
-         call init_ed_site_vars(cpoly,cgrid%lat(ipy))
+         call init_ed_site_vars(cpoly)
 
 
          !----- Get a diagnostic on the polygon's vegetation. -----------------------------!

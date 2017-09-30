@@ -39,6 +39,7 @@ module disturbance_utils
    subroutine apply_disturbances(cgrid)
       use forestry
       use update_derived_props_module
+      use ed_type_init
       use ed_state_vars, only : edtype                    & ! structure
                               , polygontype               & ! structure
                               , sitetype                  & ! structure
@@ -1296,6 +1297,7 @@ module disturbance_utils
       use consts_coms  , only : t3ple     ! ! intent(in)
       use grid_coms    , only : nzs       & ! intent(in)
                               , nzg       ! ! intent(in)
+      use ed_type_init
 
       implicit none
       !----- Arguments. -------------------------------------------------------------------!
@@ -2647,6 +2649,7 @@ module disturbance_utils
       use ed_max_dims    , only : n_pft                    ! ! intent(in)
       use phenology_aux  , only : pheninit_balive_bstorage ! ! intent(in)
       use therm_lib      , only : cmtl2uext                ! ! intent(in)
+      use ed_type_init
       implicit none
       !----- Arguments. -------------------------------------------------------------------!
       type(sitetype)                  , target     :: csite

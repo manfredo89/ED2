@@ -3965,6 +3965,7 @@ module fuse_fiss_utils
       use budget_utils       , only : update_budget         ! ! intent(in)
       use consts_coms        , only : wdns                  ! ! intent(in)
       use fusion_fission_coms, only : corr_patch            ! ! intent(in)
+      use ed_type_init       , only : new_patch_sfc_props
       implicit none
       !----- Arguments --------------------------------------------------------------------!
       type(sitetype)         , target      :: csite             ! Current site

@@ -1950,8 +1950,6 @@ module rk4_coms
       use therm_lib8  , only : press2exner8  & ! function
                              , extemp2theta8 & ! function
                              , tq2enthalpy8  & ! function
-                             , thetaeiv8     & ! function
-                             , thetaeivs8    & ! function
                              , idealdenssh8  & ! function
                              , reducedpress8 ! ! function
       use soil_coms   , only : soil8         ! ! intent(in)
