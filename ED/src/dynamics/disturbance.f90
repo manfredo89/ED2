@@ -63,6 +63,7 @@ module disturbance_utils
                               , tiny_num                  & ! intent(in)
                               , huge_num                  ! ! intent(in)
       use budget_utils , only : update_budget             ! ! sub-routine
+      use fuse_fiss_utils, only : new_patch_sfc_props
       implicit none
       !----- Arguments. -------------------------------------------------------------------!
       type(edtype)                    , target      :: cgrid

@@ -1,8 +1,13 @@
+module fire
+
 !==========================================================================================!
 !==========================================================================================!
 !    This subroutine will evaluate whether fire conditions exist, and if that is the case, !
 ! it will calculate the disturbance rate due to fire.                                      !
 !------------------------------------------------------------------------------------------!
+
+contains
+
 subroutine fire_frequency(cgrid)
    use ed_state_vars , only : edtype                 & ! structure
                             , polygontype            & ! structure
@@ -221,3 +226,4 @@ subroutine fire_frequency(cgrid)
 end subroutine fire_frequency
 !==========================================================================================!
 !==========================================================================================!
+end module fire

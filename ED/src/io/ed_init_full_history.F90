@@ -601,34 +601,14 @@ subroutine fillh_grid_p11(cgrid,ipy,py_index)
                      ,'CBUDGET_NEP '              ,dsetrank,iparallel,.true. ,foundvar)
    call hdf_getslab_r(cgrid%nbudget_initialstorage  (ipy:ipy)                              &
                      ,'NBUDGET_INITIALSTORAGE '   ,dsetrank,iparallel,.true. ,foundvar)
-   call hdf_getslab_r(cgrid%Cleaf_grow              (ipy:ipy)                              &
-                     ,'CLEAF_GROW '               ,dsetrank,iparallel,.false.,foundvar)
-   call hdf_getslab_r(cgrid%Croot_grow              (ipy:ipy)                              &
-                     ,'CROOT_GROW '               ,dsetrank,iparallel,.false.,foundvar)
-   call hdf_getslab_r(cgrid%Cdead_grow              (ipy:ipy)                              &
-                     ,'CDEAD_GROW '               ,dsetrank,iparallel,.false.,foundvar)
-   call hdf_getslab_r(cgrid%Cstore_grow             (ipy:ipy)                              &
-                     ,'CSTORE_GROW '              ,dsetrank,iparallel,.false.,foundvar)
    call hdf_getslab_r(cgrid%Cleaf_litter_flux       (ipy:ipy)                              &
                      ,'CLEAF_LITTER_FLUX '        ,dsetrank,iparallel,.false.,foundvar)
    call hdf_getslab_r(cgrid%Croot_litter_flux       (ipy:ipy)                              &
                      ,'CROOT_LITTER_FLUX '        ,dsetrank,iparallel,.false.,foundvar)
-   call hdf_getslab_r(cgrid%Ccwd_flux               (ipy:ipy)                              &
-                     ,'CCWD_FLUX '                ,dsetrank,iparallel,.false.,foundvar)
-   call hdf_getslab_r(cgrid%Nleaf_grow              (ipy:ipy)                              &
-                     ,'NLEAF_GROW '               ,dsetrank,iparallel,.false.,foundvar)
-   call hdf_getslab_r(cgrid%Ndead_grow              (ipy:ipy)                              &
-                     ,'NDEAD_GROW '               ,dsetrank,iparallel,.false.,foundvar)
-   call hdf_getslab_r(cgrid%Nroot_grow              (ipy:ipy)                              &
-                     ,'NROOT_GROW '               ,dsetrank,iparallel,.false.,foundvar)
-   call hdf_getslab_r(cgrid%Nstore_grow             (ipy:ipy)                              &
-                     ,'NSTORE_GROW '              ,dsetrank,iparallel,.false.,foundvar)
    call hdf_getslab_r(cgrid%Nleaf_litter_flux       (ipy:ipy)                              &
                      ,'NLEAF_LITTER_FLUX '        ,dsetrank,iparallel,.false.,foundvar)
    call hdf_getslab_r(cgrid%Nroot_litter_flux       (ipy:ipy)                              &
                      ,'NROOT_LITTER_FLUX '        ,dsetrank,iparallel,.false.,foundvar)
-   call hdf_getslab_r(cgrid%Ncwd_flux               (ipy:ipy)                              &
-                     ,'NCWD_FLUX '                ,dsetrank,iparallel,.false.,foundvar)
    call hdf_getslab_r(cgrid%Nbiomass_uptake         (ipy:ipy)                              &
                      ,'NBIOMASS_UPTAKE '          ,dsetrank,iparallel,.false.,foundvar)
    call hdf_getslab_r(cgrid%Ngross_min              (ipy:ipy)                              &
@@ -2526,8 +2506,8 @@ subroutine fillh_polygon(cpoly,pysi_index,nsites_global,nsites_now,is_burnt)
    memdims (1) = int(cpoly%nsites  ,8)
    memsize (1) = int(cpoly%nsites  ,8)
    memoffs (1) = 0_8
-   call hdf_getslab_i(cpoly%patch_count                                                    &
-                     ,'PATCH_COUNT             ',dsetrank,iparallel,.true. ,foundvar)
+   !call hdf_getslab_i(cpoly%patch_count                                                    &
+   !                  ,'PATCH_COUNT             ',dsetrank,iparallel,.true. ,foundvar)
    call hdf_getslab_i(cpoly%sitenum                                                        &
                      ,'SITENUM                 ',dsetrank,iparallel,.true. ,foundvar)
    call hdf_getslab_i(cpoly%num_landuse_years                                              &
@@ -2599,8 +2579,8 @@ subroutine fillh_polygon(cpoly,pysi_index,nsites_global,nsites_now,is_burnt)
    memoffs (1) = 0_8
    call hdf_getslab_r(cpoly%area                                                           &
                       ,'AREA_SI                    ' ,dsetrank,iparallel,.true. ,foundvar)
-   call hdf_getslab_r(cpoly%patch_area                                                     &
-                      ,'PATCH_AREA                 ' ,dsetrank,iparallel,.true. ,foundvar)
+   ! call hdf_getslab_r(cpoly%patch_area                                                     &
+   !                    ,'PATCH_AREA                 ' ,dsetrank,iparallel,.true. ,foundvar)
    call hdf_getslab_r(cpoly%elevation                                                      &
                       ,'ELEVATION                  ' ,dsetrank,iparallel,.true. ,foundvar)
    call hdf_getslab_r(cpoly%slope                                                          &
@@ -5345,173 +5325,6 @@ subroutine hdf_getslab_r(buff,varn,dsetrank,iparallel,required,foundvar)
 end subroutine hdf_getslab_r
 !==========================================================================================!
 !==========================================================================================!
-
-
-
-
-
-
-!==========================================================================================!
-!==========================================================================================!
-!      This routine reads in double precision variables from HDF5 files.                   !
-! BUFF      -- Where the dataset should be loaded to                                       !
-! VARN      -- Variable name as in the HDF5 file                                           !
-! DSETRANK  -- Number of dimensions.                                                       !
-! IPARALLEL -- Should fortran read data in parallel?  (0 = no, 1 = yes)                    !
-! REQUIRED  -- Is this variable required? (.true. = yes, .false. = no)                     !
-!              If a variable is missing and required is set to true, then the model will   !
-!              crash.  If it is missing but required is false, then we initialise the      !
-!              variable with zeroes and print a big banner to the standard output to       !
-!              warn the user.                                                              !
-! FOUNDVAR  -- Output flag that tells whether the variable was found or not.               !
-!------------------------------------------------------------------------------------------!
-subroutine hdf_getslab_d(buff,varn,dsetrank,iparallel,required,foundvar)
-
-   use hdf5
-   use hdf5_coms, only : file_id      & ! intent(inout)
-                       , dset_id      & ! intent(inout)
-                       , plist_id     & ! intent(inout)
-                       , filespace    & ! intent(inout)
-                       , memspace     & ! intent(inout)
-                       , globdims     & ! intent(inout)
-                       , chnkdims     & ! intent(inout)
-                       , chnkoffs     & ! intent(inout)
-                       , memdims      & ! intent(inout)
-                       , memoffs      & ! intent(inout)
-                       , memsize      ! ! intent(inout)
-
-   use ed_misc_coms,only: suppress_h5_warnings
-
-   implicit none
-   !----- Arguments. ----------------------------------------------------------------------!
-   real(kind=8)    , dimension(memsize(1),memsize(2),memsize(3),memsize(4))                &
-                                                              , intent(inout) :: buff
-   character(len=*)                                           , intent(in)    :: varn
-   integer                                                    , intent(in)    :: dsetrank
-   integer                                                    , intent(in)    :: iparallel
-   logical                                                    , intent(in)    :: required
-   logical                                                    , intent(out)   :: foundvar
-   !----- Local variables. ----------------------------------------------------------------!
-   integer                                                                    :: hdferr
-   !---------------------------------------------------------------------------------------!
-
-
-
-   !---------------------------------------------------------------------------------------!
-   !     Try to open dataset, and save the success/failure flag.                           !
-   !---------------------------------------------------------------------------------------!
-   call h5dopen_f(file_id,trim(varn), dset_id, hdferr)
-   foundvar = hdferr == 0
-   !---------------------------------------------------------------------------------------!
-
-
-   !---------------------------------------------------------------------------------------!
-   !    Check whether the dataset was opened before continuing.                            !
-   !---------------------------------------------------------------------------------------!
-   if ((.not. foundvar) .and. required ) then
-      !------------------------------------------------------------------------------------!
-      !    Variable is required but wasn't found; stop the run.                            !
-      !------------------------------------------------------------------------------------!
-      write(unit=*,fmt=*) 'File_ID = ',file_id
-      write(unit=*,fmt=*) 'Dset_ID = ',dset_id
-      call fatal_error('Could not get the dataset for '//trim(varn)//'!!!' &
-           ,'hdf_getslab_d','ed_init_full_hist.F90')
-      !------------------------------------------------------------------------------------!
-
-   else if ((.not. foundvar) .and. (.not.required) ) then
-      !------------------------------------------------------------------------------------!
-      !    Variable wasn't found but it wasn't required either; initialise buffer with     !
-      ! zeroes, and warn the user that we are doing this.                                  !
-      !------------------------------------------------------------------------------------!
-      if(.not.suppress_h5_warnings)then
-      write(unit=*,fmt=*) 'File_ID = ',file_id
-      write(unit=*,fmt=*) 'Dset_ID = ',dset_id
-      write (unit=*,fmt='(a)') '----------------------------------------------------------'
-      write (unit=*,fmt='(a)') '   WARNING! WARNING! WARNING! WARNING! WARNING! WARNING!  '
-      write (unit=*,fmt='(a)') '                                                          '
-      write (unit=*,fmt='(a)') ' + Variable '//trim(varn)//' not found in your history.'
-      write (unit=*,fmt='(a)') ' + Initializing this variable with zero. '
-      write (unit=*,fmt='(a)') ' + his may cause some of your diagnostic output related'
-      write (unit=*,fmt='(a)') '   to this variable to be incorrect the current period.'
-      write (unit=*,fmt='(a)') ''
-      write (unit=*,fmt='(a)') '   This variable has been specified as:'
-      write (unit=*,fmt='(a)') '   NOT ABSOUTELY NECESSARY TO RESTART THE PROGNOSTIC STATE'
-      write (unit=*,fmt='(a)') '----------------------------------------------------------'
-      write (unit=*,fmt='(a)') ''
-      end if
-      buff(:,:,:,:) = 0.d0
-      return
-      !------------------------------------------------------------------------------------!
-
-   else
-      !------------------------------------------------------------------------------------!
-      !     Found the variable, read in the data, checking that every step was success-    !
-      ! fully done before moving to the next.                                              !
-      !------------------------------------------------------------------------------------!
-      call h5dget_space_f(dset_id,filespace,hdferr)
-      if (hdferr /= 0) then
-         call fatal_error('Could not get the hyperslabs filespace for '//trim(varn)//'!'   &
-              ,'hdf_getslab_d','ed_init_full_hist.F90')
-      end if
-
-      call h5sselect_hyperslab_f(filespace,H5S_SELECT_SET_F,chnkoffs, &
-           chnkdims,hdferr)
-      if (hdferr /= 0) then
-         call fatal_error('Couldn''t assign the hyperslab filespace for '//trim(varn)//'!' &
-              ,'hdf_getslab_d','ed_init_full_hist.F90')
-      end if
-
-      call h5screate_simple_f(dsetrank,memsize,memspace,hdferr)
-      if (hdferr /= 0) then
-         write(unit=*,fmt=*) 'Chnkdims = ',chnkdims
-         write(unit=*,fmt=*) 'Dsetrank = ',dsetrank
-         call fatal_error('Couldn''t create the hyperslab memspace for '//trim(varn)//'!'  &
-                         ,'hdf_getslab_d','ed_init_full_hist.F90')
-      end if
-
-      call h5sselect_hyperslab_f(memspace,H5S_SELECT_SET_F,memoffs, &
-           memdims,hdferr)
-      if (hdferr /= 0) then
-         call fatal_error('Couldn''t assign the hyperslab filespace for '//trim(varn)//'!' &
-              ,'hdf_getslab_d','ed_init_full_hist.F90')
-      end if
-
-      if (iparallel == 1) then
-
-         call h5dread_f(dset_id, H5T_NATIVE_DOUBLE,buff,globdims, hdferr, &
-              mem_space_id = memspace, file_space_id = filespace, &
-              xfer_prp = plist_id)
-
-         if (hdferr /= 0) then
-            call fatal_error('Couldn''t read in hyperslab dataset for '//trim(varn)//'!'   &
-                 ,'hdf_getslab_d','ed_init_full_hist.F90')
-         end if
-
-      else
-
-         call h5dread_f(dset_id, H5T_NATIVE_DOUBLE,buff,globdims, hdferr, &
-              mem_space_id = memspace, file_space_id = filespace )
-
-         if (hdferr /= 0) then
-            call fatal_error('Couldn''t read in hyperslab dataset for '//trim(varn)//'!'   &
-                 ,'hdf_getslab_d','ed_init_full_hist.F90')
-         end if
-
-      end if
-
-      !  write(unit=*,fmt='(a)') 'History start: Loading '//trim(varn)//'...'
-
-      call h5sclose_f(filespace, hdferr)
-      call h5sclose_f(memspace , hdferr)
-      call h5dclose_f(dset_id  , hdferr)
-
-   end if
-   return
-end subroutine hdf_getslab_d
-!==========================================================================================!
-!==========================================================================================!
-
-
 
 
 

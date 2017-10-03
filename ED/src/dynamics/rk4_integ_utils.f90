@@ -30,6 +30,7 @@ subroutine odeint(h1,csite,ipa,isi,nsteps)
                              , simplerunoff
    use consts_coms    , only : wdnsi8                 ! ! intent(in)
    use therm_lib8     , only : tl2uint8               ! ! intent(in)
+   use rk4_derivs     , only : leaf_derivs
    !$ use omp_lib
 
    implicit none
@@ -1928,6 +1929,7 @@ end subroutine initialize_misc_stepvars
                                , zero_rk4_cohort     ! ! intent(in)
       use ed_state_vars , only : sitetype            & ! structure
                                , patchtype           ! ! structure
+      use rk4_derivs    , only : leaf_derivs
       implicit none
 
       !----- Arguments --------------------------------------------------------------------!

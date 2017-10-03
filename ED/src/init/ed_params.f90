@@ -523,21 +523,31 @@ subroutine init_can_rad_params()
       , orient_grass                & ! intent(in)
       , clump_tree                  & ! intent(in)
       , clump_grass                 & ! intent(in)
-      , leaf_reflect_nir            & ! intent(in)
-      , leaf_trans_nir              & ! intent(in)
-      , leaf_reflect_vis            & ! intent(in)
-      , leaf_trans_vis              & ! intent(in)
-      , leaf_backscatter_tir        & ! intent(out)
-      , leaf_emiss_tir              & ! intent(out)
-      , clumping_factor             & ! intent(out)
-      , orient_factor               & ! intent(out)
-      , wood_reflect_nir            & ! intent(in)
-      , wood_trans_nir              & ! intent(in)
-      , wood_reflect_vis            & ! intent(in)
-      , wood_trans_vis              & ! intent(in)
-      , wood_trans_vis              & ! intent(in)
-      , wood_backscatter_tir        & ! intent(out)
-      , wood_emiss_tir              & ! intent(out)
+                                    , clumping_factor             & ! intent(in)
+                                    , orient_factor               & ! intent(in)
+                                    , leaf_emiss_tir              & ! intent(out)
+                                    , wood_emiss_tir              & ! intent(in)
+                                    , leaf_reflect_vis            & ! intent(in)
+                                    , leaf_reflect_nir            & ! intent(out)
+                                    , wood_reflect_vis            & ! intent(in)
+                                    , wood_reflect_nir            & ! intent(in)
+                                    , leaf_trans_vis              & ! intent(out)
+                                    , leaf_trans_nir              & ! intent(out)
+                                    , wood_trans_vis              & ! intent(out)
+                                    , wood_trans_nir              & ! intent(out)
+                                    , leaf_backscatter_vis        & ! intent(out)
+                                    , leaf_backscatter_nir        & ! intent(out)
+                                    , leaf_backscatter_tir        & ! intent(out)
+                                    , wood_backscatter_vis        & ! intent(in)
+                                    , wood_backscatter_nir        & ! intent(in)
+                                    , wood_backscatter_tir        & ! intent(out)
+                                    , leaf_scatter_vis            & ! intent(in)
+                                    , leaf_scatter_nir            & ! intent(in)
+                                    , wood_scatter_vis            & ! intent(out)
+                                    , wood_scatter_nir            & ! intent(in)
+                                    , phi1                        & ! intent(in)
+                                    , phi2                        & ! intent(in)
+                                    , mu_bar                      & ! intent(out)
       , fvis_beam_def               & ! intent(out)
       , fvis_diff_def               & ! intent(out)
       , fnir_beam_def               & ! intent(out)
@@ -782,6 +792,68 @@ subroutine init_can_rad_params()
    end do
    !---------------------------------------------------------------------------------------!
 
+   !---------------------------------------------------------------------------------------!
+
+   !---------------------------------------------------------------------------------------!
+   !     Forward scattering.                                                               !
+   !---------------------------------------------------------------------------------------!
+   !----- Visible (PAR). ------------------------------------------------------------------!
+   leaf_scatter_vis(:) = leaf_reflect_vis(:) + leaf_trans_vis(:)
+   wood_scatter_vis(:) = wood_reflect_vis(:) + wood_trans_vis(:)
+   !----- Near infrared (NIR). ------------------------------------------------------------!
+   leaf_scatter_nir(:) = leaf_reflect_nir(:) + leaf_trans_nir(:)
+   wood_scatter_nir(:) = wood_reflect_nir(:) + wood_trans_nir(:)
+   !---------------------------------------------------------------------------------------!
+
+   !---------------------------------------------------------------------------------------!
+   !      Back-scattering coefficients following CLM.                                      !
+   !---------------------------------------------------------------------------------------!
+   !----- Visible (PAR). ------------------------------------------------------------------!
+   leaf_backscatter_vis = ( leaf_scatter_vis                                               &
+                          + 2.5d-1 * ( leaf_reflect_vis - leaf_trans_vis   )               &
+                          * ( 1.d0 + orient_factor) ** 2 )                                 &
+                          / ( 2.d0 * leaf_scatter_vis )
+   wood_backscatter_vis = ( wood_scatter_vis                                               &
+                          + 2.5d-1                                                         &
+                          * ( wood_reflect_vis - wood_trans_vis   )                        &
+                          * ( 1.d0 + orient_factor) ** 2 )                                 &
+                          / ( 2.d0 * wood_scatter_vis )
+   !----- Near infrared (NIR). ------------------------------------------------------------!
+   leaf_backscatter_nir = ( leaf_scatter_nir                                               &
+                          + 2.5d-1                                                         &
+                          * ( leaf_reflect_nir - leaf_trans_nir   )                        &
+                          * ( 1.d0 + orient_factor) ** 2 )                                 &
+                          / ( 2.d0 * leaf_scatter_nir )
+   wood_backscatter_nir = ( wood_scatter_nir                                               &
+                          + 2.5d-1                                                         &
+                          * ( wood_reflect_nir - wood_trans_nir   )                        &
+                          * ( 1.d0 + orient_factor) ** 2 )                                 &
+                          / ( 2.d0 * wood_scatter_nir )
+
+   !---------------------------------------------------------------------------------------!
+   !     Light extinction coefficients.   These are found following CLM technical manual,  !
+   ! and the values fall back to ED-2.0 defaults when orient_factor is zero.               !
+   !---------------------------------------------------------------------------------------!
+   phi1 = 5.d-1 - orient_factor * ( 6.33d-1 + 3.3d-1 * orient_factor )
+   phi2 = 8.77d-1 * (1.d0 - 2.d0 * phi1)
+
+   !---------------------------------------------------------------------------------------!
+   !     Find the average inverse diffuse optical depth per unit leaf and stem area.       !
+   ! We follow CLM technical manual, equation 3.4 only when the orientation factor is      !
+   ! non-zero.   Otherwise, we make it 1.d0, which is the limit of that equation when      !
+   ! phi2 approaches zero.                                                                 !
+   !---------------------------------------------------------------------------------------!
+   do ipft = 1, n_pft
+      if (orient_factor(ipft) == 0.d0) then
+         mu_bar(ipft) = 1.d0
+      else
+         mu_bar(ipft) = ( 1.d0                                                             &
+                        - phi1(ipft) * log(1.d0 + phi2(ipft) / phi1(ipft)) / phi2(ipft) )  &
+                        / phi2(ipft)
+      end if
+   end do
+
+   !---------------------------------------------------------------------------------------!
 
 
 
@@ -5176,8 +5248,6 @@ subroutine overwrite_with_xml_config(thisnode)
          end if
 
 
-         !! FINALLY, write out copy of settings
-         call write_ed_xml_config()
       !      stop
       elseif (thisnode == 1) then
          write(unit=*,fmt='(a)') '*********************************************'

@@ -93,11 +93,6 @@ ed_1st.o : $(ED_DRIVER)/ed_1st.F90
 	/bin/cp -f $< $(<F:.F90=.F90)
 	$(FPP_COMMAND) $(<F:.F90=.F90)
 
-ed_bigleaf_init.o : $(ED_INIT)/ed_bigleaf_init.f90
-	/bin/rm -f $(<F:.f90=.f90)
-	/bin/cp -f $< $(<F:.f90=.f90)
-	$(F90_COMMAND) $(<F:.f90=.f90)
-
 ed_driver.o : $(ED_DRIVER)/ed_driver.F90
 	/bin/rm -f $(<F:.F90=.F90)
 	/bin/cp -f $< $(<F:.F90=.F90)
@@ -248,11 +243,6 @@ ename_coms.o : $(ED_MEMORY)/ename_coms.f90
 	/bin/cp -f $< $(<F:.f90=.f90)
 	$(F90_COMMAND) $(<F:.f90=.f90)
 
-euler_driver.o : $(ED_DYNAMICS)/euler_driver.f90
-	/bin/rm -f $(<F:.f90=.f90)
-	/bin/cp -f $< $(<F:.f90=.f90)
-	$(F90_COMMAND) $(<F:.f90=.f90)
-
 events.o : $(ED_DYNAMICS)/events.f90
 	/bin/rm -f $(<F:.f90=.f90)
 	/bin/cp -f $< $(<F:.f90=.f90)
@@ -318,16 +308,6 @@ hdf5_utils.o : $(ED_UTILS)/hdf5_utils.F90
 	/bin/cp -f $< $(<F:.F90=.F90)
 	$(FPP_COMMAND) $(HDF5_INCS) $(<F:.F90=.F90)
 
-heun_driver.o: $(ED_DYNAMICS)/heun_driver.f90
-	/bin/rm -f $(<F:.f90=.f90)
-	/bin/cp -f $< $(<F:.f90=.f90)
-	$(F90_COMMAND) $(<F:.f90=.f90)
-
-hybrid_driver.o : $(ED_DYNAMICS)/hybrid_driver.f90
-	/bin/rm -f $(<F:.f90=.f90)
-	/bin/cp -f $< $(<F:.f90=.f90)
-	$(F90_COMMAND) $(<F:.f90=.f90)
-
 hydrology_coms.o: $(ED_MEMORY)/hydrology_coms.f90
 	/bin/rm -f $(<F:.f90=.f90)
 	/bin/cp -f $< $(<F:.f90=.f90)
@@ -389,11 +369,6 @@ multiple_scatter.o : $(ED_DYNAMICS)/multiple_scatter.f90
 	$(F90_COMMAND) $(<F:.f90=.f90)
 
 numutils.o: $(ED_UTILS)/numutils.f90
-	/bin/rm -f $(<F:.f90=.f90)
-	/bin/cp -f $< $(<F:.f90=.f90)
-	$(F90_COMMAND) $(<F:.f90=.f90)
-
-old_twostream_rad.o : $(ED_DYNAMICS)/old_twostream_rad.f90
 	/bin/rm -f $(<F:.f90=.f90)
 	/bin/cp -f $< $(<F:.f90=.f90)
 	$(F90_COMMAND) $(<F:.f90=.f90)

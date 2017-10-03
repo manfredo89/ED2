@@ -54,7 +54,6 @@ module ed_therm_lib
                                       , agf_bs              & ! intent(in)
                                       , C2B                 & ! intent(in)
                                       , brf_wd              ! ! intent(in)
-
       use rk4_coms             , only : ibranch_thermo      ! ! intent(in)
       implicit none
       !----- Arguments --------------------------------------------------------------------!

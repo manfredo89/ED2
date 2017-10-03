@@ -83,26 +83,29 @@ endif
 #################################    DEBUG BUILD   #########################################
 ifeq ($(KIND_COMP),A)
 	USE_INTERF=0
-	F_OPTS= -FR -O0 -check -g -debug extended -debug-parameters -traceback -ftrapuv -u      \
-			-fp-stack-check -assume byterecl -warn unused -warn uncalled -gen-interfaces
-	C_OPTS= -O0 -g -traceback
+#	F_OPTS= -FR -check -g -debug extended -debug-parameters -traceback -u -fp-stack-check \
+#			-warn unused -warn uncalled -gen-interfaces
+#	C_OPTS= -g -traceback
+	F_OPTS= -FR -check -g -debug extended -debug-parameters -traceback -u -fp-stack-check \
+		-warn
+	C_OPTS= -g -traceback
 	#---------------------------------------------------------------------------------------#
 endif
 ############################   LEGACY DEBUG BUILD   #########################################
 ifeq ($(KIND_COMP),B)
 	USE_INTERF=0
-	F_OPTS= -FR -O0 -recursive  -check all -g -debug extended -debug-parameters used        \
-			-fpe0 -no-ftz -traceback -ftrapuv -fp-stack-check -implicitnone                 \
+	F_OPTS= -FR -recursive  -check all -g -debug extended -debug-parameters used        \
+			-fpe0 -no-ftz -traceback -ftrapuv -fp-stack-check -implicitnone      \
 			-assume byterecl -warn unused -warn uncalled -warn usage -gen-interfaces
-	C_OPTS= -O0 -DLITTLE  -g -traceback
+	C_OPTS= -DLITTLE  -g -traceback
 	#---------------------------------------------------------------------------------------#
 endif
 ########################   DEBUG BUILD WITH INTEL PROFILING   ###############################
 ifeq ($(KIND_COMP),C)
 	USE_INTERF=0
-	F_OPTS= -O0 -check -g -prof-gen=srcpos -debug extended -debug-parameters -traceback -u  \
-			-ftrapuv -fp-stack-check -assume byterecl -gen-interfaces
-	C_OPTS= -O0 -g -traceback
+	F_OPTS= -check -g -prof-gen=srcpos -debug extended -debug-parameters -traceback -u  \
+			-fp-stack-check -gen-interfaces
+	C_OPTS= -g -traceback
 	#---------------------------------------------------------------------------------------#
 endif
 ############################### LEGACY OPTIMIZED BUILD   ####################################
@@ -124,8 +127,10 @@ endif
 ###########################   OPTIMIZED BUILD WITH OpenMP   #################################
 ifeq ($(KIND_COMP),F)
 	USE_INTERF=1
-	F_OPTS= -O3 -xHost -g -assume byterecl -qopenmp
+	F_OPTS= -O3 -xHost -g -qopenmp
 	C_OPTS= -O3 -xHost -g -qopenmp
+#	F_OPTS= -fast -g -qopenmp
+#	C_OPTS= -fast -g -qopenmp
 	F_LOWO_OPTS= -O2 -xHost -g -qopenmp
 	#---------------------------------------------------------------------------------------#
 endif

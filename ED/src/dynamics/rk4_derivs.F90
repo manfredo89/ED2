@@ -1,3 +1,4 @@
+module rk4_derivs
 !==========================================================================================!
 !==========================================================================================!
 ! Subroutine leaf_derivs                                                                   !
@@ -7,6 +8,9 @@
 ! whereas in LEAF-3 the actual step is done at once. This derivative will be used for the  !
 ! Runge-Kutta integration step.                                                            !
 !------------------------------------------------------------------------------------------!
+
+contains
+
 subroutine leaf_derivs(initp,dinitp,csite,ipa,dt,is_hybrid)
 
    use rk4_coms               , only : rk4patchtype       ! ! structure
@@ -27,29 +31,29 @@ subroutine leaf_derivs(initp,dinitp,csite,ipa,dt,is_hybrid)
    !---------------------------------------------------------------------------------------!
    ! Depending on the type of compilation, interfaces must be explicitly declared.         !
    !---------------------------------------------------------------------------------------!
-#if USE_INTERF
-   interface
-      !------------------------------------------------------------------------------------!
-      !    Subroutine that computes the canopy and leaf fluxes.                            !
-      !------------------------------------------------------------------------------------!
-      subroutine leaftw_derivs(mzg,initp,dinitp,csite,ipa,dt,is_hybrid)
-         use rk4_coms      , only : rk4patchtype ! ! structure
-         use ed_state_vars , only : sitetype     & ! structure
-                                  , polygontype  ! ! structure
-         implicit none
-         !----- Arguments -----------------------------------------------------------------!
-         type(rk4patchtype)  , target     :: initp     ! RK4 structure, intermediate step
-         type(rk4patchtype)  , target     :: dinitp    ! RK4 structure, derivatives
-         type(sitetype)      , target     :: csite     ! Current site (before integration)
-         integer             , intent(in) :: ipa       ! Current patch ID
-         integer             , intent(in) :: mzg       ! Number of ground layers
-         real(kind=8)        , intent(in) :: dt        ! Time step
-         logical             , intent(in) :: is_hybrid ! Hybrid solver?
-      end subroutine leaftw_derivs
-      !------------------------------------------------------------------------------------!
-   end interface
-#endif
-   !---------------------------------------------------------------------------------------!
+!#if USE_INTERF
+!   interface
+!      !------------------------------------------------------------------------------------!
+!      !    Subroutine that computes the canopy and leaf fluxes.                            !
+!      !------------------------------------------------------------------------------------!
+!      subroutine leaftw_derivs(mzg,initp,dinitp,csite,ipa,dt,is_hybrid)
+!         use rk4_coms      , only : rk4patchtype ! ! structure
+!         use ed_state_vars , only : sitetype     & ! structure
+!                                  , polygontype  ! ! structure
+!         implicit none
+!         !----- Arguments -----------------------------------------------------------------!
+!         type(rk4patchtype)  , target     :: initp     ! RK4 structure, intermediate step
+!         type(rk4patchtype)  , target     :: dinitp    ! RK4 structure, derivatives
+!         type(sitetype)      , target     :: csite     ! Current site (before integration)
+!         integer             , intent(in) :: ipa       ! Current patch ID
+!         integer             , intent(in) :: mzg       ! Number of ground layers
+!         real(kind=8)        , intent(in) :: dt        ! Time step
+!         logical             , intent(in) :: is_hybrid ! Hybrid solver?
+!      end subroutine leaftw_derivs
+!      !------------------------------------------------------------------------------------!
+!   end interface
+!#endif
+!   !---------------------------------------------------------------------------------------!
 
    !----- Ensure that theta_Eiv and water storage derivatives are both zero. --------------!
    dinitp%ebudget_storage   = 0.d0
@@ -170,41 +174,41 @@ subroutine leaftw_derivs(mzg,initp,dinitp,csite,ipa,dt,is_hybrid)
    !---------------------------------------------------------------------------------------!
    ! Depending on the type of compilation, interfaces must be explicitly declared.         !
    !---------------------------------------------------------------------------------------!
-#if USE_INTERF
-   interface
-      subroutine canopy_derivs_two(mzg,initp,dinitp,csite,ipa,hflxsc,wflxsc,qwflxsc        &
-                                  ,hflxgc,wflxgc,qwflxgc,dewgndflx,qdewgndflx,ddewgndflx   &
-                                  ,throughfall_tot,qthroughfall_tot,dthroughfall_tot       &
-                                  ,wshed_tot,qwshed_tot,dwshed_tot,dt,is_hybrid)
-         use rk4_coms     , only: rk4patchtype  ! ! structure
-         use ed_state_vars, only: sitetype      & ! structure
-                                , patchtype     & ! structure
-                                , polygontype   ! ! structure
-         implicit none
-         type (rk4patchtype), target      :: initp, dinitp
-         type (sitetype)    , target      :: csite
-         integer            , intent(in)  :: ipa
-         integer            , intent(in)  :: mzg
-         real(kind=8)       , intent(in)  :: dt
-         logical            , intent(in)  :: is_hybrid
-         real(kind=8)       , intent(out) :: hflxsc
-         real(kind=8)       , intent(out) :: wflxsc
-         real(kind=8)       , intent(out) :: qwflxsc
-         real(kind=8)       , intent(out) :: hflxgc
-         real(kind=8)       , intent(out) :: wflxgc
-         real(kind=8)       , intent(out) :: qwflxgc
-         real(kind=8)       , intent(out) :: dewgndflx
-         real(kind=8)       , intent(out) :: qdewgndflx
-         real(kind=8)       , intent(out) :: ddewgndflx
-         real(kind=8)       , intent(out) :: wshed_tot
-         real(kind=8)       , intent(out) :: qwshed_tot
-         real(kind=8)       , intent(out) :: dwshed_tot
-         real(kind=8)       , intent(out) :: throughfall_tot
-         real(kind=8)       , intent(out) :: qthroughfall_tot
-         real(kind=8)       , intent(out) :: dthroughfall_tot
-      end subroutine canopy_derivs_two
-   end interface
-#endif
+!#if USE_INTERF
+!   interface
+!      subroutine canopy_derivs_two(mzg,initp,dinitp,csite,ipa,hflxsc,wflxsc,qwflxsc        &
+!                                  ,hflxgc,wflxgc,qwflxgc,dewgndflx,qdewgndflx,ddewgndflx   &
+!                                  ,throughfall_tot,qthroughfall_tot,dthroughfall_tot       &
+!                                  ,wshed_tot,qwshed_tot,dwshed_tot,dt,is_hybrid)
+!         use rk4_coms     , only: rk4patchtype  ! ! structure
+!         use ed_state_vars, only: sitetype      & ! structure
+!                                , patchtype     & ! structure
+!                                , polygontype   ! ! structure
+!         implicit none
+!         type (rk4patchtype), target      :: initp, dinitp
+!         type (sitetype)    , target      :: csite
+!         integer            , intent(in)  :: ipa
+!         integer            , intent(in)  :: mzg
+!         real(kind=8)       , intent(in)  :: dt
+!         logical            , intent(in)  :: is_hybrid
+!         real(kind=8)       , intent(out) :: hflxsc
+!         real(kind=8)       , intent(out) :: wflxsc
+!         real(kind=8)       , intent(out) :: qwflxsc
+!         real(kind=8)       , intent(out) :: hflxgc
+!         real(kind=8)       , intent(out) :: wflxgc
+!         real(kind=8)       , intent(out) :: qwflxgc
+!         real(kind=8)       , intent(out) :: dewgndflx
+!         real(kind=8)       , intent(out) :: qdewgndflx
+!         real(kind=8)       , intent(out) :: ddewgndflx
+!         real(kind=8)       , intent(out) :: wshed_tot
+!         real(kind=8)       , intent(out) :: qwshed_tot
+!         real(kind=8)       , intent(out) :: dwshed_tot
+!         real(kind=8)       , intent(out) :: throughfall_tot
+!         real(kind=8)       , intent(out) :: qthroughfall_tot
+!         real(kind=8)       , intent(out) :: dthroughfall_tot
+!      end subroutine canopy_derivs_two
+!   end interface
+!#endif
    !---------------------------------------------------------------------------------------!
 
    ibuff = 1
@@ -2011,3 +2015,4 @@ subroutine canopy_derivs_two(mzg,initp,dinitp,csite,ipa,hflxsc,wflxsc,qwflxsc,hf
 end subroutine canopy_derivs_two
 !==========================================================================================!
 !==========================================================================================!
+end module rk4_derivs

@@ -457,6 +457,8 @@ subroutine event_planting(pft,density8)
   use disturbance_utils,only: plant_patch
   use budget_utils     , only : update_budget
   use ed_type_init
+  use fuse_fiss_utils, only : new_patch_sfc_props
+
   implicit none
   integer(kind=4),intent(in) :: pft
   real(kind=8),intent(in) :: density8

@@ -60,33 +60,11 @@ end module libxml2f90_module
 
 module libxml2f90_strings_module
   PUBLIC
-  INTERFACE OPERATOR (-)
-     MODULE PROCEDURE lowercase
-  END INTERFACE
   INTERFACE OPERATOR (+)
      MODULE PROCEDURE uppercase
   END INTERFACE
 
-  INTERFACE OPERATOR (.itos.)
-     MODULE PROCEDURE i_2_s
-  END INTERFACE
-  INTERFACE OPERATOR (.rtos.)
-     MODULE PROCEDURE r_2_s
-  END INTERFACE
 contains
-  function lowercase(old) result(new)
-    implicit none
-    character(*), intent(in):: old
-    character(len(old))     :: new
-    integer(4)              :: i,isvar
-    !.......................................
-    new=old
-    do i=1,len(trim(old))
-       isvar=iachar(old(i:i))
-       if(isvar.ge.65.and.isvar.le.90) new(i:i)=achar(isvar+32)
-    enddo
-  end function lowercase
-
   function uppercase(old) result(new)
     implicit none
     character(*), intent(in):: old
@@ -99,329 +77,6 @@ contains
        if(isvar.ge.97.and.isvar.le.122) new(i:i)=achar(isvar-32)
     enddo
   end function uppercase
-
-  function i_2_s(i) result(string)
-    implicit none
-    integer(4),intent(in)        :: i
-    character(256)               :: string
-    integer(4)                   :: ibase
-    real(8)                      :: rbase=10_8
-    integer(4)                   :: ibasemax=10
-    integer(4)                   :: ifl
-    real(8)                      :: rbj
-    real(8)                      :: iact
-    integer(4)                   :: iwrite
-    logical(4)                   :: tzero
-    
-    string=''
-    iwrite=1
-    iact=abs(real(i,kind=8))
-    tzero=.true.
-    
-    !checks
-    if(dble(i).gt.rbase**(ibasemax-1)) then
-       print*, 'ERROR STOP IN INTEGER TO STRING'
-       print*, 'YOUR INTEGER NUMBER IS LARGER THAN IMPLEMENTED'
-    end if
-    
-    if(i.lt.0) then
-       string(1:1)='-'
-       iwrite=2
-    end if
-    
-    do ibase=1,ibasemax
-       rbj=rbase**(ibasemax-ibase)
-       ifl=floor(iact/rbj)
-       iact=iact-real(ifl,kind=8)*rbj
-       
-       select case (ifl)
-       case (0)
-          if(tzero) then !we do not keep leading zeros
-             if(rbj.eq.1.d0) then !we keep the 0 for 10**0
-                string(iwrite:iwrite)='0'
-                iwrite=iwrite+1
-             end if
-          else  !we have a value .neq. 0
-             string(iwrite:iwrite)='0'
-             iwrite=iwrite+1
-          end if
-       case (1)
-          string(iwrite:iwrite)='1'
-          iwrite=iwrite+1
-          tzero=.false.
-       case (2)
-          string(iwrite:iwrite)='2'
-          iwrite=iwrite+1
-          tzero=.false.
-       case (3)
-          string(iwrite:iwrite)='3'
-          iwrite=iwrite+1
-          tzero=.false.
-       case (4)
-          string(iwrite:iwrite)='4'
-          iwrite=iwrite+1
-          tzero=.false.
-       case (5)
-          string(iwrite:iwrite)='5'
-          iwrite=iwrite+1
-          tzero=.false.
-       case (6)
-          string(iwrite:iwrite)='6'
-          iwrite=iwrite+1
-          tzero=.false.
-       case (7)
-          string(iwrite:iwrite)='7'
-          iwrite=iwrite+1
-          tzero=.false.
-       case (8)
-          string(iwrite:iwrite)='8'
-          iwrite=iwrite+1
-          tzero=.false.
-       case (9)
-          string(iwrite:iwrite)='9'
-          iwrite=iwrite+1
-          tzero=.false.
-       end select
-    end do
-  end function i_2_s
-
-  function r_2_s(i) result(string)
-    implicit none
-    real(8),intent(in)           :: i
-    character(256)               :: string
-    integer(4)                   :: ibase
-    real(8)                      :: rbase=10.d0
-    integer(4)                   :: ibasemax=10
-    integer(4)                   :: digits=13
-    integer(4)                   :: j,ifl,izero,k
-    real(8)                      :: rbj
-    real(8)                      :: iact
-    integer(4)                   :: iwrite
-    logical(4)                   :: tzero,tfzero
-    
-    string=''
-    iwrite=1
-    iact=abs(i)
-    tzero=.true.
-    
-    !checks
-    if(i.gt.rbase**(ibasemax-1)) then
-       print*, 'ERROR STOP IN INTEGER TO STRING'
-       print*, 'YOUR INTEGER NUMBER IS LARGER THAN IMPLEMENTED'
-    end if
-    
-    if(i.lt.0.d0) then
-       string(1:1)='-'
-       iwrite=2
-    end if
-    
-    do ibase=1,ibasemax
-       rbj=rbase**(ibasemax-ibase)
-       ifl=floor(iact/rbj)
-       iact=iact-real(ifl,kind=8)*rbj
-       
-       select case (ifl)
-       case (0)
-          if(tzero) then !we do not keep leading zeros
-             if(rbj.eq.1.d0) then !we keep the 0 for 10**0
-                string(iwrite:iwrite)='0'
-                iwrite=iwrite+1
-             end if
-          else  !we have a value .neq. 0
-             string(iwrite:iwrite)='0'
-             iwrite=iwrite+1
-          end if
-       case (1)
-          string(iwrite:iwrite)='1'
-          iwrite=iwrite+1
-          tzero=.false.
-       case (2)
-          string(iwrite:iwrite)='2'
-          iwrite=iwrite+1
-          tzero=.false.
-       case (3)
-          string(iwrite:iwrite)='3'
-          iwrite=iwrite+1
-          tzero=.false.
-       case (4)
-          string(iwrite:iwrite)='4'
-          iwrite=iwrite+1
-          tzero=.false.
-       case (5)
-          string(iwrite:iwrite)='5'
-          iwrite=iwrite+1
-          tzero=.false.
-       case (6)
-          string(iwrite:iwrite)='6'
-          iwrite=iwrite+1
-          tzero=.false.
-       case (7)
-          string(iwrite:iwrite)='7'
-          iwrite=iwrite+1
-          tzero=.false.
-       case (8)
-          string(iwrite:iwrite)='8'
-          iwrite=iwrite+1
-          tzero=.false.
-       case (9)
-          string(iwrite:iwrite)='9'
-          iwrite=iwrite+1
-          tzero=.false.
-       end select
-    end do
-
-    string(iwrite:iwrite)='.'
-    iwrite=iwrite+1
-    
-    tzero=.false.
-    tfzero=.false.
-    izero=0
-    do j=1,digits
-       rbj=10.d0**(-j)
-       ifl=floor(iact/rbj)
-       iact=real(iact,kind=8)-real(ifl,kind=8)*real(rbj,kind=8)
-       
-       select case (ifl)
-       case (0)
-          if(tzero) then !we have a subsequent zero
-             tfzero=.true.
-             izero=izero+1
-          else  !we have the first zero
-             string(iwrite:iwrite)='0'
-             iwrite=iwrite+1
-             tzero=.true.
-          end if
-       case (1)
-          if(tfzero) then
-             !write the foregoing zeros
-             do k=1,izero
-                string(iwrite:iwrite)='0'
-                iwrite=iwrite+1
-             end do
-             izero=0
-             tfzero=.false.
-             tzero=.false.
-          end if
-          string(iwrite:iwrite)='1'
-          iwrite=iwrite+1
-          tzero=.false.
-       case (2)
-          if(tfzero) then
-             !write the foregoing zeros
-             do k=1,izero
-                string(iwrite:iwrite)='0'
-                iwrite=iwrite+1
-             end do
-             izero=0
-             tfzero=.false.
-             tzero=.false.
-          end if
-          string(iwrite:iwrite)='2'
-          iwrite=iwrite+1
-          tzero=.false.
-       case (3)
-          if(tfzero) then
-             !write the foregoing zeros
-             do k=1,izero
-                string(iwrite:iwrite)='0'
-                iwrite=iwrite+1
-             end do
-             izero=0
-             tfzero=.false.
-             tzero=.false.
-          end if
-          string(iwrite:iwrite)='3'
-          iwrite=iwrite+1
-          tzero=.false.
-       case (4)
-          if(tfzero) then
-             !write the foregoing zeros
-             do k=1,izero
-                string(iwrite:iwrite)='0'
-                iwrite=iwrite+1
-             end do
-             izero=0
-             tfzero=.false.
-             tzero=.false.
-          end if
-          string(iwrite:iwrite)='4'
-          iwrite=iwrite+1
-          tzero=.false.
-       case (5)
-          if(tfzero) then
-             !write the foregoing zeros
-             do k=1,izero
-                string(iwrite:iwrite)='0'
-                iwrite=iwrite+1
-             end do
-             izero=0
-             tfzero=.false.
-             tzero=.false.
-          end if
-          string(iwrite:iwrite)='5'
-          iwrite=iwrite+1
-          tzero=.false.
-       case (6)
-          if(tfzero) then
-             !write the foregoing zeros
-             do k=1,izero
-                string(iwrite:iwrite)='0'
-                iwrite=iwrite+1
-             end do
-             izero=0
-             tfzero=.false.
-             tzero=.false.
-          end if
-          string(iwrite:iwrite)='6'
-          iwrite=iwrite+1
-          tzero=.false.
-       case (7)
-          if(tfzero) then
-             !write the foregoing zeros
-             do k=1,izero
-                string(iwrite:iwrite)='0'
-                iwrite=iwrite+1
-             end do
-             izero=0
-             tfzero=.false.
-             tzero=.false.
-          end if
-          string(iwrite:iwrite)='7'
-          iwrite=iwrite+1
-          tzero=.false.
-       case (8)
-          if(tfzero) then
-             !write the foregoing zeros
-             do k=1,izero
-                string(iwrite:iwrite)='0'
-                iwrite=iwrite+1
-             end do
-             izero=0
-             tfzero=.false.
-             tzero=.false.
-          end if
-          string(iwrite:iwrite)='8'
-          iwrite=iwrite+1
-          tzero=.false.
-       case (9)
-          if(tfzero) then
-             !write the foregoing zeros
-             do k=1,izero
-                string(iwrite:iwrite)='0'
-                iwrite=iwrite+1
-             end do
-             izero=0
-             tfzero=.false.
-             tzero=.false.
-          end if
-          string(iwrite:iwrite)='9'
-          iwrite=iwrite+1
-          tzero=.false.
-       end select
-    end do
-    
-
-  end function r_2_s
 
   
 end module libxml2f90_strings_module
@@ -461,7 +116,7 @@ contains
     character(*),intent(in)    :: string1
     character(*),intent(in)    :: string2
     logical(4)                 :: teq
-    
+
     if(tcasesensitive) then
        teq=(trim(adjustl(string1)).eq.trim(adjustl(string2)))
     else
@@ -475,11 +130,6 @@ end module ll_module
 
 
 module libxml2f90_interface_module
-  interface libxml2f90__addid
-     module procedure libxml2f90_ll_addidr8
-     module procedure libxml2f90_ll_addidr8a
-  end interface
-
 
   interface libxml2f90__getid
      subroutine libxml2f90__ll_getr8(id,size_,val)
@@ -488,231 +138,19 @@ module libxml2f90_interface_module
        integer(4),intent(in)           :: size_
        real(8),intent(out)             :: val(size_)
      end subroutine libxml2f90__ll_getr8
-     subroutine libxml2f90__ll_getr8_(id,val)
-       implicit none
-       character(*),intent(in)         :: id
-       real(8),intent(out)             :: val
-     end subroutine libxml2f90__ll_getr8_
-     subroutine libxml2f90__ll_getc8(id,size_,val)
-       implicit none
-       character(*),intent(in)         :: id
-       integer(4),intent(in)           :: size_
-       complex(8),intent(out)          :: val(size_)
-     end subroutine libxml2f90__ll_getc8
-     subroutine libxml2f90__ll_getc8_(id,val)
-       implicit none
-       character(*),intent(in)         :: id
-       complex(8),intent(out)          :: val
-     end subroutine libxml2f90__ll_getc8_
      subroutine libxml2f90__ll_geti4(id,size_,val)
        implicit none
        character(*),intent(in)         :: id
        integer(4),intent(in)           :: size_
        integer(4),intent(out)          :: val(size_)
      end subroutine libxml2f90__ll_geti4
-     subroutine libxml2f90__ll_geti4_(id,val)
-       implicit none
-       character(*),intent(in)         :: id
-       integer(4),intent(out)          :: val
-     end subroutine libxml2f90__ll_geti4_
-     subroutine libxml2f90__ll_getl4(id,size_,val)
-       implicit none
-       character(*),intent(in)         :: id
-       integer(4),intent(in)           :: size_
-       logical(4),intent(out)          :: val(size_)
-     end subroutine libxml2f90__ll_getl4
-     subroutine libxml2f90__ll_getl4_(id,val)
-       implicit none
-       character(*),intent(in)         :: id
-       logical(4),intent(out)          :: val
-     end subroutine libxml2f90__ll_getl4_
-     subroutine libxml2f90__ll_getstring(id,size_,val)
-       implicit none
-       character(*),intent(in)         :: id
-       integer(4),intent(in)           :: size_
-       character(*),intent(out)        :: val(size_)
-     end subroutine libxml2f90__ll_getstring
-     subroutine libxml2f90__ll_getstring_(id,val)
-       implicit none
-       character(*),intent(in)         :: id
-       character(*),intent(out)        :: val
-     end subroutine libxml2f90__ll_getstring_
-  end interface
-
-  interface libxml2f90__getpid
-     subroutine libxml2f90__ll_getpr8(id,size_,val)
-       implicit none
-       character(*),intent(in)         :: id
-       integer(4),intent(in)           :: size_
-       real(8),intent(out)             :: val(size_)
-     end subroutine libxml2f90__ll_getpr8
-     subroutine libxml2f90__ll_getpr8_(id,val)
-       implicit none
-       character(*),intent(in)         :: id
-       real(8),intent(out)             :: val
-     end subroutine libxml2f90__ll_getpr8_
-     subroutine libxml2f90__ll_getpc8(id,size_,val)
-       implicit none
-       character(*),intent(in)         :: id
-       integer(4),intent(in)           :: size_
-       complex(8),intent(out)          :: val(size_)
-     end subroutine libxml2f90__ll_getpc8
-     subroutine libxml2f90__ll_getpc8_(id,val)
-       implicit none
-       character(*),intent(in)         :: id
-       complex(8),intent(out)          :: val
-     end subroutine libxml2f90__ll_getpc8_
-     subroutine libxml2f90__ll_getpi4(id,size_,val)
-       implicit none
-       character(*),intent(in)         :: id
-       integer(4),intent(in)           :: size_
-       integer(4),intent(out)          :: val(size_)
-     end subroutine libxml2f90__ll_getpi4
-     subroutine libxml2f90__ll_getpi4_(id,val)
-       implicit none
-       character(*),intent(in)         :: id
-       integer(4),intent(out)          :: val
-     end subroutine libxml2f90__ll_getpi4_
-     subroutine libxml2f90__ll_getpl4(id,size_,val)
-       implicit none
-       character(*),intent(in)         :: id
-       integer(4),intent(in)           :: size_
-       logical(4),intent(out)          :: val(size_)
-     end subroutine libxml2f90__ll_getpl4
-     subroutine libxml2f90__ll_getpl4_(id,val)
-       implicit none
-       character(*),intent(in)         :: id
-       logical(4),intent(out)          :: val
-     end subroutine libxml2f90__ll_getpl4_
-     subroutine libxml2f90__ll_getpstring(id,size_,val)
-       implicit none
-       character(*),intent(in)         :: id
-       integer(4),intent(in)           :: size_
-       character(*),intent(out)        :: val(size_)
-     end subroutine libxml2f90__ll_getpstring
-     subroutine libxml2f90__ll_getpstring_(id,val)
-       implicit none
-       character(*),intent(in)         :: id
-       character(*),intent(out)        :: val
-     end subroutine libxml2f90__ll_getpstring_
   end interface
 
 contains
 
-  subroutine libxml2f90_ll_addidr8(id,value)
-    use libxml2f90_strings_module
-    implicit none
-    character(*),intent(in)        :: id
-    real(8),intent(in)             :: value
-    integer(4)                     :: size_
-    character(32)                  :: ch
-    character, dimension(32)       :: chvec
-    integer                        :: s
-    !............................................
-
-    !convert the value to a string
-    ch=r_2_s(value)
-
-    size_=len(trim(adjustl(ch)))
-    do s=1,size_
-      chvec(s)=ch(s:s)
-    end do
-    call libxml2f90_ll_addid(id,size_,chvec)
-
-    return
-  end subroutine libxml2f90_ll_addidr8
-
-
-  subroutine libxml2f90_ll_addidr8a(id,n,value)
-    use libxml2f90_strings_module
-    implicit none
-    character(*),intent(in)        :: id
-    integer(4),intent(in)          :: n
-    real(8),intent(in)             :: value(n)
-    character(32)                  :: ch(n)
-    integer(4)                     :: i,l,ipos
-    character(1),allocatable       :: ch1(:)
-    !............................................
-    ipos=0
-    l=0
-    !convert
-    do i=1,n
-       ch(i)=r_2_s(value(i))
-       l=l+len(trim(adjustl(ch(i))))
-    end do
-
-    allocate(ch1(l+n))!n: a blank between the numbers
-
-    do i=1,n
-       do l=1,len(trim(adjustl(ch(i))))
-          ipos=ipos+1
-          ch1(ipos)=ch(i)(l:l)
-       end do
-       ipos=ipos+1 !a blank between the numbers
-       ch1(ipos)=' '
-    end do
-
-    call libxml2f90_ll_addid(id,l+n,ch1)
-    deallocate(ch1)
-    return
-  end subroutine libxml2f90_ll_addidr8a
 
 
 end module libxml2f90_interface_module
-
-
-
-subroutine how_to_read_a_file()
-  implicit none
-  integer(4)                      :: i
-!  logical(4)                      :: tread
-
-  call libxml2f90__readin_file('config.cntl','CNTL')
-
-  call libxml2f90__ll_report('CNTL',6,.true.)
-
-  call libxml2f90__ll_selectlist('CNTL')
-  call libxml2f90__ll_exist('DOWN','tag1',i)
-  call libxml2f90__ll_selecttag('DOWN','tag1',2)
-
-end subroutine how_to_read_a_file
-
-
-
-subroutine libxml2f90__get_fileunit(file,nfil)
-  !=======================================================
-  !===== RETURNS THE FILEUNIT FOR FILE IF OPENED,
-  !===== OTHERWISE 0
-  !=======================================================
-  use libxml2f90_module
-  IMPLICIT NONE
-  integer(4),intent(out)           :: nfil
-  character(*),intent(in)          :: file
-  character(256)                   :: afile
-  logical(4)                       :: topened
-  integer(4)                       :: ifil
-  integer(4)                       :: rb,lb
-
-  nfil=0
-  do ifil=nfilstart,nfilmax
-     inquire(UNIT=ifil,OPENED=topened,NAME=afile)
-
-     !some compilers return the whole path!
-     !get the right boundary
-     rb=scan(afile,' ')
-     if(rb.eq.0) then
-        rb=len(afile)
-     end if
-
-     lb=rb-len(file)
-
-     if(topened.and.file.eq.afile(lb:rb)) then
-        nfil=ifil
-        exit
-     end if
-  end do
-  return
-end subroutine libxml2f90__get_fileunit
 
 
 subroutine libxml2f90__getunit(nfil)
@@ -787,75 +225,6 @@ end subroutine libxml2f90__getunit
        return
      end subroutine libxml2f90__openfile
 
-     subroutine libxml2f90__closeall()
-       use libxml2f90_module
-       IMPLICIT NONE
-       integer(4)       :: i
-       logical(4)       :: topened
-       !.................................
-
-       do i=nfilstart,nfilmaxused
-          inquire(UNIT=i,OPENED=topened)
-          if(.not.topened)close(i)
-       end do
-     end subroutine libxml2f90__closeall
-
-     subroutine libxml2f90__closefile(file)
-       use libxml2f90_module
-       IMPLICIT NONE
-       character(*),intent(in)       :: file
-       integer(4)                    :: nfil
-       !.................................
-
-       call libxml2f90__get_fileunit(trim(adjustl(file)),nfil)
-       if(nfil.eq.0) then
-          print*,'ERROR STOP IN libxml2f90__closefile: the file ',trim(adjustl(file))
-          print*,'CAN NOT BE CLOSED'
-          stop
-       end if
-       close(nfil)
-
-       return
-     end subroutine libxml2f90__closefile
-
-
-     subroutine libxml2f90__flush(nfil)
-       use libxml2f90_module
-       IMPLICIT NONE
-       integer(4),intent(in)       :: nfil
-       character(256)              :: file,access,form,action,pad
-       character(256)              :: blank,position,delim
-       logical(4)                  :: opened
-       integer(4)                  :: recl
-       !....................................
-       inquire(UNIT=nfil,NAME=file,OPENED=opened,ACCESS=access,FORM=form,&
-            &RECL=recl,BLANK=blank,POSITION=position,ACTION=action,&
-            &DELIM=delim,PAD=pad)
-
-       if(.not.opened) then
-          print*,'CAN NOT FLUSH A NON OPENED FILE'
-       else
-          close(nfil)
-          if(trim(adjustl(position)).eq.'UNDEFINED')position='APPEND'
-          open(UNIT=nfil,FILE=trim(adjustl(file)),STATUS='OLD',&
-               &ACCESS=trim(adjustl(access)),FORM=trim(adjustl(form)),&
-               &RECL=recl,BLANK=trim(adjustl(blank)),&
-               &POSITION=trim(adjustl(position)),ACTION=trim(adjustl(action)),&
-               &DELIM=trim(adjustl(delim)),PAD=trim(adjustl(pad)))
-!!__          print*,'flushed ',trim(adjustl(file))
-!!__          print*,opened
-!!__          print*,trim(adjustl(access))
-!!__          print*,trim(adjustl(form))
-!!__          print*,recl
-!!__          print*,trim(adjustl(blank))
-!!__          print*,trim(adjustl(position))
-!!__          print*,trim(adjustl(action))
-!!__          print*,trim(adjustl(delim))
-!!__          print*,trim(adjustl(pad))
-       end if
-     end subroutine libxml2f90__flush
-
-
 
 subroutine libxml2f90__set_default_ll_id(llid)
 use libxml2f90_module
@@ -889,19 +258,6 @@ subroutine libxml2f90__readin_file(file,ll_id)
   call libxml2f90_readin_file(nfil,ll_id)
   close(nfil)
 end subroutine libxml2f90__readin_file
-
-
-
-!=========================================================
-subroutine libxml2f90__readin_nfil(nfil,ll_id)
-  implicit none
-  integer(4),intent(in)        :: nfil
-  character(*),intent(in)       :: ll_id
-  !.................................
-
-  call libxml2f90_readin_file(nfil,ll_id)
-
-end subroutine libxml2f90__readin_nfil
 
 
 
@@ -1787,18 +1143,6 @@ subroutine libxml2f90__existid(id,texist)
   return
 end subroutine libxml2f90__existid
 
-!============================================
-subroutine libxml2f90__existpid(id,texist)
-  implicit none
-  character(*),intent(in)        :: id
-  logical(4),intent(out)         :: texist
-  !............................
-  texist=.false.
-  call libxml2f90_existid(0,id,texist)!1=id 0=pid
-  return
-end subroutine libxml2f90__existpid
-
-
 !================================================================
 subroutine libxml2f90__ll_getr8(id,size_,val)
 implicit none
@@ -1811,43 +1155,6 @@ return
 end subroutine libxml2f90__ll_getr8
 
 !================================================================
-subroutine libxml2f90__ll_getr8_(id,val)
-implicit none
-character(*),intent(in)         :: id
-real(8),intent(out)             :: val
-real(8)                         :: vala(1)
-!........................................
-call libxml2f90_ll_getr8(1,id,1,vala)
-val=vala(1)
-return
-end subroutine libxml2f90__ll_getr8_
-
-
-!================================================================
-subroutine libxml2f90__ll_getc8(id,size_,val)
-implicit none
-character(*),intent(in)         :: id
-integer(4),intent(in)           :: size_
-complex(8),intent(out)          :: val(size_)
-!........................................
-call libxml2f90_ll_getc8(1,id,size_,val)
-return
-end subroutine libxml2f90__ll_getc8
-
-!================================================================
-subroutine libxml2f90__ll_getc8_(id,val)
-implicit none
-character(*),intent(in)         :: id
-complex(8),intent(out)          :: val
-complex(8)                      :: vala(1)
-!........................................
-call libxml2f90_ll_getc8(1,id,1,vala)
-val=vala(1)
-return
-end subroutine libxml2f90__ll_getc8_
-
-
-!================================================================
 subroutine libxml2f90__ll_geti4(id,size_,val)
 implicit none
 character(*),intent(in)         :: id
@@ -1857,43 +1164,6 @@ integer(4),intent(out)          :: val(size_)
 call libxml2f90_ll_geti4(1,id,size_,val)
 return
 end subroutine libxml2f90__ll_geti4
-
-!================================================================
-subroutine libxml2f90__ll_geti4_(id,val)
-implicit none
-character(*),intent(in)         :: id
-integer(4),intent(out)          :: val
-integer(4)                      :: vala(1)
-!........................................
-call libxml2f90_ll_geti4(1,id,1,vala)
-val=vala(1)
-return
-end subroutine libxml2f90__ll_geti4_
-
-
-
-!================================================================
-subroutine libxml2f90__ll_getl4(id,size_,val)
-implicit none
-character(*),intent(in)         :: id
-integer(4),intent(in)           :: size_
-logical(4),intent(out)          :: val(size_)
-!........................................
-call libxml2f90_ll_getl4(1,id,size_,val)
-return
-end subroutine libxml2f90__ll_getl4
-
-!================================================================
-subroutine libxml2f90__ll_getl4_(id,val)
-implicit none
-character(*),intent(in)         :: id
-logical(4),intent(out)          :: val
-logical(4)                      :: vala(1)
-!........................................
-call libxml2f90_ll_getl4(1,id,1,vala)
-val=vala(1)
-return
-end subroutine libxml2f90__ll_getl4_
 
 
 !================================================================
@@ -1924,29 +1194,6 @@ return
 end subroutine libxml2f90__ll_getch_scal
 
 !================================================================
-subroutine libxml2f90__ll_getstring(id,size_,val)
-implicit none
-character(*),intent(in)         :: id
-integer(4),intent(in)           :: size_
-character(*),intent(out)        :: val(size_)
-!........................................
-call libxml2f90_ll_getstring(1,id,size_,val)
-return
-end subroutine libxml2f90__ll_getstring
-
-!================================================================
-subroutine libxml2f90__ll_getstring_(id,val)
-implicit none
-character(*),intent(in)         :: id
-character(*),intent(out)        :: val
-character(512)                  :: vala(1)
-!........................................
-call libxml2f90_ll_getstring(1,id,1,vala)
-val=trim(adjustl(vala(1)))
-return
-end subroutine libxml2f90__ll_getstring_
-
-!================================================================
 subroutine libxml2f90__ll_getsize(id,size_)
 implicit none
 character(*),intent(in)         :: id
@@ -1956,146 +1203,6 @@ call libxml2f90_ll_getsize(1,id,size_)
 return
 end subroutine libxml2f90__ll_getsize
 
-
-!================================================================
-subroutine libxml2f90__ll_getpr8(id,size_,val)
-implicit none
-character(*),intent(in)         :: id
-integer(4),intent(in)           :: size_
-real(8),intent(out)             :: val(size_)
-!........................................
-call libxml2f90_ll_getr8(0,id,size_,val)
-return
-end subroutine libxml2f90__ll_getpr8
-
-!================================================================
-subroutine libxml2f90__ll_getpr8_(id,val)
-implicit none
-character(*),intent(in)         :: id
-real(8),intent(out)             :: val
-real(8)                         :: vala(1)
-!........................................
-call libxml2f90_ll_getr8(0,id,1,vala)
-val=vala(1)
-return
-end subroutine libxml2f90__ll_getpr8_
-
-
-!================================================================
-subroutine libxml2f90__ll_getpc8(id,size_,val)
-implicit none
-character(*),intent(in)         :: id
-integer(4),intent(in)           :: size_
-complex(8),intent(out)          :: val(size_)
-!........................................
-call libxml2f90_ll_getc8(0,id,size_,val)
-return
-end subroutine libxml2f90__ll_getpc8
-
-!================================================================
-subroutine libxml2f90__ll_getpc8_(id,val)
-implicit none
-character(*),intent(in)         :: id
-complex(8),intent(out)          :: val
-complex(8)                      :: vala(1)
-!........................................
-call libxml2f90_ll_getc8(0,id,1,vala)
-val=vala(1)
-return
-end subroutine libxml2f90__ll_getpc8_
-
-
-!================================================================
-subroutine libxml2f90__ll_getpi4(id,size_,val)
-implicit none
-character(*),intent(in)         :: id
-integer(4),intent(in)           :: size_
-integer(4),intent(out)          :: val(size_)
-!........................................
-call libxml2f90_ll_geti4(0,id,size_,val)
-return
-end subroutine libxml2f90__ll_getpi4
-
-!================================================================
-subroutine libxml2f90__ll_getpi4_(id,val)
-implicit none
-character(*),intent(in)         :: id
-integer(4),intent(out)          :: val
-integer(4)                      :: vala(1)
-!........................................
-call libxml2f90_ll_geti4(0,id,1,vala)
-val=vala(1)
-return
-end subroutine libxml2f90__ll_getpi4_
-
-
-!================================================================
-subroutine libxml2f90__ll_getpl4(id,size_,val)
-implicit none
-character(*),intent(in)         :: id
-integer(4),intent(in)           :: size_
-logical(4),intent(out)          :: val(size_)
-!........................................
-call libxml2f90_ll_getl4(0,id,size_,val)
-return
-end subroutine libxml2f90__ll_getpl4
-
-!================================================================
-subroutine libxml2f90__ll_getpl4_(id,val)
-implicit none
-character(*),intent(in)         :: id
-logical(4),intent(out)          :: val
-logical(4)                      :: vala(1)
-!........................................
-call libxml2f90_ll_getl4(0,id,1,vala)
-val=vala(1)
-return
-end subroutine libxml2f90__ll_getpl4_
-
-
-!================================================================
-subroutine libxml2f90__ll_getpch(id,size_,val)
-implicit none
-character(*),intent(in)         :: id
-integer(4),intent(in)           :: size_
-character(1),intent(out)        :: val(size_)
-!........................................
-call libxml2f90_ll_getch(0,id,size_,val)
-return
-end subroutine libxml2f90__ll_getpch
-
-!================================================================
-subroutine libxml2f90__ll_getpstring(id,size_,val)
-implicit none
-character(*),intent(in)         :: id
-integer(4),intent(in)           :: size_
-character(*),intent(out)        :: val(size_)
-!........................................
-call libxml2f90_ll_getstring(0,id,size_,val)
-return
-end subroutine libxml2f90__ll_getpstring
-
-!================================================================
-subroutine libxml2f90__ll_getpstring_(id,val)
-implicit none
-character(*),intent(in)         :: id
-character(*),intent(out)        :: val
-character(512)                  :: vala(1)
-!........................................
-call libxml2f90_ll_getstring(0,id,1,vala)
-val=trim(adjustl(vala(1)))
-return
-end subroutine libxml2f90__ll_getpstring_
-
-!================================================================
-subroutine libxml2f90__ll_getpsize(id,size_)
-implicit none
-character(*),intent(in)         :: id
-integer(4),intent(out)          :: size_
-!........................................
-call libxml2f90_ll_getsize(0,id,size_)
-return
-end subroutine libxml2f90__ll_getpsize
 
 !========= these call the generic interface
 !=========================================
@@ -2241,95 +1348,6 @@ subroutine libxml2f90_getsafer8(id,csize,chara,size_,value)
   return
 end subroutine libxml2f90_getsafer8
 
-!================================================================
-subroutine libxml2f90_getsafec8(id,csize,chara,size_,value)
-  implicit none
-  character(*),intent(in)        :: id
-  integer(4),intent(in)          :: csize
-  character(1),intent(in)        :: chara(csize)
-  integer(4),intent(in)          :: size_
-  complex(8),intent(out)         :: value(size_)
-  integer(4)                     :: i,isign,blocks,left,right
-  character(256)                 :: string
-  integer(4)                     :: stringsize=256
-  character, dimension(1)        :: ctmp_sp
-  ctmp_sp = (/' '/)
-
-  !=======================================
-  !        check for unallowed signs
-  !=======================================
-  ! for real these are everything except
-  ! space, e,d,.,+,-
-  do i=1,csize
-     !check for unallowed signs
-     if(scan(chara(i),'1234567890.dD eE+-').ne.1) then
-        print*,'ERROR STOP: UNALLOWED SIGN WHILE TRYING TO READ&
-             &NUMERICAL INPUT: ',id,chara(i)
-     end if
-  end do
-
-
-  !=======================================
-  !           split in blocks
-  !=======================================
-  left=1
-  right=1
-  blocks=0
-
-  do
-     !find the first non blank
-     do
-        if(chara(left).eq.' '.and.left.lt.csize) then
-           left=left+1
-        else
-           exit
-        end if
-     end do
-
-     call libxml2f90__findinchara(csize,chara,left,.true.,1,ctmp_sp,right,isign)
-     if(isign.eq.0) right=csize !no blank found - we use the right bound
-     if(right.lt.left) then
-        print*,'ERROR STOP IN LINKELIST: GETSAFE: RIGHTBOUND IS SMALLER THAN LEFTBOUND'
-        stop
-     end if
-
-     if(left.eq.right.and.scan(chara(left),' .dD eE+-').eq.1) then
-        if(chara(left).eq.' ') then
-           !we skip the blank
-        else
-           print*,'ERROR STOP IN LINKLIST: GETSAFE NUMERICAL INPUT CONSISTS SOLELY OF A ',chara(left)
-           stop
-        end if
-     else
-        !we read
-        if(blocks+1.gt.size_) then
-           print*,'ERROR STOP IN LINKLIST: GETSAFE: THE NUMERICAL INPUT IS LARGER THAN THE &
-                &PROVIDED ARRAY! THE ID WAS: ',trim(adjustl(id))
-           stop
-        else
-           !if(allocated(val))deallocate(val)
-           !allocate(val(right-left+1))
-           if((right-left+1).gt.stringsize) then
-              print*,'ERROR STOP IN LINKLIST: GETSAFE: THE INTERNAL FIXED STRING SIZE IS &
-                   &TOO SMALL! U CAN CHANGE THE VALUE IN libxml2f90_getsafe*. ID WAS: ',trim(adjustl(id))
-              stop
-           end if
-           call libxml2f90_tostring((right-left+1),chara(left:right),string)
-           blocks=blocks+1
-           string=trim(adjustl(string))
-           read(string,*)value(blocks)
-        end if
-     end if
-     left=right
-     if(right.eq.csize) exit !the loop
-  end do
-  if(blocks.lt.size_) then
-     print*,'ERROR STOP IN LINKLIST: GETSAFE: # OF BLOCKS READ IS SMALLER THAN&
-          & USER WANTS TO READ'
-     stop
-  end if
-  return
-end subroutine libxml2f90_getsafec8
 
 !================================================================
 subroutine libxml2f90_getsafei4(id,csize,chara,size_,value)
@@ -2419,93 +1437,6 @@ subroutine libxml2f90_getsafei4(id,csize,chara,size_,value)
   return
 end subroutine libxml2f90_getsafei4
 
-!================================================================
-subroutine libxml2f90_getsafel4(id,csize,chara,size_,value)
-  implicit none
-  character(*),intent(in)        :: id
-  integer(4),intent(in)          :: csize
-  character(1),intent(in)        :: chara(csize)
-  integer(4),intent(in)          :: size_
-  logical(4),intent(out)         :: value(size_)
-  integer(4)                     :: i,isign,blocks,left,right
-  character(256)                 :: string
-  integer(4)                     :: stringsize=256
-  character, dimension(1)        :: ctmp_sp
-  ctmp_sp = (/' '/)
-
-  !=======================================
-  !        check for unallowed signs
-  !=======================================
-  do i=1,csize
-     !check for unallowed signs
-     if(scan(chara(i),' .truefalsTRUEFALS').ne.1) then
-        print*,'ERROR STOP: UNALLOWED SIGN WHILE TRYING TO READ&
-             &NUMERICAL INPUT: ',id,' ',chara(i)
-     end if
-  end do
-
-
-  !=======================================
-  !           split in blocks
-  !=======================================
-  left=1
-  right=1
-  blocks=0
- 
-  do
-     !find the first non blank
-     do
-        if(chara(left).eq.' '.and.left.lt.csize) then
-           left=left+1
-        else
-           exit
-        end if
-     end do
-
-     call libxml2f90__findinchara(csize,chara,left,.true.,1,ctmp_sp,right,isign)
-     if(isign.eq.0) right=csize !no blank found - we use the right bound
-     if(right.lt.left) then
-        print*,'ERROR STOP IN LINKELIST: GETSAFE: RIGHTBOUND IS SMALLER THAN LEFTBOUND'
-        stop
-     end if
-
-     if(left.eq.right.and.scan(chara(left),' .RUEALSrueals').eq.1) then
-        if(chara(left).eq.' ') then
-           !we skip the blank
-        else
-           print*,'ERROR STOP IN LINKLIST: GETSAFE NUMERICAL INPUT CONSISTS SOLELY OF A ',chara(left)
-           stop
-        end if
-     else
-        !we read
-        if(blocks+1.gt.size_) then
-           print*,'ERROR STOP IN LINKLIST: GETSAFE: THE NUMERICAL INPUT IS LARGER THAN THE &
-                &PROVIDED ARRAY! THE ID WAS: ',trim(adjustl(id))
-           stop
-        else
-           !if(allocated(val))deallocate(val)
-           !allocate(val(right-left+1))
-           if((right-left+1).gt.stringsize) then
-              print*,'ERROR STOP IN LINKLIST: GETSAFE: THE INTERNAL FIXED STRING SIZE IS &
-                   &TOO SMALL! U CAN CHANGE THE VALUE IN libxml2f90_getsafe*. ID WAS: ',trim(adjustl(id))
-              stop
-           end if
-           call libxml2f90_tostring((right-left+1),chara(left:right),string)
-           blocks=blocks+1
-           string=trim(adjustl(string))
-           read(string,*)value(blocks)
-        end if
-     end if
-     left=right
-     if(right.eq.csize) exit !the loop
-  end do
-  if(blocks.lt.size_) then
-     print*,'ERROR STOP IN LINKLIST: GETSAFE: # OF BLOCKS READ IS SMALLER THAN&
-          & USER WANTS TO READ'
-     stop
-  end if
-  return
-end subroutine libxml2f90_getsafel4
 
 
 !================================================================
@@ -2562,62 +1493,6 @@ else
 end if
 return
 end subroutine libxml2f90_ll_getr8
-
-
-!================================================================
-subroutine libxml2f90_ll_getc8(wid,id,size_,val)
-use ll_module
-implicit none
-integer(4),intent(in)           :: wid! 0=pid,1=id
-character(*),intent(in)         :: id
-integer(4),intent(in)           :: size_
-complex(8),intent(out)          :: val(size_)
-!character(30000)                :: string='' !solve more elegant!!!
-!........................................
-
-THIS=>THIS%FIRST_ID
-if(wid.eq.0) then !read pids
-   do
-      if(associated(THIS%NEXT_PID)) then
-         THIS=>THIS%NEXT_PID
-         if(THIS%ID.xmleq.ID) then
-            !the safe way:
-            call libxml2f90_getsafec8(trim(id),size(THIS%VALUE),THIS%VALUE,size_,val)
-
-            !alex: this has to be solved more elegant!
- !           if(len(string).lt.size(THIS%VALUE)) stop'ERROR VALUE IS LARGER THAN IMPLEMENTED'
- !           call libxml2f90_tostring(size(THIS%VALUE),THIS%VALUE,string)
- !           read(string,*)val
-            exit
-         end if
-      else
-         print*,'ERROR STOP IN LINKLIST: CAN NOT GET C8 VALUE FOR ID: ',trim(adjustl(id))
-         stop
-      end if
-   end do
-else if(wid.eq.1) then !read pids
-   do
-      if(associated(THIS%NEXT_ID)) then
-         THIS=>THIS%NEXT_ID
-         if(THIS%ID.xmleq.ID) then
-            call libxml2f90_getsafec8(trim(id),size(THIS%VALUE),THIS%VALUE,size_,val)
-           !alex: this has to be solved more elegant!
-!            if(len(string).lt.size(THIS%VALUE)) stop'ERROR VALUE IS LARGER THAN IMPLEMENTED'
-!            call libxml2f90_tostring(size(THIS%VALUE),THIS%VALUE,string)
-!            read(string,*)val
-            exit
-         end if
-      else
-         print*,'ERROR STOP IN LINKLIST: CAN NOT GET C8 VALUE FOR ID: ',trim(adjustl(id))
-         stop
-      end if
-   end do
-else
-   stop 'libxml2f90_ll_get interface read method not allowed'
-end if
-
-return
-end subroutine libxml2f90_ll_getc8
 
 
 !================================================================
@@ -2678,61 +1553,6 @@ return
 end subroutine libxml2f90_ll_geti4
 
 
-
-!================================================================
-subroutine libxml2f90_ll_getl4(wid,id,size_,val)
-use ll_module
-implicit none
-integer(4),intent(in)           :: wid! 0=pid,1=id
-character(*),intent(in)         :: id
-integer(4),intent(in)           :: size_
-logical(4),intent(out)          :: val(size_)
-!character(30000)                :: string='' !solve more elegant!!!
-!........................................
-
-THIS=>THIS%FIRST_ID
-if(wid.eq.0) then !read pids
-   do
-      if(associated(THIS%NEXT_PID)) then
-         THIS=>THIS%NEXT_PID
-         if(THIS%ID.xmleq.ID) then
-            call libxml2f90_getsafel4(trim(id),size(THIS%VALUE),THIS%VALUE,size_,val)
-            !alex: this has to be solved more elegant!
- !           if(len(string).lt.size(THIS%VALUE)) stop'ERROR VALUE IS LARGER THAN IMPLEMENTED'
- !           call libxml2f90_tostring(size(THIS%VALUE),THIS%VALUE,string)
- !           read(string,*)val
-            exit
-         end if
-      else
-         print*,'ERROR STOP IN LINKLIST: CAN NOT GET L4 VALUE FOR ID: ',trim(adjustl(id))
-         stop
-      end if
-   end do
-else if(wid.eq.1) then !read pids
-   do
-      if(associated(THIS%NEXT_ID)) then
-         THIS=>THIS%NEXT_ID
-         if(THIS%ID.xmleq.ID) then
-            call libxml2f90_getsafel4(trim(id),size(THIS%VALUE),THIS%VALUE,size_,val)
-            !alex: this has to be solved more elegant!
-            !if(len(string).lt.size(THIS%VALUE)) stop'ERROR VALUE IS LARGER THAN IMPLEMENTED'
-            !call libxml2f90_tostring(size(THIS%VALUE),THIS%VALUE,string)
-            !read(string,*)val
-            exit
-         end if
-      else
-         print*,'ERROR STOP IN LINKLIST: CAN NOT GET L4 VALUE FOR ID: ',trim(adjustl(id))
-         stop
-      end if
-   end do
-else
-   stop 'libxml2f90_ll_get interface read method not allowed'
-end if
-
-return
-end subroutine libxml2f90_ll_getl4
-
-
 !================================================================
 subroutine libxml2f90_ll_getch(wid,id,size_,val)
 use ll_module
@@ -2785,59 +1605,6 @@ end if
 return
 end subroutine libxml2f90_ll_getch
 
-!================================================================
-subroutine libxml2f90_ll_getstring(wid,id,size_,val)
-use ll_module
-implicit none
-integer(4),intent(in)           :: wid! 0=pid,1=id
-character(*),intent(in)         :: id
-integer(4),intent(in)           :: size_
-character(*),intent(out)        :: val(size_)
-!........................................
-
-THIS=>THIS%FIRST_ID
-if(wid.eq.0) then !read pids
-   do
-      if(associated(THIS%NEXT_PID)) then
-         THIS=>THIS%NEXT_PID
-         if(THIS%ID.xmleq.ID) then
-            if(size(this%value).gt.(size_*len(val(1)))) then
-               print*,'ERROR STOP IN LINKLIST: SIZE OF STRING ARRAY IN GETSTRING &
-                    &IS TOO SMALL: ',SIZE_*len(val(1)),size(this%value)
-               stop
-            end if
-            call libxml2f90_tostringa(size(this%value),this%value,size_,val)
-            exit
-         end if
-      else
-         print*,'ERROR STOP IN LINKLIST: CAN NOT GET CH VALUE FOR ID: ',trim(adjustl(id))
-         stop
-      end if
-   end do
-else if(wid.eq.1) then !read pids
-   do
-      if(associated(THIS%NEXT_ID)) then
-         THIS=>THIS%NEXT_ID
-         if(THIS%ID.xmleq.ID) then
-            if(size(this%value).gt.(size_*len(val(1)))) then
-               print*,'ERROR STOP IN LINKLIST: SIZE OF STRING ARRAY IN GETSTRING &
-                    &IS TOO SMALL: ',SIZE_*len(val(1)),size(this%value)
-               stop
-            end if
-            call libxml2f90_tostringa(size(this%value),this%value,size_,val)
-            exit
-         end if
-      else
-         print*,'ERROR STOP IN LINKLIST: CAN NOT GET CH VALUE FOR ID: ',trim(adjustl(id))
-         stop
-      end if
-   end do
-else
-   stop 'libxml2f90_ll_get interface read method not allowed'
-end if
-
-return
-end subroutine libxml2f90_ll_getstring
 
 !================================================================
 subroutine libxml2f90_ll_getsize(wid,id,size_)
@@ -2900,72 +1667,6 @@ subroutine libxml2f90_tostring(size_,val,string)
   end do
   return
 end subroutine libxml2f90_tostring
-
-!================================================================
-subroutine libxml2f90_tostringa(size_,val,sizea,stringa)
-  use ll_module
-  implicit none
-  integer(4),intent(in)              :: size_
-  character(1),intent(in)            :: val(size_)
-  integer(4),intent(in)              :: sizea
-  character(*),intent(out)           :: stringa(sizea)
-  integer(4)                         :: i,j,k
-  logical(4)                         :: texit
-  !.............................................
-  texit=.false.
-  stringa(:)=''
-  do i=1,sizea                     !loop over the array layers
-     do j=1,len(stringa(1))        !loop over the layer itself
-        k=(i-1)*len(stringa(1))+j  !get the actual character(1) value
-        if(k.gt.size_) then
-           !(we do not need this warning)
-           !print*,'WARNING IN LINKLIST: TOSTRINGA: &
-           !     &YOUR STRINGA IS LARGER THEN CH(1) ARRAY'
-           texit=.true.
-           exit
-        end if
-        stringa(i)(j:j)=val(k)
-     end do
-     if(texit) exit
-  end do
-  if(k.lt.size_) then
-     print*,'ERROR STOP IN LINKLIST: TOSTRINGA: &
-          &YOUR STRINGA IS SMALLER THEN CH(1) ARRAY'
-     stop
-  end if
-  return
-end subroutine libxml2f90_tostringa
-
-
-
-!!__!================================================================
-!!__subroutine libxml2f90$ll_getvalue(id,value,tget)
-!!__use ll_module
-!!__implicit none
-!!__character(*),intent(in)         :: id
-!!__character(*),intent(out)        :: value
-!!__logical(4),intent(out)          :: tget !did we manage to find that id
-!!__!........................................
-!!__tget=.false.
-!!__THIS=>THIS%FIRST_ID
-!!__do
-!!__   if(associated(THIS%NEXT_ID)) then
-!!__      THIS=>THIS%NEXT_ID
-!!__!print*,'debug-',trim(this%id)
-!!__!print*,'debug--',trim(this%value)
-!!__      if(trim(THIS%ID).eq.trim(ID)) then
-!!__         value=this%value
-!!__         tget=.true.
-!!__         exit
-!!__      end if
-!!__   else
-!!__      exit
-!!__   end if
-!!__end do
-!!__
-!!__return
-!!__end subroutine libxml2f90$ll_getvalue
-
 
 
 !================================================================
@@ -3115,7 +1816,7 @@ end subroutine libxml2f90_ll_opentag
 subroutine libxml2f90_ll_closetag(tag)
   use ll_module
   implicit none
-  character(*),intent(in)       :: tag !
+  character(len=*),intent(in)       :: tag !
   integer(4)                    :: line !corresponds to the fileline
   !...........................
   !JUMP TO THE FIRST ID BECAUSE IT'S CONNECTED UPWARDS
@@ -3189,166 +1890,6 @@ subroutine libxml2f90_ll_addid(id,size_,value)
      end if
   end do
 end subroutine libxml2f90_ll_addid
-
-!====================================================================  
-subroutine libxml2f90__ll_edit_id(id,new_id,value)
-  implicit none
-  character(*),intent(in)             :: id !
-  character(*),intent(in)             :: new_id !
-  character(*),intent(in)             :: value
-  character(1), allocatable, dimension(:) :: valvec
-  integer :: l,lenval
-  !............................................
-  lenval=len(value)
-  allocate(valvec(lenval))
-  do l=1,lenval
-    valvec(l)=value(l:l)
-  end do
-  !................................
-  call libxml2f90_ll_edit_pid(id,new_id,lenval,valvec)
-  deallocate(valvec)
-  return
-end subroutine libxml2f90__ll_edit_id
-
-
-!====================================================================
-subroutine libxml2f90_ll_edit_id(id,new_id,size_,value)
-  !===============================================
-  !edit the id or the vale; keep the value for size_=0
-  !===============================================
-  use ll_module
-  implicit none
-  character(*),intent(in)             :: id !
-  character(*),intent(in)             :: new_id !
-  integer(4),intent(in)               :: size_
-  character(1),intent(in)             :: value(size_)
-  logical(4)                          :: tfound=.false.
-  !...........................
-
-  if(id.ne.new_id) then !we change the id ->
-     ! check if the new one's already used
-       THIS=>THIS%FIRST_ID
-       do
-          if(associated(THIS%NEXT_ID)) then
-             THIS=>THIS%NEXT_ID
-             if(trim(THIS%ID).xmleq.trim(NEW_ID)) then
-                print*,'ERROR STOP IN LINKLIST: LL_EDIT: YOU CAN NOT USE&
-                     & THE SAME ID TWICE IN THE SAME TAG: ',NEW_ID
-                stop
-             end if
-          else
-             exit
-          end if
-       end do
-    end if
-
-  THIS=>THIS%FIRST_ID
-  do
-     if(associated(THIS%NEXT_ID)) then
-        THIS=>THIS%NEXT_ID
-        if(trim(THIS%ID).xmleq.trim(ID)) then
-           THIS%ID=NEW_ID
-           if(size_.ne.0) then
-              if(associated(this%value)) nullify(this%value)
-              allocate(this%value(size_))
-              this%value(:)=''
-              this%value=value
-              tfound=.true.
-              exit
-           end if
-        end if
-     else
-        exit
-     end if
-  end do
-  if(.not.tfound) then
-     print*,'ERROR STOP IN LINKLIST: EDIT_ID: ID NOT FOUND ',ID
-     stop
-  end if
-end subroutine libxml2f90_ll_edit_id
-
-
-
-
-!====================================================================
-subroutine libxml2f90__ll_edit_pid(id,new_id,value)
-  implicit none
-  character(*),intent(in)             :: id !
-  character(*),intent(in)             :: new_id !
-  character(*),intent(in)             :: value
-  character(1), allocatable, dimension(:) :: valvec
-  integer :: l,lenval
-  !............................................
-  lenval=len(value)
-  allocate(valvec(lenval))
-  do l=1,lenval
-    valvec(l)=value(l:l)
-  end do
-  !................................
-  call libxml2f90_ll_edit_pid(id,new_id,lenval,valvec)
-  deallocate(valvec)
-  return
-
-
-end subroutine libxml2f90__ll_edit_pid
-
-
-!====================================================================
-subroutine libxml2f90_ll_edit_pid(id,new_id,size_,value)
-  !===============================================
-  !edit the id or the vale; keep the value for size_=0
-  !===============================================
-  use ll_module
-  implicit none
-  character(*),intent(in)             :: id !
-  character(*),intent(in)             :: new_id !
-  integer(4),intent(in)               :: size_
-  character(1),intent(in)             :: value(size_)
-  logical(4)                          :: tfound=.false.
-  !...........................
-
-  if(id.ne.new_id) then !we change the id ->
-     ! check if the new one's already used
-       THIS=>THIS%FIRST_ID
-       do
-          if(associated(THIS%NEXT_PID)) then
-             THIS=>THIS%NEXT_PID
-             if(trim(THIS%ID).xmleq.trim(NEW_ID)) then
-                print*,'ERROR STOP IN LINKLIST: LL_EDIT: YOU CAN NOT USE&
-                     & THE SAME ID TWICE IN THE SAME TAG: ',NEW_ID
-                stop
-             end if
-          else
-             exit
-          end if
-       end do
-    end if
-
-  THIS=>THIS%FIRST_ID
-  do
-     if(associated(THIS%NEXT_PID)) then
-        THIS=>THIS%NEXT_PID
-        if(trim(THIS%ID).xmleq.trim(ID)) then
-           THIS%ID=NEW_ID
-           if(size_.ne.0) then
-              if(associated(this%value)) nullify(this%value)
-              allocate(this%value(size_))
-              this%value(:)=''
-              this%value=value
-              tfound=.true.
-              exit
-           end if
-        else
-           exit
-        end if
-     end if
-  end do
-  if(.not.tfound) then
-    print*,'ERROR STOP IN LINKLIST: EDIT_PID: ID NOT FOUND ',ID
-     stop
-  end if
-
-end subroutine libxml2f90_ll_edit_pid
 
 
 !====================================================================
@@ -3465,73 +2006,6 @@ end subroutine libxml2f90_ll_addpid
 !========   public ll routines
 
 
-!================================================================
-subroutine libxml2f90__ll_add_list(ll_id)
-  implicit none
-  character(*),intent(in)       :: ll_id !
-  !.........................
-  if(len(trim(adjustl(ll_id))).gt.32) then
-     print*,'THE LISTs NAME CAN NOT BE LARGER THAN 32'
-  end if
-
-  call libxml2f90_ll_add_list(ll_id)
-end subroutine libxml2f90__ll_add_list
-
-!================================================================
-subroutine libxml2f90__ll_opentag(tag)
-  implicit none
-  character(*),intent(in)           :: tag
-  !........................................
-  call libxml2f90_ll_opentag(tag)
-
-end subroutine libxml2f90__ll_opentag
-
-!================================================================
-subroutine libxml2f90__ll_addid(id,value)
-  implicit none
-  character(*),intent(in)        :: id
-  character(*),intent(in)         :: value
-  character(1), allocatable, dimension(:) :: valvec
-  integer :: l,lenval
-  lenval=len(value)
-  allocate(valvec(lenval))
-  do l=1,lenval
-    valvec(l)=value(l:l)
-  end do
-  !............................................
-  call libxml2f90_ll_addid(id,lenval,valvec)
-  deallocate(valvec)
-  return
-end subroutine libxml2f90__ll_addid
-
-!================================================================
-subroutine libxml2f90__ll_addpid(id,value)
-  implicit none
-  character(*),intent(in)        :: id
-  character(*),intent(in)         :: value
-  character(1), allocatable, dimension(:) :: valvec
-  integer :: l,lenval
-  lenval=len(value)
-  allocate(valvec(lenval))
-  do l=1,lenval
-    valvec(l)=value(l:l)
-  end do
-  !............................................
-  call libxml2f90_ll_addpid(id,lenval,valvec)
-  deallocate(valvec)
-  return
-end subroutine libxml2f90__ll_addpid
-
-
-!================================================================
-subroutine libxml2f90__ll_closetag(tag)
-  implicit none
-  character(*),intent(in)           :: tag
-  !........................................
-  call libxml2f90_ll_closetag(tag)
-
-end subroutine libxml2f90__ll_closetag
-
 
 !====================================================================
 subroutine libxml2f90__ll_report(ll_id,nfil,theader)
@@ -3603,7 +2077,7 @@ end subroutine libxml2f90__ll_report
 
 subroutine libxml2f90_ll_report_rec_wrap(LL_ID,nfil,nind)
   implicit none
-  character(*),intent(in)       :: ll_id !the id of the linklist
+  character(len=*),intent(in)       :: ll_id !the id of the linklist
   integer(4),intent(in)         :: nfil !the file unit we report to
   integer(4),intent(inout)      :: nind  !indentation
 
@@ -3619,7 +2093,7 @@ subroutine libxml2f90_ll_report_rec(LL_ID,nfil,nind)
   use ll_module
   use libxml2f90_module, only: twrite_paw,indstep
   implicit none
-  character(*),intent(in)       :: ll_id !the id of the linklist
+  character(len=*),intent(in)       :: ll_id !the id of the linklist
   integer(4),intent(in)         :: nfil !the file unit we report to
   integer(4),intent(inout)      :: nind  !indentation
   character(1)                  :: indch(512)
@@ -3748,22 +2222,6 @@ subroutine libxml2f90_ll_report_rec(LL_ID,nfil,nind)
 
 end subroutine libxml2f90_ll_report_rec
 
-
-
-!====================================================================  
-subroutine libxml2f90__ll_up(tjump)
-  use ll_module
-  implicit none
-  logical(4),intent(out)      :: tjump
-  !...........................
-  tjump=.false.
-  if(.not.associated(this%first_id%up_tag%next_tag))return
-  this=>this%first_id%up_tag%next_tag
-  tjump=.true.
-  return
-end subroutine libxml2f90__ll_up
-
-
 !====================================================================
 subroutine libxml2f90__ll_down(tjump)
   use ll_module
@@ -3778,64 +2236,11 @@ subroutine libxml2f90__ll_down(tjump)
 end subroutine libxml2f90__ll_down
 
 
-
-
-
-
-
-
-
-
-
-
-
 !**********************************************************************
 !**********************************************************************
 !***********                  END LINKLIST
 !**********************************************************************
 !**********************************************************************
-
-
-
-
-!================================================================
-!actually not used, but eventually useful
-subroutine libxml2f90_parse_find_char(charstart,linestart,charend,lineend,char2find,ichar,line)
-  !RETURNS THE ICHAR AND LINE IN STRINGA WHERE CHAR2FIND CAN BE FOUND
-  !ICHAR=0 MEANS THAT CHAR2FIND WAS NOT FOUND
-  use libxml2f90_module
-  implicit none
-  integer(4),intent(in)                ::  charstart,linestart,charend,lineend
-  character(1),intent(in)              ::  char2find !
-  integer(4),intent(out)               ::  ichar,line !the position we found char2find
-  !......................................
-
-  ichar=0
-  line=0
-  do line=linestart, lineend
-     if(line.eq.linestart) then
-        ichar=scan(stringa(line)(charstart:charend),char2find)
-        if(ichar.ne.0) then
-           !we found
-           ichar=charstart-1+ichar
-           exit
-        end if
-     else
-        ichar=scan(stringa(line)(1:charend),char2find)
-        if(ichar.ne.0) then
-           !we found
-           exit
-        end if
-     end if
-  end do
-  return
-end subroutine libxml2f90_parse_find_char
-
-
-
-!Note for PID's: we use THIS%FIRST_ID as root and THIS%NEXT_PID to navigate.
-!we use id and value as wit ususal id's!
-
 
 
 
@@ -3999,67 +2404,6 @@ subroutine libxml2f90_transform_paw()
 
 end subroutine libxml2f90_transform_paw
 
-
-subroutine libxml2f90__settransform_exm(ttransform_paw_)
-  use libxml2f90_module
-  implicit none
-  logical(4),intent(in)          :: ttransform_paw_
-  !.................................................
-  ttransform_paw=ttransform_paw_
-  return
-end subroutine libxml2f90__settransform_exm
-
-subroutine libxml2f90__setwrite_exm(twrite_paw_)
-  use libxml2f90_module
-  implicit none
-  logical(4),intent(in)          :: twrite_paw_
-  !.................................................
-  twrite_paw=twrite_paw_
-  return
-end subroutine libxml2f90__setwrite_exm
-
- subroutine libxml2f90__set_paw(tpaw_)
-  use libxml2f90_module
-  implicit none
-  logical(4),intent(in)          :: tpaw_
-  !.................................................
-  tpaw=tpaw_
-  !paw files are exm structured
-  if(tpaw_) call libxml2f90__settransform_exm(.true.)
-  return
-end subroutine libxml2f90__set_paw
-
-subroutine libxml2f90__set_rmcomma(trmcomma_)
-  use libxml2f90_module
-  implicit none
-  logical(4),intent(in)          :: trmcomma_
-  !.................................................
-  trmcomma=trmcomma_
-  return
-end subroutine libxml2f90__set_rmcomma
-
-subroutine libxml2f90__set_rmquotes(trmquotes_)
-  use libxml2f90_module
-  implicit none
-  logical(4),intent(in)          :: trmquotes_
-  !.................................................
-  trmquotes=trmquotes_
-  return
-end subroutine libxml2f90__set_rmquotes
-
-
-subroutine libxml2f90__set_casesensitive(tcasesensitive_)
-  use ll_module
-  implicit none
-  logical(4),intent(in)          :: tcasesensitive_
-  !.................................................
-  tcasesensitive=tcasesensitive_
-
-  !comment:
-  !tcasesensitive is kept in ll_module and not in libxml2f90_module
-  !because it is solely used in ll routines
-  return
-end subroutine libxml2f90__set_casesensitive
 
 subroutine libxml2f90_getline(ipos,line)
   !returns the line ipos belongs to

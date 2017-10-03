@@ -58,7 +58,7 @@ gendep:
 
 $(EXE): $(LIBMODEL) $(MAINOBJ) 
 	@echo ""
-	$(LOADER) -o $(EXE) edmain.o $(LOADER_OPTS) $(INCLUDES) $(LIBMODEL) $(HDF5_LIBS)   \
+	$(LOADER) -o $(EXE) edmain.o $(F_OPTS) $(INCLUDES) $(LIBMODEL) $(HDF5_LIBS)   \
 	$(PAR_LIBS) $(NC_LIBS) $(LIBS) $(LOADER_OPTS)
 	@echo ""
 	@echo Finished building === $(EXE)
