@@ -2087,7 +2087,6 @@ subroutine init_pft_mort_params()
       , lnexp_max                  & ! intent(in)
       , onethird                   & ! intent(in)
       , twothirds                  ! ! intent(in)
-   use ed_misc_coms, only : iallom                     ! ! intent(in)
    use disturb_coms, only : treefall_disturbance_rate  & ! intent(inout)
       , time2canopy                ! ! intent(in)
 
@@ -2418,7 +2417,6 @@ subroutine init_pft_alloc_params()
    integer                           :: n
    real                              :: aux
    real                              :: init_density_grass
-   real                              :: init_bleaf
    logical                           :: write_allom
    real                              :: bleaf_sapling
    !----- Constants shared by both bdead and bleaf (tropical PFTs) ------------------------!

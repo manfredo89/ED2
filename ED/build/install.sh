@@ -26,14 +26,9 @@
 #           velopers.                                                                      #
 #                                                                                          #
 #                                                                                          #
-# usage example:                                                                           #
+# Usage example:                                                                           #
 #                                                                                          #
-# install.sh --kind A --platform intel                                                     #
-#------------------------------------------------------------------------------------------#
-
-#----- Define the number of arguments. ----------------------------------------------------#
-nargs=$#
-args=$@
+# install.sh -k A -p intel                                                                 #
 #------------------------------------------------------------------------------------------#
 
 # Initialize vars
@@ -79,16 +74,16 @@ fi
 
 if [ "${KIND}" == "" ]
 then  
-   echo "No optimization level specified, defaulting to E."
-   KIND="E"
+   echo "No optimization level specified, defaulting to C."
+   KIND="C"
 fi
 
 # Set opt and bin
 case ${KIND} in
-['A','B','C']*)
+['A','B']*)
    OPT='dbg'
    ;;
-['D','E','F']*)
+['C']*)
    OPT='opt'
    ;;
 *)
@@ -119,11 +114,10 @@ fi
 cd ${BIN}
 
 
-# Link to makefiles, includes, and shell scripts
-ln -sf ../make/*.mk ./
-ln -sf ../make/Makefile ./
+# Link to makefiles and includes
+ln -sf ../make/* ./
 ln -sf ../make/include.${PLATFORM}.mk ./include.mk
-ln -sf ../shell/* ./
+
 touch dependency.mk
 
 #----- Launch the compiler. ---------------------------------------------------------------#

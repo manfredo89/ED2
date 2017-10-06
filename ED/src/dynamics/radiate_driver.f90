@@ -195,39 +195,21 @@ subroutine sfcrad_ed(cosaoi,csite,mzg,mzs,ntext_soil,ncol_soil,tuco,rlong,twilig
 
    use ed_state_vars        , only : sitetype             & ! structure
                                    , patchtype            ! ! structure
-   use canopy_layer_coms    , only : crown_mod            & ! intent(in)
-                                   , tai_lyr_max          ! ! intent(in)
-   use canopy_radiation_coms, only : icanrad              & ! intent(in)
-                                   , clumping_factor      & ! intent(in)
+   use canopy_layer_coms    , only : crown_mod            ! ! intent(in)
+   use canopy_radiation_coms, only : clumping_factor      & ! intent(in)
                                    , par_beam_norm        & ! intent(in)
                                    , par_diff_norm        & ! intent(in)
                                    , nir_beam_norm        & ! intent(in)
                                    , nir_diff_norm        & ! intent(in)
-                                   , leaf_trans_vis       & ! intent(in)
-                                   , leaf_reflect_vis     & ! intent(in)
                                    , leaf_scatter_vis     & ! intent(out)
-                                   , leaf_backscatter_vis & ! intent(out)
-                                   , wood_trans_vis       & ! intent(in)
-                                   , wood_reflect_vis     & ! intent(in)
                                    , wood_scatter_vis     & ! intent(out)
-                                   , wood_backscatter_vis & ! intent(out)
-                                   , leaf_trans_nir       & ! intent(in)
-                                   , leaf_reflect_nir     & ! intent(in)
                                    , leaf_scatter_nir     & ! intent(out)
-                                   , leaf_backscatter_nir & ! intent(out)
-                                   , wood_trans_nir       & ! intent(in)
-                                   , wood_reflect_nir     & ! intent(in)
                                    , wood_scatter_nir     & ! intent(out)
-                                   , wood_backscatter_nir & ! intent(out)
                                    , leaf_emiss_tir       & ! intent(in)
                                    , wood_emiss_tir       & ! intent(in)
                                    , snow_albedo_vis      & ! intent(in)
                                    , snow_albedo_nir      & ! intent(in)
                                    , snow_emiss_tir       & ! intent(in)
-                                   , orient_factor        & ! intent(out)
-                                   , phi1                 & ! intent(out)
-                                   , phi2                 & ! intent(out)
-                                   , mu_bar               & ! intent(out)
                                    , radscr
    use soil_coms            , only : soil                 & ! intent(in)
                                    , soilcol              ! ! intent(in)
@@ -302,8 +284,6 @@ subroutine sfcrad_ed(cosaoi,csite,mzg,mzs,ntext_soil,ncol_soil,tuco,rlong,twilig
    real                                          :: wwood_vis
    real                                          :: wwood_nir
    real                                          :: wwood_tir
-   real                                          :: bl_lai_each
-   real                                          :: bl_wai_each
    integer                                       :: ibuff
    !----- External function. --------------------------------------------------------------!
    real            , external                    :: sngloff

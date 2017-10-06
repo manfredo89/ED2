@@ -1182,7 +1182,7 @@ end subroutine libxml2f90__ll_getch
 !          not, and we use libxml2f90__ll_getch, then the interface check will fail
 subroutine libxml2f90__ll_getch_scal(id,size_,val)
 implicit none
-character(len=*),intent(in)        :: id
+character(*),intent(in)        :: id
 integer(4),intent(in)              :: size_
 character(len=size_),intent(out)   :: val
 character(len=1), dimension(size_) :: val_loc
@@ -1816,7 +1816,7 @@ end subroutine libxml2f90_ll_opentag
 subroutine libxml2f90_ll_closetag(tag)
   use ll_module
   implicit none
-  character(len=*),intent(in)       :: tag !
+  character(*),intent(in)       :: tag !
   integer(4)                    :: line !corresponds to the fileline
   !...........................
   !JUMP TO THE FIRST ID BECAUSE IT'S CONNECTED UPWARDS
@@ -2077,7 +2077,7 @@ end subroutine libxml2f90__ll_report
 
 subroutine libxml2f90_ll_report_rec_wrap(LL_ID,nfil,nind)
   implicit none
-  character(len=*),intent(in)       :: ll_id !the id of the linklist
+  character(*),intent(in)       :: ll_id !the id of the linklist
   integer(4),intent(in)         :: nfil !the file unit we report to
   integer(4),intent(inout)      :: nind  !indentation
 
@@ -2093,7 +2093,7 @@ subroutine libxml2f90_ll_report_rec(LL_ID,nfil,nind)
   use ll_module
   use libxml2f90_module, only: twrite_paw,indstep
   implicit none
-  character(len=*),intent(in)       :: ll_id !the id of the linklist
+  character(*),intent(in)       :: ll_id !the id of the linklist
   integer(4),intent(in)         :: nfil !the file unit we report to
   integer(4),intent(inout)      :: nind  !indentation
   character(1)                  :: indch(512)
@@ -2166,6 +2166,8 @@ subroutine libxml2f90_ll_report_rec(LL_ID,nfil,nind)
         !write the actual id/value
         if(trim(adjustl(THIS%ID)).eq.trim(adjustl(THIS%TAG))) then
            write(nfil,*)indch(1:nind),THIS%VALUE
+           write(*,*),"ed_xml_print",indch(1:nind),THIS%VALUE
+
         else !write id=value
            if(twrite_paw) then
               !we need ' around the strings

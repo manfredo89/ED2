@@ -22,15 +22,11 @@ subroutine reproduction(cgrid,month)
                                  , copy_recruit             & ! subroutine
                                  , seedling_mortality       & ! intent(in)
                                  , min_recruit_size         & ! intent(in)
-                                 , one_plant_c              & ! intent(in)
                                  , c2n_recruit              & ! intent(in)
                                  , seed_rain                & ! intent(in)
                                  , include_pft              & ! intent(in)
                                  , include_pft_ag           & ! intent(in)
                                  , include_pft_fp           & ! intent(in)
-                                 , qsw                      & ! intent(in)
-                                 , q                        & ! intent(in)
-                                 , agf_bs                   & ! intent(in)
                                  , hgt_min                  & ! intent(in)
                                  , plant_min_temp           ! ! intent(in)
    use ed_max_dims        , only : n_pft                    ! ! intent(in)
@@ -76,12 +72,6 @@ subroutine reproduction(cgrid,month)
    logical                             :: allow_pft
    real                                :: elim_nplant
    real                                :: elim_lai
-   real                                :: nplant_inc
-   real                                :: bleaf_plant
-   real                                :: bdead_plant
-   real                                :: broot_plant
-   real                                :: bsapwood_plant
-   real                                :: balive_plant
    real                                :: rec_biomass
    !----- Saved variables -----------------------------------------------------------------!
    logical          , save             :: first_time = .true.

@@ -3965,7 +3965,6 @@ subroutine print_rk4_state(initp,fluxp,csite,ipa,isi,elapsed,hdid)
    real(kind=8)                       :: elapsec
    real(kind=8)                       :: can_rvap
    real(kind=8)                       :: can_theiv
-   real(kind=8)                       :: can_vpdef
    !----- Local constants. ----------------------------------------------------------------!
    character(len=10), parameter :: phfmt='(86(a,1x))'
    character(len=48), parameter :: pbfmt='(3(i13,1x),4(es13.6,1x),3(i13,1x),76(es13.6,1x))'

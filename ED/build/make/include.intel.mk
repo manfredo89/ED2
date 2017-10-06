@@ -29,11 +29,11 @@ UNAME_S := $(shell uname -s)
 #------------------------------------------------------------------------------------------#
 USE_HDF5=1
 ifeq ($(UNAME_S),Linux)
-	HDF5_LIBS=-lz -lm -lhdf5 -lhdf5_fortran -lhdf5_hl
+	HDF5_LIBS=-lz -lhdf5 -lhdf5_fortran -lhdf5_hl
 endif
 ifeq ($(UNAME_S),Darwin)
 	HDF5_INCS=-I/usr/local/hdf5_mio/include
-	HDF5_LIBS=-lm -lz -L/usr/local/hdf5_mio/lib -lhdf5 -lhdf5_fortran -lhdf5_hl
+	HDF5_LIBS=-lz -L/usr/local/hdf5_mio/lib -lhdf5 -lhdf5_fortran -lhdf5_hl
 endif
 #------------------------------------------------------------------------------------------#
 
@@ -44,7 +44,6 @@ CMACH=PC_LINUX1
 F_COMP=ifort
 C_COMP=icc
 LOADER=ifort
-LIBS=
 MOD_EXT=mod
 #------------------------------------------------------------------------------------------#
 
@@ -52,89 +51,43 @@ MOD_EXT=mod
 
 ##################################### COMPILER OPTIONS #####################################
 #------------------------------------------------------------------------------------------#
-# A/B. Pickiest - Use this whenever you change arguments on functions and subroutines.     #
-#                 This will perform the same tests as B but it will also check whether all #
-#                 arguments match between subroutine declaration and subroutine calls.     #
-#                 WARNING: In order to really check all interfaces you must compile with   #
-#                          this option twice:                                              #
-#                 1. Compile (./install.sh A)                                              #
-#                 2. Prepare second compilation(./2ndcomp.sh)                              #
-#                 3. Compile one more time (./install.sh B)                                #
-#                 If the compilation fails either at step 3, then your code has interface  #
-#                 problems. If it successfully compiles, then the code is fine for         #
-#                 interfaces.                                                              #
-# C. Pickiest with no interface - This will compile fast but the run will be slow due to   #
-#    the -O0 option. However, by setting -O0 you will take full advantage of the intel     #
-#    debugger.                                                                             #
-#    Ideally, you should compile your code with this option whenever you make any changes. #
-#    Note, however, that if you change arguments you should first try A.                   #
-# D. Fast check - This will check pretty much the same as C, but it will not set up        #
-#    anything for the debugger. Use this only if you really don't want to deal with idb or #
-#    if you have a good idea of which problem you are dealing with.                        #
-# E. Fast - This is all about performance, use only when you are sure that the model has   #
-#           no code problem, and you want results asap. This will not check for any        #
-#           problems, which means that this is an option suitable for end users, not de-   #
-#           velopers.                                                                      #
+# A. Pickiest - Use this whenever you change arguments on functions and subroutines.       #
+#             This will do all possible checks. Interface is no longer an issue in this    #
+#             version of the code. double compilation is no longer needed).                #
+# B. Profiler - This is a debug build with flags for profiling. To produce the coverage    #
+#             run the application, then in the bin folder execute profmerge (this will     #
+#             merge the *.dyn files. Then run                                              #
+#             codecov -prj <build/project_name> -spi <bin/file.spi> -dpi <bin/file.dpi>    #
+# C. Fast     - This is all about performance, use only when you are sure that the model   #
+#             has no code problem, and you want results asap. This will not check for any  #
+#             problems, which means that this is an option suitable for end users, not de- #
+#             velopers.                                                                    #
 #------------------------------------------------------------------------------------------#
 ifeq ($(KIND_COMP),)
-	KIND_COMP=E
+	KIND_COMP=C
 endif
 #------------------------------------------------------------------------------------------#
 #################################    DEBUG BUILD   #########################################
 ifeq ($(KIND_COMP),A)
-	USE_INTERF=0
-#	F_OPTS= -FR -check -g -debug extended -debug-parameters -traceback -u -fp-stack-check \
-#			-warn unused -warn uncalled -gen-interfaces
-#	C_OPTS= -g -traceback
-	F_OPTS= -FR -check -g -debug extended -debug-parameters -traceback -u -fp-stack-check \
-		-warn
-	C_OPTS= -g -traceback
-	#---------------------------------------------------------------------------------------#
-endif
-############################   LEGACY DEBUG BUILD   #########################################
-ifeq ($(KIND_COMP),B)
-	USE_INTERF=0
-	F_OPTS= -FR -recursive  -check all -g -debug extended -debug-parameters used        \
-			-fpe0 -no-ftz -traceback -ftrapuv -fp-stack-check -implicitnone      \
-			-assume byterecl -warn unused -warn uncalled -warn usage -gen-interfaces
-	C_OPTS= -DLITTLE  -g -traceback
+	F_OPTS= -check -g -debug extended -debug-parameters -traceback -u -fp-stack-check -warn
+	C_OPTS= -g -traceback -debug extended -debug-parameters -warn
 	#---------------------------------------------------------------------------------------#
 endif
 ########################   DEBUG BUILD WITH INTEL PROFILING   ###############################
-ifeq ($(KIND_COMP),C)
-	USE_INTERF=0
-	F_OPTS= -check -g -prof-gen=srcpos -debug extended -debug-parameters -traceback -u  \
-			-fp-stack-check -gen-interfaces
-	C_OPTS= -g -traceback
-	#---------------------------------------------------------------------------------------#
-endif
-############################### LEGACY OPTIMIZED BUILD   ####################################
-ifeq ($(KIND_COMP),D)
-	USE_INTERF=1
-	F_OPTS= -FR -O3 -recursive -traceback -assume byterecl
-	C_OPTS= -O3 -DLITTLE -traceback
-	F_LOWO_OPTS=-FR -O2 -recursive -traceback -assume byterecl
+ifeq ($(KIND_COMP),B)
+	F_OPTS= -check -g -debug extended -debug-parameters -traceback -u -fp-stack-check -warn \
+			-prof-gen=srcpos
+	C_OPTS= -g -traceback -debug extended -debug-parameters -warn -prof-gen=srcpos
 	#---------------------------------------------------------------------------------------#
 endif
 ######################################   OPTIMIZED BUILD   ##################################
-ifeq ($(KIND_COMP),E)
-	USE_INTERF=1
-	F_OPTS= -O3 -xHost -g -assume byterecl
-	C_OPTS= -O3 -xHost -g
-	F_LOWO_OPTS= -O2 -xHost -g
-	#---------------------------------------------------------------------------------------#
-endif
-###########################   OPTIMIZED BUILD WITH OpenMP   #################################
-ifeq ($(KIND_COMP),F)
-	USE_INTERF=1
-	F_OPTS= -O3 -xHost -g -qopenmp
+ifeq ($(KIND_COMP),C)
+	F_OPTS= -O3 -xHost -g -u -qopenmp
 	C_OPTS= -O3 -xHost -g -qopenmp
-#	F_OPTS= -fast -g -qopenmp
-#	C_OPTS= -fast -g -qopenmp
-	F_LOWO_OPTS= -O2 -xHost -g -qopenmp
+	F_LOWO_OPTS= -O2 -xHost -g -u -qopenmp
 	#---------------------------------------------------------------------------------------#
 endif
-#------------------------------------------------------------------------------------------#
+#-------------------------------------------------------------------------------------------#
 ############################################################################################
 
 
@@ -148,26 +101,13 @@ USE_COLLECTIVE_MPIO=0
 
 
 #------------------------------------------------------------------------------------------#
-#     If using mpicc and mpif90 as compilers (recommended), leave MPI_PATH, PAR_INCS, and  #
-# PAR_LIBS blank, otherwise provide the includes and libraries for mpi.  Either way, don't #
-# change PAR_DEFS unless you know what you are doing.                                      #
-#------------------------------------------------------------------------------------------#
-MPI_PATH=
-PAR_INCS=
-PAR_LIBS=
-PAR_DEFS=
-#------------------------------------------------------------------------------------------#
-
-
-
-#------------------------------------------------------------------------------------------#
 #     Archive options.                                                                     #
 #------------------------------------------------------------------------------------------#
 ifeq ($(UNAME_S),Linux)
-	ARCHIVE=ar rs
+	ARCHIVE=xiar crs
 endif
 ifeq ($(UNAME_S),Darwin)
-	ARCHIVE=libtool -c -static -o
+	ARCHIVE=xilibtool -c -static -o
 endif
 #------------------------------------------------------------------------------------------#
 

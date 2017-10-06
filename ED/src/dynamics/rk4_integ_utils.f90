@@ -1211,10 +1211,9 @@ subroutine initialize_rk4patches(init)
                             , deallocate_bdf2_patch & 
                             , rk4aux
 
-   use canopy_layer_coms,only : alloc_canopy_layer_mbs &
-                              , tai_lyr_max          ! ! intent(in)
+   use canopy_layer_coms,only : alloc_canopy_layer_mbs
    use ed_misc_coms  , only : integration_scheme
-   use grid_coms     , only : ngrids                ! ! intent(in)
+   use grid_coms     , only : ngrids
    use c34constants  , only : thispft,              &
                               met,                  &
                               aparms,               &
@@ -1239,7 +1238,6 @@ subroutine initialize_rk4patches(init)
    type(sitetype)    , pointer    :: csite
    type(patchtype)   , pointer    :: cpatch
    integer                        :: maxcohort
-   integer                        :: cohort_count
    integer                        :: igr
    integer                        :: ipy
    integer                        :: isi

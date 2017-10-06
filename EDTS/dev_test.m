@@ -19,13 +19,13 @@ close all;
 test_name = 'r85v2ghubrapid';
 
 use_m34 = true;       % SOI Manaus km34
-use_ata = false;       % SOI Atacama
+use_ata = true;       % SOI Atacama
 use_s67 = true;       % SOI Santarem km 67
 use_har = true;       % SOI Harvard Forest
-use_pdg = false;       % SOI Pe de Gigante
+use_pdg = true;       % SOI Pe de Gigante
 use_cax = true;       % SOI Caxiuana
-use_ton = true;       % SOI Tonzi (temperate)
-use_tnf = false;       % SOI Tapajos National Forest
+use_ton = false;       % SOI Tonzi (temperate)
+use_tnf = true;       % SOI Tapajos National Forest
 use_gyf = true;        % SOI Paracou
 use_pet = true;        % SOI Petrolina
 use_hip = true;       % SOI Petrolina (short high frequency)
@@ -178,7 +178,7 @@ for ih=1:nhifr
     
     if (isempty(srch_test) | isempty(srch_dbug) | isempty(srch_main))
         
-        use_site(ih)=false;
+        use_hifr(ih)=false;
         continue
         
     else
@@ -217,7 +217,7 @@ for ig=1:ngrid
     
     if (isempty(srch_test) | isempty(srch_dbug) | isempty(srch_main))
         
-        use_site(ig)=false;
+        use_grid(ig)=false;
         continue
         
     else

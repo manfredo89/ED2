@@ -754,19 +754,19 @@ subroutine structural_growth_eq_0(cgrid, month)
                !---------------------------------------------------------------------------!
                select case (iddmort_scheme)
                case (0)
-                  !------ Storage is not accounted. ------------------------------------------------!
+                  !------ Storage is not accounted. ---------------------------------------!
                   cpatch%cb          (13,ico) = 0.0
                   cpatch%cb_lightmax (13,ico) = 0.0
                   cpatch%cb_moistmax (13,ico) = 0.0
                   cpatch%cb_mlmax    (13,ico) = 0.0
                case (1)
-                  !------ Storage is accounted. ----------------------------------------------------!
+                  !------ Storage is accounted. -------------------------------------------!
                   cpatch%cb          (13,ico) = cpatch%bstorage(ico)
                   cpatch%cb_lightmax (13,ico) = cpatch%bstorage(ico)
                   cpatch%cb_moistmax (13,ico) = cpatch%bstorage(ico)
                   cpatch%cb_mlmax    (13,ico) = cpatch%bstorage(ico)
                end select
-               !------------------------------------------------------------------------------------!
+               !---------------------------------------------------------------------------!
 
                !---------------------------------------------------------------------------!
                !  Set up CB/CBmax as running sums and use that in the calculate cbr        !
@@ -779,7 +779,7 @@ subroutine structural_growth_eq_0(cgrid, month)
                   cb_mlmax     = 0.0
 
                !----- Compute the relative carbon balance. --------------------------------!
-               if (is_grass(ipft).and. igrass==1) then  !!Grass loop, use past month's carbon balance only
+               if (is_grass(ipft).and. igrass==1) then  !!Grass loop, use past month's cb only
                   cb_act      =  cpatch%cb          (prev_month,ico)
                   cb_lightmax =  cpatch%cb_lightmax (prev_month,ico)
                   cb_moistmax =  cpatch%cb_moistmax (prev_month,ico)
@@ -923,7 +923,8 @@ end subroutine structural_growth_eq_0
 !     This subroutine will decide the partition of storage biomass into seeds and dead     !
 ! (structural) biomass.                                                                    !
 !------------------------------------------------------------------------------------------!
-subroutine plant_structural_allocation(ipft,hite,dbh,lat,phen_status, bdead, bstorage, f_bseeds,f_bdead, maxh)
+subroutine plant_structural_allocation(ipft,hite,dbh,lat,phen_status, bdead, bstorage,     &
+                                       f_bseeds,f_bdead, maxh)
    use pft_coms      , only : phenology    & ! intent(in)
                             , repro_min_h  & ! intent(in)
                             , r_fract      & ! intent(in)
@@ -1047,26 +1048,26 @@ subroutine plant_structural_allocation(ipft,hite,dbh,lat,phen_status, bdead, bst
             !   storage. Basically don't grow bdead -> DBH -> Height                       !
             !------------------------------------------------------------------------------!
             if (is_liana(ipft)) then
-            if(hite > maxh) then
-               f_bseeds = merge(0.0, r_fract(ipft), hite <= repro_min_h(ipft))
-               f_bdead  = 0.0
+               if(hite > maxh) then
+                  f_bseeds = merge(0.0, r_fract(ipft), hite <= repro_min_h(ipft))
+                  f_bdead  = 0.0
                else
-               bd_target = dbh2bd(h2dbh(maxh,ipft),ipft)
-               delta_bd = bd_target - bdead
-               !---------------------------------------------------------------------------!
-               ! If bstorage is 0 or lianas have already reached their bd_target don't     !
-               ! grow otherwise invest what you need (or everything if it's not enough) to !
-               ! reach bd_target.
-               ! For seeds first check if you have reached repro_min_h. If that's the case !
-               ! then check that you have enough left to invest r_fract in reproduction.   !
-               ! If that's the case invest r_fract in reproduction and the rest will stay  !
-               ! in storage. If that's not the case invest everything in reproduction.     !
-               ! Finally if you haven't reache repro_min_h leave everything in storage.    !
-               !---------------------------------------------------------------------------!
-               f_bdead   = merge(0.0, min(delta_bd / bstorage, 1.0),                       &
-                                 bstorage * delta_bd <= 0.0)
-               f_bseeds  = merge(0.0, merge(r_fract(ipft), 1.0 - f_bdead,                  &
-                                 r_fract(ipft) < 1.0 - f_bdead), hite <= repro_min_h(ipft))
+                  bd_target = dbh2bd(h2dbh(maxh,ipft),ipft)
+                  delta_bd = bd_target - bdead
+                  !---------------------------------------------------------------------------!
+                  ! If bstorage is 0 or lianas have already reached their bd_target don't     !
+                  ! grow otherwise invest what you need (or everything if it's not enough) to !
+                  ! reach bd_target.
+                  ! For seeds first check if you have reached repro_min_h. If that's the case !
+                  ! then check that you have enough left to invest r_fract in reproduction.   !
+                  ! If that's the case invest r_fract in reproduction and the rest will stay  !
+                  ! in storage. If that's not the case invest everything in reproduction.     !
+                  ! Finally if you haven't reache repro_min_h leave everything in storage.    !
+                  !---------------------------------------------------------------------------!
+                  f_bdead   = merge(0.0, min(delta_bd / bstorage, 1.0),                       &
+                     bstorage * delta_bd <= 0.0)
+                  f_bseeds  = merge(0.0, merge(r_fract(ipft), 1.0 - f_bdead,                  &
+                     r_fract(ipft) < 1.0 - f_bdead), hite <= repro_min_h(ipft))
                end if
             else
                f_bseeds = merge(0.0, r_fract(ipft), hite <= repro_min_h(ipft))
@@ -1474,7 +1475,7 @@ subroutine compute_C_and_N_storage(cgrid,ipy, soil_C, soil_N, veg_C, veg_N)
 
             veg_N8 = veg_N8 + area_factor                                                  &
                             * ( dble(cpatch%balive(ico)) / dble(c2n_leaf(cpatch%pft(ico))) &
-                              + dble(cpatch%bdead(ico)) / dble(c2n_stem(cpatch%pft(ico)))                   &
+                              + dble(cpatch%bdead(ico)) / dble(c2n_stem(cpatch%pft(ico)))  &
                               + dble(cpatch%bstorage(ico)) / dble(c2n_storage))            &
                             * dble(cpatch%nplant(ico))
          end do cohortloop

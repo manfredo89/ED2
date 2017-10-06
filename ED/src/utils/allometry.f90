@@ -58,8 +58,7 @@ contains
          , dbh_crit    & ! intent(in)
          , b1Ht        & ! intent(in)
          , b2Ht        & ! intent(in)
-         , hgt_ref     & ! intent(in)
-         , hgt_max     ! ! intent(in)
+         , hgt_ref     ! ! intent(in)
       use ed_misc_coms, only : iallom
       use ed_state_vars, only:  patchtype  ! ! structure
 

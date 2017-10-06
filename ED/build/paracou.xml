@@ -1,0 +1,19 @@
+ <config>
+   <pft>
+      <num>
+                  17
+      </num>
+      <leaf_turnover_rate>
+                 0.85
+      </leaf_turnover_rate>
+	  <!--
+	   Hello,
+	   I am a multi-line XML comment
+	   <staticText>
+	   <reportElement x="180" y="0" width="200" height="20"/>
+	   <text><![CDATA[Hello World!]]></text>
+	   </staticText>
+	   -->
+	  
+   </pft>
+ </config>

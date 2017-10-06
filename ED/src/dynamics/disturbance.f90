@@ -77,12 +77,8 @@ module disturbance_utils
       integer                                       :: ipy
       integer                                       :: isi
       integer                                       :: ipa
-      integer                                       :: npa
       integer                                       :: ico
-      integer                                       :: ipft
       integer                                       :: i
-      integer                                       :: apa
-      integer                                       :: zpa
       integer                                       :: mypfts
       integer                                       :: onsp
       integer                                       :: nnsp_ble
@@ -101,7 +97,6 @@ module disturbance_utils
       real   , dimension(n_dist_types)              :: act_area_gain
       logical                                       :: biomass_harvest
       logical                                       :: disturbed
-      logical                                       :: same_pft
       logical                                       :: mature_plantation
       logical                                       :: mature_primary
       logical                                       :: mature_secondary
@@ -116,7 +111,6 @@ module disturbance_utils
       real                                          :: dist_rate
       real                                          :: elim_nplant
       real                                          :: elim_lai
-      real                                          :: new_nplant
       logical                                       :: is_plantation
       !----- Debugging controls. ----------------------------------------------------------!
       logical                         , parameter   :: print_debug = .false.
@@ -2637,8 +2631,7 @@ module disturbance_utils
       use stable_cohorts
       use ed_state_vars , only  : sitetype                 & ! structure
                                 , patchtype                ! ! structure
-      use pft_coms       , only : hgt_min                  & ! intent(in)
-                                , hgt_max                  ! ! intent(in)
+      use pft_coms       , only : hgt_min                  ! ! intent(in)
       use fuse_fiss_utils, only : sort_cohorts             ! ! sub-routine
       use ed_therm_lib   , only : calc_veg_hcap            ! ! function
       use consts_coms    , only : t3ple                    & ! intent(in)
