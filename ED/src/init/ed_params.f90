@@ -1638,18 +1638,7 @@ subroutine init_pft_photo_params()
    !    Dark_respiration_factor is the lower-case gamma in Moorcroft et al. (2001).        !
    !---------------------------------------------------------------------------------------!
    dark_respiration_factor(1)     = gamma_c4
-   dark_respiration_factor(2)     = gamma_c3
-   dark_respiration_factor(3)     = gamma_c3
-   dark_respiration_factor(4)     = gamma_c3
-   dark_respiration_factor(5)     = gamma_c3
-   dark_respiration_factor(6)     = gamma_c3
-   dark_respiration_factor(7)     = gamma_c3
-   dark_respiration_factor(8)     = gamma_c3
-   dark_respiration_factor(9)     = gamma_c3
-   dark_respiration_factor(10)    = gamma_c3
-   dark_respiration_factor(11)    = gamma_c3
-   dark_respiration_factor(12)    = gamma_c3
-   dark_respiration_factor(13)    = gamma_c3
+   dark_respiration_factor(2:13)  = gamma_c3
    dark_respiration_factor(14)    = gamma_c4
    dark_respiration_factor(15)    = gamma_c4
    dark_respiration_factor(16)    = gamma_c3

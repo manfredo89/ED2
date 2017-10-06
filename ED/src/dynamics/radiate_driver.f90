@@ -284,6 +284,8 @@ subroutine sfcrad_ed(cosaoi,csite,mzg,mzs,ntext_soil,ncol_soil,tuco,rlong,twilig
    real                                          :: wwood_vis
    real                                          :: wwood_nir
    real                                          :: wwood_tir
+   real                                          :: bl_lai_each
+   real                                          :: bl_wai_each
    integer                                       :: ibuff
    !----- External function. --------------------------------------------------------------!
    real            , external                    :: sngloff
