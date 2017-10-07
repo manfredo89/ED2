@@ -2166,7 +2166,6 @@ subroutine libxml2f90_ll_report_rec(LL_ID,nfil,nind)
         !write the actual id/value
         if(trim(adjustl(THIS%ID)).eq.trim(adjustl(THIS%TAG))) then
            write(nfil,*)indch(1:nind),THIS%VALUE
-           write(*,*),"ed_xml_print",indch(1:nind),THIS%VALUE
 
         else !write id=value
            if(twrite_paw) then
