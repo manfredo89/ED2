@@ -1,6 +1,4 @@
-
 <!-- NOTE: This page uses a combination of HTML and markdown to display properly in both GitHub and Doxygen. -->
-@mainpage
 
 ## Important: Please see <a href="#doxygit"> Doxygen and Git Commits </a>
 
@@ -73,7 +71,7 @@ More General Info
  - http://stackoverflow.com/questions/51667/best-tips-for-documenting-code-using-doxygen
  - https://www.rosettacommons.org/manuals/rosetta3.2_user_guide/doxygen_tips.html
  
-Mainpage & custom file construction links:
+Main page & custom file construction links:
  - http://stackoverflow.com/questions/10136201/mainpage-in-doxygen-documentation?rq=1
  - http://stackoverflow.com/questions/9502426/how-to-make-an-introduction-page-with-doxygen
  - http://stackoverflow.com/questions/13368350/use-the-readme-md-file-as-main-page-in-doxygen

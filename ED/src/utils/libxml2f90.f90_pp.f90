@@ -43,7 +43,7 @@ module libxml2f90_module
   character(1),allocatable    ::  tempstringa(:)
   integer(4)                  ::  filelines
   integer(4)                  ::  lbact
-  character(1024)               ::  default_llid='CNTL'
+  character(1024)             ::  default_llid='CNTL'
   integer(4)                  ::  xmlformat=3
   integer(4)                  ::  arraystep=2000
   integer(4)                  ::  indstep=2
