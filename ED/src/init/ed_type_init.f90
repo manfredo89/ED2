@@ -232,7 +232,8 @@ subroutine init_ed_cohort_vars(cpatch,ico, lsl)
    cpatch%lint_co2_closed       (ico) = 0.
    !---------------------------------------------------------------------------------------!
 
-
+   !---- Set which cohorts are at the top of the canopy (none at the beginning) -----------!
+   cpatch%at_the_top(ico) = .false.
 
    !---------------------------------------------------------------------------------------!
    !     Fast-averages.                                                                    !

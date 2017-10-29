@@ -15,7 +15,7 @@ BASE=$(ED_ROOT)/build/
 #------------------------------------------------------------------------------------------#
 
 
-#------ Detect current system. -----------------------------------------------------------#
+#------ Detect current system. ------------------------------------------------------------#
 UNAME_S := $(shell uname -s)
 #------------------------------------------------------------------------------------------#
 
@@ -75,16 +75,19 @@ ifeq ($(KIND_COMP),A)
 endif
 ########################   DEBUG BUILD WITH INTEL PROFILING   ###############################
 ifeq ($(KIND_COMP),B)
-	F_OPTS= -check -g -debug extended -debug-parameters -traceback -u -fp-stack-check -warn \
-			-prof-gen=srcpos
-	C_OPTS= -g -traceback -debug extended -debug-parameters -warn -prof-gen=srcpos
+#	F_OPTS= -check -g -debug extended -debug-parameters -traceback -u -fp-stack-check -warn \
+#			-prof-gen=srcpos
+#	C_OPTS= -g -traceback -debug extended -debug-parameters -warn -prof-gen=srcpos
 	#---------------------------------------------------------------------------------------#
 endif
 ######################################   OPTIMIZED BUILD   ##################################
 ifeq ($(KIND_COMP),C)
-	F_OPTS= -O3 -xHost -g -u -qopenmp
-	C_OPTS= -O3 -xHost -g -qopenmp
-	F_LOWO_OPTS= -O2 -xHost -g -u -qopenmp
+#	F_OPTS= -O3 -xHost -g -u -qopenmp -guide -qopt-report -parallel
+#	C_OPTS= -O3 -xHost -g -qopenmp -guide -qopt-report -parallel
+#	F_LOWO_OPTS= -O1 -xHost -g -u -qopenmp -guide -qopt-report -parallel
+	F_OPTS= -O3 -xHost -g -u
+	C_OPTS= -O3 -xHost -g
+	F_LOWO_OPTS= -O2 -xHost -g -u
 	#---------------------------------------------------------------------------------------#
 endif
 #-------------------------------------------------------------------------------------------#

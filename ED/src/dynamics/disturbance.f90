@@ -2867,7 +2867,7 @@ module disturbance_utils
          ipft = cpatch%pft(ico)
          !---------------------------------------------------------------------------------!
 
-         ! Attention: if maxh turns out to be less than 1 m there's gonna be a problem
+         ! Attention: if maxh turns out to be less than 1 m there's goig to be a problem
          ! because cpatch%hite will be increased instead of reduced
          if (is_liana(ipft) .and. cpatch%hite(ico) > maxh .and. maxh >= 1.0) then
 

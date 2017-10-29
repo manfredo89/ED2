@@ -480,6 +480,9 @@ module ed_state_vars
       real, pointer, dimension(:) :: vm_bar
       real, pointer, dimension(:) :: sla
 
+      ! Bool to set cohorts that are at the top of the canopy (important for lianas)
+      logical, pointer, dimension(:) :: at_the_top
+
       !------------------------------------------------------------------------------------!
       ! These are diagnostic variables, averaged over various time scales.                 !
       ! FMEAN -- averaged over FRQSUM (the least between FRQFAST, FRQSTATE and one day).   !
@@ -4601,6 +4604,7 @@ module ed_state_vars
       allocate(cpatch%llspan                       (                    ncohorts))
       allocate(cpatch%vm_bar                       (                    ncohorts))
       allocate(cpatch%sla                          (                    ncohorts))
+      allocate(cpatch%at_the_top                   (                    ncohorts))
       allocate(cpatch%fmean_gpp                    (                    ncohorts))
       allocate(cpatch%fmean_npp                    (                    ncohorts))
       allocate(cpatch%fmean_leaf_resp              (                    ncohorts))
@@ -6397,6 +6401,7 @@ module ed_state_vars
       nullify(cpatch%llspan                )
       nullify(cpatch%vm_bar                )
       nullify(cpatch%sla                   )
+      nullify(cpatch%at_the_top            )
       nullify(cpatch%fmean_gpp             )
       nullify(cpatch%fmean_npp             )
       nullify(cpatch%fmean_leaf_resp       )
@@ -7318,6 +7323,7 @@ module ed_state_vars
       if(associated(cpatch%llspan              )) deallocate(cpatch%llspan              )
       if(associated(cpatch%vm_bar              )) deallocate(cpatch%vm_bar              )
       if(associated(cpatch%sla                 )) deallocate(cpatch%sla                 )
+      if(associated(cpatch%at_the_top          )) deallocate(cpatch%at_the_top          )
       if(associated(cpatch%fmean_gpp           )) deallocate(cpatch%fmean_gpp           )
       if(associated(cpatch%fmean_npp           )) deallocate(cpatch%fmean_npp           )
       if(associated(cpatch%fmean_leaf_resp     )) deallocate(cpatch%fmean_leaf_resp     )
@@ -9131,6 +9137,7 @@ module ed_state_vars
          opatch%llspan                (oco) = ipatch%llspan                (ico)
          opatch%vm_bar                (oco) = ipatch%vm_bar                (ico)
          opatch%sla                   (oco) = ipatch%sla                   (ico)
+         opatch%at_the_top            (oco) = ipatch%at_the_top            (ico)
          opatch%fmean_gpp             (oco) = ipatch%fmean_gpp             (ico)
          opatch%fmean_npp             (oco) = ipatch%fmean_npp             (ico)
          opatch%fmean_leaf_resp       (oco) = ipatch%fmean_leaf_resp       (ico)
@@ -9731,6 +9738,7 @@ module ed_state_vars
       opatch%llspan                (1:z) = pack(ipatch%llspan                    ,lmask)
       opatch%vm_bar                (1:z) = pack(ipatch%vm_bar                    ,lmask)
       opatch%sla                   (1:z) = pack(ipatch%sla                       ,lmask)
+      opatch%at_the_top            (1:z) = pack(ipatch%at_the_top                ,lmask)
       !------------------------------------------------------------------------------------!
 
 

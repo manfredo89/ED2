@@ -523,31 +523,31 @@ subroutine init_can_rad_params()
       , orient_grass                & ! intent(in)
       , clump_tree                  & ! intent(in)
       , clump_grass                 & ! intent(in)
-                                    , clumping_factor             & ! intent(in)
-                                    , orient_factor               & ! intent(in)
-                                    , leaf_emiss_tir              & ! intent(out)
-                                    , wood_emiss_tir              & ! intent(in)
-                                    , leaf_reflect_vis            & ! intent(in)
-                                    , leaf_reflect_nir            & ! intent(out)
-                                    , wood_reflect_vis            & ! intent(in)
-                                    , wood_reflect_nir            & ! intent(in)
-                                    , leaf_trans_vis              & ! intent(out)
-                                    , leaf_trans_nir              & ! intent(out)
-                                    , wood_trans_vis              & ! intent(out)
-                                    , wood_trans_nir              & ! intent(out)
-                                    , leaf_backscatter_vis        & ! intent(out)
-                                    , leaf_backscatter_nir        & ! intent(out)
-                                    , leaf_backscatter_tir        & ! intent(out)
-                                    , wood_backscatter_vis        & ! intent(in)
-                                    , wood_backscatter_nir        & ! intent(in)
-                                    , wood_backscatter_tir        & ! intent(out)
-                                    , leaf_scatter_vis            & ! intent(in)
-                                    , leaf_scatter_nir            & ! intent(in)
-                                    , wood_scatter_vis            & ! intent(out)
-                                    , wood_scatter_nir            & ! intent(in)
-                                    , phi1                        & ! intent(in)
-                                    , phi2                        & ! intent(in)
-                                    , mu_bar                      & ! intent(out)
+      , clumping_factor             & ! intent(in)
+      , orient_factor               & ! intent(in)
+      , leaf_emiss_tir              & ! intent(out)
+      , wood_emiss_tir              & ! intent(in)
+      , leaf_reflect_vis            & ! intent(in)
+      , leaf_reflect_nir            & ! intent(out)
+      , wood_reflect_vis            & ! intent(in)
+      , wood_reflect_nir            & ! intent(in)
+      , leaf_trans_vis              & ! intent(out)
+      , leaf_trans_nir              & ! intent(out)
+      , wood_trans_vis              & ! intent(out)
+      , wood_trans_nir              & ! intent(out)
+      , leaf_backscatter_vis        & ! intent(out)
+      , leaf_backscatter_nir        & ! intent(out)
+      , leaf_backscatter_tir        & ! intent(out)
+      , wood_backscatter_vis        & ! intent(in)
+      , wood_backscatter_nir        & ! intent(in)
+      , wood_backscatter_tir        & ! intent(out)
+      , leaf_scatter_vis            & ! intent(in)
+      , leaf_scatter_nir            & ! intent(in)
+      , wood_scatter_vis            & ! intent(out)
+      , wood_scatter_nir            & ! intent(in)
+      , phi1                        & ! intent(in)
+      , phi2                        & ! intent(in)
+      , mu_bar                      & ! intent(out)
       , fvis_beam_def               & ! intent(out)
       , fvis_diff_def               & ! intent(out)
       , fnir_beam_def               & ! intent(out)
@@ -661,25 +661,13 @@ subroutine init_can_rad_params()
    !      leaf aging in Amazon caatinga. Trees, 12, 315-325.                               !
    !---------------------------------------------------------------------------------------!
    !----- Visible (PAR). ------------------------------------------------------------------!
-   leaf_reflect_vis(1)     = dble(lreflect_vis)
-   leaf_reflect_vis(2)     = dble(lreflect_vis)
-   leaf_reflect_vis(3)     = dble(lreflect_vis)
-   leaf_reflect_vis(4)     = dble(lreflect_vis)
-   leaf_reflect_vis(5)     = 1.10d-1 ! 6.2d-2
-   leaf_reflect_vis(6:11)  = 1.10d-1 ! 1.1d-1
-   leaf_reflect_vis(12:13) = 1.10d-1 ! 1.1d-1
-   leaf_reflect_vis(14:15) = dble(lreflect_vis)
-   leaf_reflect_vis(16)    = dble(lreflect_vis)
-   leaf_reflect_vis(17)    = dble(lreflect_vis)
+   leaf_reflect_vis(1:4)   = dble(lreflect_vis)
+   leaf_reflect_vis(5:13)  = 1.10d-1 ! 6.2d-2
+   leaf_reflect_vis(14:17) = dble(lreflect_vis)
    !----- Near infrared. ------------------------------------------------------------------!
-   leaf_reflect_nir(1)     = dble(lreflect_nir)
-   leaf_reflect_nir(2:4)   = dble(lreflect_nir)
-   leaf_reflect_nir(5)     = 5.77d-1
-   leaf_reflect_nir( 6:11) = 5.77d-1
-   leaf_reflect_nir(12:13) = 5.77d-1
-   leaf_reflect_nir(14:15) = dble(lreflect_nir)
-   leaf_reflect_nir(16)    = dble(lreflect_nir)
-   leaf_reflect_nir(17)    = dble(lreflect_vis)
+   leaf_reflect_nir(1:4)   = dble(lreflect_nir)
+   leaf_reflect_nir(5:13)  = 5.77d-1
+   leaf_reflect_nir(14:17) = dble(lreflect_nir)
    !---------------------------------------------------------------------------------------!
 
 
@@ -723,16 +711,9 @@ subroutine init_can_rad_params()
    !      leaf aging in Amazon caatinga. Trees, 12, 315-325.                               !
    !---------------------------------------------------------------------------------------!
    !----- Visible (PAR). ------------------------------------------------------------------!
-   leaf_trans_vis(    1) = dble(ltrans_vis)
-   leaf_trans_vis(    2) = dble(ltrans_vis)
-   leaf_trans_vis(    3) = dble(ltrans_vis)
-   leaf_trans_vis(    4) = dble(ltrans_vis)
-   leaf_trans_vis(    5) = 1.60d-1  ! 0.160
-   leaf_trans_vis( 6:11) = 1.60d-1  ! 0.160
-   leaf_trans_vis(12:13) = 1.60d-1  ! 0.160
-   leaf_trans_vis(14:15) = dble(ltrans_vis)
-   leaf_trans_vis(   16) = dble(ltrans_vis)
-   leaf_trans_vis(   17) = dble(ltrans_vis)
+   leaf_trans_vis(1:4)   = dble(ltrans_vis)
+   leaf_trans_vis(5:13)  = 1.60d-1  ! 0.160
+   leaf_trans_vis(14:17) = dble(ltrans_vis)
    !----- Near infrared. ------------------------------------------------------------------!
    leaf_trans_nir(    1) = dble(ltrans_nir)
    leaf_trans_nir(  2:4) = dble(ltrans_nir)
@@ -2348,7 +2329,6 @@ subroutine init_pft_alloc_params()
       , is_grass              & ! intent(in)
       , rho                   & ! intent(out)
       , SLA                   & ! intent(out)
-      , horiz_branch          & ! intent(out)
       , q                     & ! intent(out)
       , qsw                   & ! intent(out)
       , init_density          & ! intent(out)
@@ -2510,27 +2490,6 @@ subroutine init_pft_alloc_params()
    SLA(15) = 22.7 ! 10.0**(sla_inter + sla_slope * log10(12.0/leaf_turnover_rate(15))) * sla_scale
    SLA(16) = 22.7 !--value from Mike Dietze: mean: 22.7, median 19.1, 95% CI: 5.7, 78.6
    SLA(17) = 10.0**(sla_inter + sla_slope * log10(12.0/leaf_turnover_rate( 17))) * sla_scale
-
-   !---------------------------------------------------------------------------------------!
-   !    Fraction of vertical branches.  Values are from Poorter et al. (2006):             !
-   !                                                                                       !
-   !    Poorter, L.; Bongers, L.; Bongers, F., 2006: Architecture of 54 moist-forest tree  !
-   ! species: traits, trade-offs, and functional groups. Ecology, 87, 1289-1301.           !
-   ! For simplicity, we assume similar numbers for temperate PFTs.                         !
-   !---------------------------------------------------------------------------------------!
-   horiz_branch(1)     = 0.50
-   horiz_branch(2)     = 0.57
-   horiz_branch(3)     = 0.39
-   horiz_branch(4)     = 0.61
-   horiz_branch(5)     = 0.50
-   horiz_branch(6:8)   = 0.61
-   horiz_branch(9)     = 0.57
-   horiz_branch(10)    = 0.39
-   horiz_branch(11)    = 0.61
-   horiz_branch(12:15) = 0.50
-   horiz_branch(16)    = 0.50
-   horiz_branch(17)    = 0.40
-   !---------------------------------------------------------------------------------------!
 
 
    !----- Ratio between fine roots and leaves [kg_fine_roots/kg_leaves] -------------------!
@@ -2937,24 +2896,24 @@ subroutine init_pft_alloc_params()
    !---------------------------------------------------------------------------------------!
 
 
-      !--------------------------- Liana allometry -----------------------------------------!
-      ! This is an experimental value for dead biomass. The Schnitzer article provide an    !
-      ! allometric equation to relate AGB to DBH. Since here we are dealing with DB instead !
-      ! of AGB I also subtracted the leaf biomass from AGB. Bl dbh allometry is the same    !
-      ! used in size2bl from Putz. I have dropped the intercept though. This is because     !
-      ! otherwise one would have DB != when plant has DBH = 0. At this point one would have !
-      ! dbh2bd = (exp(-1.484 + 2.657 * log(dbh)) - 0.0856 * dbh * dbh) / C2B                !
-      ! Moreover since Schnitzer gives AGB we have to divide by agf_bs so that              !
-      ! when we calculate the above ground fraction multiplying by agf_bs we get the correct!
-      ! AGB. I fitted this equation dbh2bd with a form dbh2bd = a*(dbh)**b because otherwise!
-      ! the formula is not invertible (we need bd2dbh). Fit converges nicely with           !
-      ! a= 0.13745 and b=2.69373 .                                                          !
-      !-------------------------------------------------------------------------------------!
-       b1Bs_small(17) = 0.2749
-       b1Bs_large(17) = b1Bs_small(17)
-       b2Bs_small(17) = 2.69373
-       b2Bs_large(17) = b2Bs_small(17)
-      !-------------------------------------------------------------------------------------!
+   !--------------------------- Liana allometry -----------------------------------------!
+   ! This is an experimental value for dead biomass. The Schnitzer article provide an    !
+   ! allometric equation to relate AGB to DBH. Since here we are dealing with DB instead !
+   ! of AGB I also subtracted the leaf biomass from AGB. Bl dbh allometry is the same    !
+   ! used in size2bl from Putz. I have dropped the intercept though. This is because     !
+   ! otherwise one would have DB != when plant has DBH = 0. At this point one would have !
+   ! dbh2bd = (exp(-1.484 + 2.657 * log(dbh)) - 0.0856 * dbh * dbh) / C2B                !
+   ! Moreover since Schnitzer gives AGB we have to divide by agf_bs so that              !
+   ! when we calculate the above ground fraction multiplying by agf_bs we get the correct!
+   ! AGB. I fitted this equation dbh2bd with a form dbh2bd = a*(dbh)**b because otherwise!
+   ! the formula is not invertible (we need bd2dbh). Fit converges nicely with           !
+   ! a= 0.13745 and b=2.69373 .                                                          !
+   !-------------------------------------------------------------------------------------!
+   b1Bs_small(17) = 0.2749
+   b1Bs_large(17) = b1Bs_small(17)
+   b2Bs_small(17) = 2.69373
+   b2Bs_large(17) = b2Bs_small(17)
+   !-------------------------------------------------------------------------------------!
 
 
 

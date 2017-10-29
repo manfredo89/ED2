@@ -48,17 +48,14 @@ contains
 
 
 
-
-
-
    !=======================================================================================!
    !=======================================================================================!
    real function dbh2h(ipft, dbh)
-      use pft_coms    , only : is_tropical & ! intent(in)
-         , dbh_crit    & ! intent(in)
-         , b1Ht        & ! intent(in)
-         , b2Ht        & ! intent(in)
-         , hgt_ref     ! ! intent(in)
+      use pft_coms    , only : is_tropical &
+         , dbh_crit    &
+         , b1Ht        &
+         , b2Ht        &
+         , hgt_ref
       use ed_misc_coms, only : iallom
       use ed_state_vars, only:  patchtype  ! ! structure
 
@@ -66,23 +63,23 @@ contains
       integer       , intent(in) :: ipft
       real          , intent(in) :: dbh
       !----- Local variables --------------------------------------------------------------!
-      real                :: mdbh
+      real                       :: mdbh
       !------------------------------------------------------------------------------------!
 
-            !----- Size- and age-structure (typical ED model). ----------------------------!
-            if (is_tropical(ipft)) then
-               mdbh = min(dbh,dbh_crit(ipft))
-               select case (iallom)
-                  case (0,1)
-                     !----- Default ED-2.1 allometry. -------------------------------------!
-                     dbh2h = exp (b1Ht(ipft) + b2Ht(ipft) * log(mdbh) )
-                  case default
-                     !----- Poorter et al. (2006) allometry. ------------------------------!
-                     dbh2h = hgt_ref(ipft) * (1. - exp(-b1Ht(ipft) * mdbh ** b2Ht(ipft)))
-               end select
-            else !----- Temperate PFT allometry. ------------------------------------------!
-               dbh2h = hgt_ref(ipft) + b1Ht(ipft) * (1.0 - exp(b2Ht(ipft) * dbh))
-            end if
+      !----- Size- and age-structure (typical ED model). ----------------------------!
+      if (is_tropical(ipft)) then
+         mdbh = min(dbh,dbh_crit(ipft))
+         select case (iallom)
+            case (0,1)
+               !----- Default ED-2.1 allometry. -------------------------------------!
+               dbh2h = exp (b1Ht(ipft) + b2Ht(ipft) * log(mdbh) )
+            case default
+               !----- Poorter et al. (2006) allometry. ------------------------------!
+               dbh2h = hgt_ref(ipft) * (1. - exp(-b1Ht(ipft) * mdbh ** b2Ht(ipft)))
+         end select
+      else !----- Temperate PFT allometry. ------------------------------------------!
+         dbh2h = hgt_ref(ipft) + b1Ht(ipft) * (1.0 - exp(b2Ht(ipft) * dbh))
+      end if
       return
    end function dbh2h
    !=======================================================================================!
@@ -159,10 +156,6 @@ contains
    !=======================================================================================!
 
 
-
-
-
-
    !=======================================================================================!
    !=======================================================================================!
    !      This function computes the maximum leaf biomass [kgC/m2] given the size (either  !
@@ -228,8 +221,8 @@ contains
 
       return
    end function size2bl
-      !====================================================================================!
-      !====================================================================================!
+   !=======================================================================================!
+   !=======================================================================================!
 
 
    !=======================================================================================!
@@ -337,7 +330,6 @@ contains
       else
 
          !----- make this function generic to size, not just dbh. -------------------------!
-
          loclai = sla * size2bl(dbh,hite,ipft)
 
          select case (iallom)
@@ -387,10 +379,6 @@ contains
    end function dbh2vol
    !=======================================================================================!
    !=======================================================================================!
-
-
-
-
 
 
    !=======================================================================================!
@@ -449,9 +437,6 @@ contains
 
 
 
-
-
-
    !=======================================================================================!
    !=======================================================================================!
    !    This function finds the trunk height.  Currently this is based on the following    !
@@ -483,9 +468,6 @@ contains
 
 
 
-
-
-
    !=======================================================================================!
    !=======================================================================================!
    !     This subroutine finds the total above ground biomass (wood + leaves)              !
@@ -512,7 +494,7 @@ contains
    !=======================================================================================!
    !     This subroutine estimates the tree area indices, namely leaf, branch(plus twigs), !
    ! and stem.  For the leaf area index (LAI), we use the specific leaf area (SLA), a      !
-   ! constant.  The wood area index WAI is found using the model proposed by J�rvel�      !
+   ! constant.  The wood area index WAI is found using the model proposed by J?rvel?      !
    ! (2004) to find the specific projected area.                                           !
    !                                                                                       !
    ! G. Hormann, S. Irrgan, H. Jochheim, M. Lukes, H. Meesenburg, J. Muller, B. Scheler,   !
