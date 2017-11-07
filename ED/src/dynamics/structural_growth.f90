@@ -203,7 +203,9 @@ contains
                   !---- Set which cohort is at the top of the canopy, important for lianas ---!
                   !------ Once lianas reach the top they stay there until they die. ----------!
                   if (is_liana(ipft)) then
-                     if (.not. cpatch%at_the_top(ico) .and. cpatch%hite(ico) >= maxh) cpatch%at_the_top(ico) = .true.
+                     if (.not. cpatch%at_the_top(ico) .and. cpatch%hite(ico) >= maxh) then
+                        cpatch%at_the_top(ico) = .true.
+                     end if
                   else if (cpatch%hite(ico) >= maxh) then
                      cpatch%at_the_top(ico) = .true.
                   end if
@@ -211,9 +213,8 @@ contains
 
 
                   !----- Determine how to distribute what is in bstorage. --------------------!
-                  call plant_structural_allocation(cpatch, ico, cgrid%lat(ipy)                &
-                     , bdead_in, bstorage_in                     &
-                     ,f_bseeds,f_bdead, maxh)
+                  call plant_structural_allocation(cpatch, ico, cgrid%lat(ipy), bdead_in      &
+                                                  ,bstorage_in,f_bseeds,f_bdead, maxh)
                   !---------------------------------------------------------------------------!
 
 

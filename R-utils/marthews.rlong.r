@@ -10,7 +10,6 @@
 # x is the set of parameters that are optimised for the dataset.                           #
 #------------------------------------------------------------------------------------------#
 rlong.in.mmi.predict <<- function(x,scheme,datum){
-
    #---------------------------------------------------------------------------------------#
    #     Estimate emissivity, based on the chosen scheme.                                  #
    #---------------------------------------------------------------------------------------#
@@ -236,8 +235,6 @@ rlong.in.mmi.support <<- function(x,scheme,sigma,datum){
 #------------------------------------------------------------------------------------------#
 rlong.in.mmi.optim <<- function(datum,run.optim=FALSE,keep.day=TRUE,keep.ngt=TRUE
                                ,scheme=NULL,verbose=FALSE){
-
-
 
 
    #----- List with all schemes available. ------------------------------------------------#

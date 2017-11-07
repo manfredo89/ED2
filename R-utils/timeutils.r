@@ -308,7 +308,7 @@ dayofyear <<- function(when){
 #==========================================================================================#
 #     This function appends several time-related variables for a given data frame.         #
 #------------------------------------------------------------------------------------------#
-alltimes <<- function(datin,lon,lat,ed21=TRUE,zeronight=FALSE,meanval=FALSE,imetavg=1
+alltimes <- function(datin,lon,lat,ed21=TRUE,zeronight=FALSE,meanval=FALSE,imetavg=1
                    ,nmean=120,...){
    #------ Copy the input data frame, and call the other functions. -----------------------#
    datout = datin
@@ -320,9 +320,9 @@ alltimes <<- function(datin,lon,lat,ed21=TRUE,zeronight=FALSE,meanval=FALSE,imet
    datout$today      = dates    (datout$when)
    datout$tomonth    = chron(paste(datout$month,1,datout$year,sep="/"))
    datout$doy        = dayofyear(datout$when)
-   zenith            = ed.zen   (when=datout$when,lon=lon,lat=lat,ed21=ed21
+   zenith            = ed.zen (when=datout$when,lon=lon,lat=lat,ed21=ed21
                                 ,zeronight=zeronight,meanval=meanval,imetavg=imetavg
-                                ,nmean=nmean,...)
+                                ,nmean=nmean)
    datout$cosz       =   zenith$cosz
    datout$zen        =   zenith$zen
    datout$sunhgt     =   zenith$hgt

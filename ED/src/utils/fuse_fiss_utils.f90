@@ -840,7 +840,8 @@ module fuse_fiss_utils
                                       , copy_patchtype         ! ! sub-routine
       use pft_coms             , only : q                      & ! intent(in), lookup table
                                       , qsw                    & ! intent(in), lookup table
-                                      , is_grass               ! ! intent(in)
+                                      , is_grass               & ! intent(in)
+                                      , is_liana
       use fusion_fission_coms  , only : lai_tol                ! ! intent(in)
       use ed_max_dims          , only : n_pft                  ! ! intent(in)
       use allometry            , only : dbh2h                  & ! function
@@ -868,6 +869,7 @@ module fuse_fiss_utils
       real                                 :: new_nplant        ! New nplant
       real                                 :: old_size          ! Old size
       real                                 :: new_size          ! New size
+      real                                 :: maxh              ! Canopy top height
       !------------------------------------------------------------------------------------!
 
 
@@ -876,6 +878,7 @@ module fuse_fiss_utils
       split_mask(:) = .false.
       old_nplant = 0.
       old_size   = 0.
+      maxh       = 0.
       !----- Loop through cohorts ---------------------------------------------------------!
       do ico = 1,cpatch%ncohorts
          ipft = cpatch%pft(ico)
@@ -895,6 +898,13 @@ module fuse_fiss_utils
          old_size   = old_size   + cpatch%nplant(ico) * ( cpatch%balive(ico)               &
                                                         + cpatch%bdead(ico)                &
                                                         + cpatch%bstorage(ico) )
+
+        !---------- Loop over cohorts to find the maximum height for trees ---------------!
+
+        if (cpatch%hite(ico) > maxh .and. .not. is_liana(ipft)) then
+           maxh = cpatch%hite(ico)
+        end if
+
       end do
 
       !----- Compute the new number of cohorts. -------------------------------------------!
@@ -944,23 +954,53 @@ module fuse_fiss_utils
 
                !----- Tweaking bdead, to ensure carbon is conserved. ----------------------!
                if (is_grass(cpatch%pft(ico)) .and. igrass==1) then 
-                   !-- use bleaf for grass
-                   cpatch%bleaf(ico)  = cpatch%bleaf(ico) * (1.-epsilon)
-                   cpatch%dbh  (ico)  = bl2dbh(cpatch%bleaf(ico), cpatch%pft(ico))
-                   cpatch%hite (ico)  = bl2h(cpatch%bleaf(ico), cpatch%pft(ico))
+                  !-- use bleaf for grass
+                  cpatch%bleaf(ico)  = cpatch%bleaf(ico) * (1.-epsilon)
+                  cpatch%dbh  (ico)  = bl2dbh(cpatch%bleaf(ico), cpatch%pft(ico))
+                  cpatch%hite (ico)  = bl2h(cpatch%bleaf(ico), cpatch%pft(ico))
 
-                   cpatch%bleaf(inew)  = cpatch%bleaf(inew) * (1.+epsilon)
-                   cpatch%dbh  (inew)  = bl2dbh(cpatch%bleaf(inew), cpatch%pft(inew))
-                   cpatch%hite (inew)  = bl2h(cpatch%bleaf(inew), cpatch%pft(inew))
+                  cpatch%bleaf(inew)  = cpatch%bleaf(inew) * (1.+epsilon)
+                  cpatch%dbh  (inew)  = bl2dbh(cpatch%bleaf(inew), cpatch%pft(inew))
+                  cpatch%hite (inew)  = bl2h(cpatch%bleaf(inew), cpatch%pft(inew))
+
+               elseif (is_liana(cpatch%pft(ico))) then
+
+                  !---------------------------------- Lianas --------------------------------------!
+                  !--------------------------------------------------------------------------------!
+                  ! For lianas we cannot assign the height resulting from the allometric eq.       !
+                  ! because since the bdead -> dbh is the sum of the two cohorts this could lead   !
+                  ! to lianas that are taller than the tree cohort. So we check that the resulting !
+                  !  height is not greater than the tallest tree cohort. If it is we assign the    !
+                  ! tallest tree height as the liana height and we turn on the at_the_top flag     !
+                  !--------------------------------------------------------------------------------!
+                  cpatch%bdead(ico)  = cpatch%bdead(ico) * (1.-epsilon)
+                  cpatch%dbh  (ico)  = bd2dbh(cpatch%pft(ico), cpatch%bdead(ico))
+                  if (dbh2h(cpatch%pft(ico),  cpatch%dbh(ico)) >= maxh) then
+                     cpatch%hite(ico)  = maxh
+                     cpatch%at_the_top(ico) = .true.
+                  else
+                     cpatch%hite(ico)  = dbh2h(cpatch%pft(ico),  cpatch%dbh(ico))
+                  end if
+
+                  cpatch%bdead(inew) = cpatch%bdead(inew) * (1.+epsilon)
+                  cpatch%dbh  (inew) = bd2dbh(cpatch%pft(inew), cpatch%bdead(inew))
+                  if (dbh2h(cpatch%pft(inew),  cpatch%dbh(inew)) >= maxh) then
+                     cpatch%hite(inew)  = maxh
+                     cpatch%at_the_top(inew) = .true.
+                  else
+                     cpatch%hite(inew)  = dbh2h(cpatch%pft(inew),  cpatch%dbh(inew))
+                  end if
+
                else
-                   !-- use bdead for trees
-                   cpatch%bdead(ico)  = cpatch%bdead(ico) * (1.-epsilon)
-                   cpatch%dbh  (ico)  = bd2dbh(cpatch%pft(ico), cpatch%bdead(ico))
-                   cpatch%hite (ico)  = dbh2h(cpatch%pft(ico), cpatch%dbh(ico))
 
-                   cpatch%bdead(inew) = cpatch%bdead(inew) * (1.+epsilon)
-                   cpatch%dbh  (inew) = bd2dbh(cpatch%pft(inew), cpatch%bdead(inew))
-                   cpatch%hite (inew) = dbh2h(cpatch%pft(inew), cpatch%dbh(inew))
+                  !-- use bdead for trees
+                  cpatch%bdead(ico)  = cpatch%bdead(ico) * (1.-epsilon)
+                  cpatch%dbh  (ico)  = bd2dbh(cpatch%pft(ico), cpatch%bdead(ico))
+                  cpatch%hite (ico)  = dbh2h(cpatch%pft(ico), cpatch%dbh(ico))
+
+                  cpatch%bdead(inew) = cpatch%bdead(inew) * (1.+epsilon)
+                  cpatch%dbh  (inew) = bd2dbh(cpatch%pft(inew), cpatch%bdead(inew))
+                  cpatch%hite (inew) = dbh2h(cpatch%pft(inew), cpatch%dbh(inew))
                end if
                !---------------------------------------------------------------------------!
 
@@ -1008,10 +1048,10 @@ module fuse_fiss_utils
    !  information from both cohorts.                                                       !
    !                                                                                       !
    !---------------------------------------------------------------------------------------!
-   subroutine fuse_2_cohorts(cpatch,donc,recc,can_prss,can_shv,lsl &
-                            ,fuse_initial)
+   subroutine fuse_2_cohorts(cpatch,donc,recc,can_prss,can_shv,lsl,fuse_initial)
       use ed_state_vars      , only : patchtype              ! ! Structure
-      use pft_coms           , only : is_grass               ! ! intent(in)
+      use pft_coms           , only : is_grass               & ! intent(in)
+                                    , is_liana
       use therm_lib          , only : uextcm2tl              & ! subroutine
                                     , vpdefil                & ! subroutine
                                     , qslif                  ! ! function
@@ -1043,6 +1083,9 @@ module fuse_fiss_utils
       integer                      :: imon              ! Month for cb loop
       integer                      :: t                 ! Time of day for dcycle loop
       integer                      :: imty              ! Mortality type
+      integer                      :: ico               ! Cohort index
+      integer                      :: ipft              ! PFT
+      real                         :: maxh              ! Patch max height
       real                         :: newni             ! Inverse of new nplants
       real                         :: exp_mort_donc     ! Exp(mortality) donor
       real                         :: exp_mort_recc     ! Exp(mortality) receptor
@@ -1102,6 +1145,39 @@ module fuse_fiss_utils
           cpatch%bleaf(recc) = cpatch%bleaf(recc) * rnplant + cpatch%bleaf(donc) * dnplant
           cpatch%dbh(recc)   = bl2dbh(cpatch%bleaf(recc), cpatch%pft(recc))
           cpatch%hite(recc)  = bl2h  (cpatch%bleaf(recc), cpatch%pft(recc))
+          !--------------------------------------------------------------------------------!
+      elseif (is_liana(cpatch%pft(donc))) then
+          !---------------------------------- Lianas --------------------------------------!
+          cpatch%bdead(recc) = cpatch%bdead(recc) * rnplant + cpatch%bdead(donc) * dnplant
+          cpatch%dbh(recc)   = bd2dbh(cpatch%pft(recc), cpatch%bdead(recc))
+
+         cohortloop: do ico=1,cpatch%ncohorts
+
+            !----- Alias for current PFT. ----------------------------------------------------!
+            ipft = cpatch%pft(ico)
+            !---------------------------------------------------------------------------------!
+
+            !---------- Loop over cohorts to find the maximum height for trees ---------------!
+            if (cpatch%hite(ico) > maxh .and. .not. is_liana(ipft)) then
+               maxh = cpatch%hite(ico)
+            end if
+
+      end do cohortloop
+
+
+          !--------------------------------------------------------------------------------!
+          ! For lianas we cannot assign the height resulting from the allometric eq.       !
+          ! because since the bdead -> dbh is the sum of the two cohorts this could lead   !
+          ! to lianas that are taller than the tree cohort. So we check that the resulting !
+          !  height is not greater than the tallest tree cohort. If it is we assign the    !
+          ! tallest tree height as the liana height and we turn on the at_the_top flag     !
+          !--------------------------------------------------------------------------------!
+          if (dbh2h(cpatch%pft(recc),  cpatch%dbh(recc)) >= cpatch%hite(1)) then
+            cpatch%hite(recc)  = cpatch%hite(1)
+            cpatch%at_the_top(recc) = .true.
+          else
+            cpatch%hite(recc)  = dbh2h(cpatch%pft(recc),  cpatch%dbh(recc))
+          end if
           !--------------------------------------------------------------------------------!
       else
           !----- Trees, or old grass scheme.  Use bdead then find DBH and height. ---------!
