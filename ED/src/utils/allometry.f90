@@ -60,8 +60,8 @@ contains
       use ed_state_vars, only:  patchtype  ! ! structure
 
       !----- Arguments --------------------------------------------------------------------!
-      integer       , intent(in) :: ipft
-      real          , intent(in) :: dbh
+      integer        ,intent(in)       :: ipft
+      real           ,intent(in)       :: dbh
       !----- Local variables --------------------------------------------------------------!
       real                       :: mdbh
       !------------------------------------------------------------------------------------!

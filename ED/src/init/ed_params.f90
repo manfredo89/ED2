@@ -1947,7 +1947,7 @@ subroutine init_pft_resp_params()
    leaf_turnover_rate(14)         = 2.0
    leaf_turnover_rate(15)         = 2.0
    leaf_turnover_rate(16)         = 2.0
-   leaf_turnover_rate(17)         = 1.27
+   leaf_turnover_rate(17)         = 1.27 !J. Wright
 
    !----- Root turnover rate.  ------------------------------------------------------------!
    root_turnover_rate(1)          = leaf_turnover_rate(1)
@@ -2468,7 +2468,7 @@ subroutine init_pft_alloc_params()
    ! sla_inter =  1.6923
    ! sla_slope = -0.3305
    !----- New parameters. -----------------------------------------------------------------!
-   sla_scale =  0.1 * C2B!C2B=2
+   sla_scale =  0.1 * C2B
    sla_inter =  2.4
    sla_slope = -0.46
 

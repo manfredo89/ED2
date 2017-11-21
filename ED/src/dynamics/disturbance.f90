@@ -15,9 +15,7 @@ module disturbance_utils
                               , copy_sitetype         ! ! subroutine
    use fuse_fiss_utils , only : fuse_cohorts          & ! subroutine
                               , terminate_cohorts     & ! subroutine
-                              , split_cohorts         & ! subroutine
-                              , fuse_2_patches        & ! subroutine
-                              , fuse_2_cohorts        ! ! subroutine
+                              , split_cohorts         ! ! subroutine
    !=======================================================================================!
    !=======================================================================================!
 
@@ -2850,6 +2848,8 @@ module disturbance_utils
          end if
 
       end do cohortloop
+
+!      maxh = maxval (cpatch%hite, .not. is_liana(cpatch%pft))
 
       !------------- pruning_factor, how much should I reduce the height ------------------!
       h_pruning_factor    = maxh / hgt_max(17)

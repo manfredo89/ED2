@@ -23,36 +23,65 @@ module fuse_fiss_utils
    ! we simply pick the lowest index (as they are exactly the same).  This could cause     !
    ! some problems when the new grass allometry is implemented, though.                    !
    !---------------------------------------------------------------------------------------!
-   subroutine sort_cohorts(cpatch)
+   subroutine sort_cohorts(cpatch, lianasort)
 
       use ed_state_vars,only :  patchtype   ! ! Structure
+      use pft_coms      , only : is_liana
       implicit none
       !----- Arguments --------------------------------------------------------------------!
-      type(patchtype)              , target      :: cpatch    ! Current patch
+      type(patchtype)              , target      :: cpatch      ! Current patch
+      logical                      , optional    :: lianasort   ! Lianas pfts at last
       !----- Local variables --------------------------------------------------------------!
-      type(patchtype)              , pointer     :: temppatch ! Scratch patch structure
-      integer                                    :: ico       ! Counters
-      integer                                    :: tallco    ! Index of tallest cohort
-      real                                       :: tophgt    ! Maximum height considered
-      logical                                    :: sorted    ! Patch is already sorted
-      logical        , dimension(:), allocatable :: attop     ! Top cohorts, for tie-break
+      type(patchtype)              , pointer     :: temppatch   ! Scratch patch structure
+      integer                                    :: ico         ! Cohort counter
+      integer                                    :: ili         ! Liana counter
+      integer                                    :: ipos        ! Cohort to copy
+      integer                                    :: ipft        ! left PFT
+      integer                                    :: ipft2       ! right PFT
+      integer                                    :: tallco      ! Index of tallest cohort
+      integer                                    :: n_lianas    ! N of lianas in patch
+      integer                                    :: pftdiffs    ! N of swaps in the order
+      real                                       :: tophgt      ! Maximum height considered
+      logical                                    :: sorted      ! Patch is already h sorted
+      logical                                    :: h_sorted    ! Patch is already h sorted
+      logical                                    :: l_sorted    ! Patch is already l sorted
+      logical        , dimension(:), allocatable :: attop       ! Top cohorts, for tie-break
       !------------------------------------------------------------------------------------!
-      
+
       !----- No need to sort an empty patch or a patch with a single cohort. --------------!
       if (cpatch%ncohorts < 2) return
-
 
       !------------------------------------------------------------------------------------!
       !     Check whether this patch is already sorted.   We don't want to do the entire   !
       ! deallocating/copying/allocating thing if it's not needed as this takes up too much !
       ! time.                                                                              !
       !------------------------------------------------------------------------------------!
-      sorted = .true.
-      sortcheck: do ico=1,cpatch%ncohorts-1
-         sorted = cpatch%hite(ico) >= cpatch%dbh(ico+1) .and.                              &
-                  cpatch%dbh(ico)  >= cpatch%dbh(ico+1)
-         if (.not. sorted) exit sortcheck
-      end do sortcheck
+      h_sorted = .true.
+      h_sortcheck: do ico=1,cpatch%ncohorts-1
+         h_sorted = cpatch%hite(ico) >= cpatch%dbh(ico+1) .and.                              &
+                    cpatch%dbh(ico)  >= cpatch%dbh(ico+1)
+         if (.not. h_sorted) exit h_sortcheck
+      end do h_sortcheck
+
+      sorted = h_sorted
+
+      if (present(lianasort)) then
+         if(lianasort) then
+
+            n_lianas = count(is_liana(cpatch%pft))
+
+            l_sorted = .true.
+            pftdiffs = 0
+            l_sortcheck: do ico=1,cpatch%ncohorts-1
+               ipft  = cpatch%pft(ico    )
+               ipft2 = cpatch%pft(ico + 1)
+               pftdiffs = merge(pftdiffs + 1, pftdiffs, is_liana(ipft) .neqv. is_liana(ipft2))
+            end do l_sortcheck
+            if (pftdiffs > 1) l_sorted = .false.
+         sorted = h_sorted .and. l_sorted
+         end if
+      end if
+
       if (sorted) return
       !------------------------------------------------------------------------------------!
 
@@ -67,10 +96,12 @@ module fuse_fiss_utils
       allocate(attop(cpatch%ncohorts))
 
       ico = 0
+      ili = 0
       !---- Loop until all cohorts were sorted. -------------------------------------------!
+!write(*,*) cpatch%pft
       do while(ico < cpatch%ncohorts)
-         ico = ico + 1
-
+         ico  = ico + 1
+         ipos = ico
          !----- Find the maximum height. --------------------------------------------------!
          tophgt = maxval(cpatch%hite)
 
@@ -80,8 +111,19 @@ module fuse_fiss_utils
          !----- Find the fattest cohort at a given height. --------------------------------!
          tallco = maxloc(cpatch%dbh,dim=1,mask=attop)
 
+         if (present(lianasort)) then
+            if (lianasort) then
+               if(is_liana(cpatch%pft(ico))) then
+                  ili  = ili + 1
+                  ipos = cpatch%ncohorts - n_lianas + ili
+               else
+                  ipos = ico - ili
+               end if
+            end if
+         end if
+!write(*,*) "ico",ico,"ili",ili,"nco",cpatch%ncohorts,"ipos",ipos,"tallco",tallco, "nli",n_lianas
          !----- Copy to the scratch structure. --------------------------------------------!
-         call copy_patchtype(cpatch,temppatch,tallco,tallco,ico,ico)
+         call copy_patchtype(cpatch,temppatch,tallco,tallco,ipos,ipos)
 
          !----- Put a non-sense DBH so this will never "win" again. -----------------------!
          cpatch%hite(tallco) = -huge(1.)
@@ -138,7 +180,7 @@ module fuse_fiss_utils
       integer                            :: ipft         ! PFT size
       real                               :: csize        ! Size of current cohort
       !------------------------------------------------------------------------------------!
-      
+
       cpatch => csite%patch(ipa)
       elim_nplant = 0.
       elim_lai    = 0.
@@ -148,7 +190,7 @@ module fuse_fiss_utils
       allocate(temppatch)
       allocate(remain_table(cpatch%ncohorts))
       remain_table(:) = .true.
-     
+
       !----- Main loop --------------------------------------------------------------------!
       do ico = 1,cpatch%ncohorts
 
@@ -172,11 +214,11 @@ module fuse_fiss_utils
             csite%fsn_in(ipa) = csite%fsn_in(ipa) + cpatch%nplant(ico)                     &
                               * ( f_labile(ipft) * cpatch%balive(ico) / c2n_leaf(ipft)     &
                                 + cpatch%bstorage(ico) / c2n_storage)
-            
+
             csite%ssc_in(ipa) = csite%ssc_in(ipa) + cpatch%nplant(ico)                     &
                               * ( (1.0 - f_labile(ipft)) * cpatch%balive(ico)              &
                                 + cpatch%bdead(ico))
-            
+
             csite%ssl_in(ipa) = csite%ssl_in(ipa) + cpatch%nplant(ico)                     &
                               * ( (1.0 - f_labile(ipft)) * cpatch%balive(ico)              &
                                 + cpatch%bdead(ico) ) * l2n_stem/c2n_stem(ipft)
@@ -194,8 +236,8 @@ module fuse_fiss_utils
       call allocate_patchtype(cpatch,count(remain_table))
       call copy_patchtype(temppatch,cpatch,1,cpatch%ncohorts,1,cpatch%ncohorts)
       call sort_cohorts(cpatch)
-     
-      !----- Deallocate the temporary patch -----------------------------------------------!     
+
+      !----- Deallocate the temporary patch -----------------------------------------------!
       call deallocate_patchtype(temppatch)
       deallocate(temppatch)
       deallocate(remain_table)
@@ -290,8 +332,8 @@ module fuse_fiss_utils
          write (unit=*,fmt='(a,1x,es12.5)') ' + NEW_AREA: ',new_area
          call fatal_error('New_area should be 1 but it isn''t!!!','terminate_patches'      &
                          ,'fuse_fiss_utils.f90')
-      end if 
-      
+      end if
+
       return
    end subroutine terminate_patches
    !=======================================================================================!
@@ -316,7 +358,7 @@ module fuse_fiss_utils
       use allometry    , only : size2bl        ! ! function
       use ed_max_dims  , only : n_dist_types       & ! intent(in)
                               , n_pft              ! ! intent(in)
-      
+
       implicit none
       !----- Arguments --------------------------------------------------------------------!
       type(sitetype)         , target      :: csite        ! Current site
@@ -448,7 +490,7 @@ module fuse_fiss_utils
          lu_laimax(ilu) = lu_laimax(ilu) + patch_laimax(ipa)
          lu_npatch(ilu) = lu_npatch(ilu) + 1
 
-         site_area      = site_area + csite%area(ipa) 
+         site_area      = site_area + csite%area(ipa)
       end do
       !------------------------------------------------------------------------------------!
 
@@ -517,7 +559,7 @@ module fuse_fiss_utils
          write (unit=*,fmt='(a)'          ) '---------------------------------------------'
          call fatal_error('New_area should be 1 but it isn''t!!!','rescale_patches'        &
                          ,'fuse_fiss_utils.f90')
-      end if 
+      end if
       !------------------------------------------------------------------------------------!
 
 
@@ -580,7 +622,7 @@ module fuse_fiss_utils
       integer                              :: donc,recc,ico3 ! Counters
       logical                              :: fusion_test    ! Flag: proceed with fusion?
       real                                 :: newn           ! new nplants of merged coh.
-      real                                 :: lai_max        ! Maximum LAI the fused 
+      real                                 :: lai_max        ! Maximum LAI the fused
                                                              !    cohort could have.
       real                                 :: total_size     ! Total size
       real                                 :: tolerance_mult ! Multiplication factor
@@ -627,7 +669,7 @@ module fuse_fiss_utils
             mean_dbh  = mean_dbh + cpatch%dbh(ico3)
             ntall     = ntall + 1
          end if
-      end do 
+      end do
       !------------------------------------------------------------------------------------!
       if (ntall  > 0) mean_dbh = mean_dbh   / real(ntall)
       if (nshort > 0) mean_hite= mean_hite  / real(nshort)
@@ -637,9 +679,9 @@ module fuse_fiss_utils
       fuse_table(:) = .true.
 
       force_fusion: do
-         
+
          ncohorts_old =  count(fuse_table) ! Save current number of cohorts ---------------!
-         
+
          donloop:do donc = 1,cpatch%ncohorts-1
             if (.not. fuse_table(donc)) cycle donloop ! This one is gone, move to next.
 
@@ -659,7 +701,7 @@ module fuse_fiss_utils
                elseif (fuse_relax) then
                   fusion_test = ( abs(cpatch%hite(donc) - cpatch%hite(recc))               &
                                      / (0.5*(cpatch%hite(donc) + cpatch%hite(recc)))  <    &
-                                fusetol * tolerance_mult)  
+                                fusetol * tolerance_mult)
                else
                   fusion_test = (abs(cpatch%hite(donc) - cpatch%hite(recc))  <             &
                                 fusetol_h * tolerance_mult)
@@ -700,9 +742,9 @@ module fuse_fiss_utils
                                                      + cpatch%bdead(recc)                  &
                                                      + cpatch%bstorage(recc) )
 
-                  
-                  
-                  
+
+
+
                   !------------------------------------------------------------------------!
                   !    Six conditions must be met to allow two cohorts to be fused:        !
                   ! 1. Both cohorts must have the same PFT;                                !
@@ -716,6 +758,8 @@ module fuse_fiss_utils
                   ! 6. Both cohorts must have the same recruitment status with respect to  !
                   !    the census.                                                         !
                   ! 7. Both cohorts must have the same phenology status.                   !
+                  ! 8. For lianas both lianas must be either free standing or tracking the !
+                  !    same tree cohort (trees should have tracking_co set to -1 always)   !
                   !------------------------------------------------------------------------!
                   if (     cpatch%pft(donc)              == cpatch%pft(recc)               &
                      .and. lai_max                        < lai_fuse_tol*tolerance_mult    &
@@ -724,6 +768,7 @@ module fuse_fiss_utils
                      .and. cpatch%recruit_dbh     (donc) == cpatch%recruit_dbh(recc)       &
                      .and. cpatch%census_status   (donc) == cpatch%census_status(recc)     &
                      .and. cpatch%phenology_status(donc) == cpatch%phenology_status(recc)  &
+                     .and. cpatch%tracking_co     (donc) == cpatch%tracking_co(recc)       &
                      ) then
 
                      !----- Proceed with fusion -------------------------------------------!
@@ -732,7 +777,7 @@ module fuse_fiss_utils
 
                      !----- Flag donating cohort as gone, so it won't be checked again. ---!
                      fuse_table(donc) = .false.
-                     
+
                      !----- Check whether total size and LAI are conserved. ---------------!
                      new_size = cpatch%nplant(recc) * ( cpatch%balive(recc)                &
                                                       + cpatch%bdead(recc)                 &
@@ -798,9 +843,9 @@ module fuse_fiss_utils
                                  ,count(fuse_table))
 
          !----- Now I reallocate the current patch with its new reduced size. -------------!
-         call deallocate_patchtype(cpatch)  
+         call deallocate_patchtype(cpatch)
          call allocate_patchtype(cpatch,count(fuse_table))
-  
+
          !----- Make fuse_table true to all remaining cohorts. ----------------------------!
          fuse_table(:)                 = .false.
          fuse_table(1:cpatch%ncohorts) = .true.
@@ -809,7 +854,7 @@ module fuse_fiss_utils
 
          !----- Discard the scratch patch. ------------------------------------------------!
          call deallocate_patchtype(temppatch)
-         deallocate(temppatch)  
+         deallocate(temppatch)
 
          !----- Sort cohorts by size again, and update the cohort census for this patch. --!
          call sort_cohorts(cpatch)
@@ -818,7 +863,7 @@ module fuse_fiss_utils
 
       !----- Deallocate the aux. table ----------------------------------------------------!
       deallocate(fuse_table)
-     
+
       return
    end subroutine fuse_cohorts
    !=======================================================================================!
@@ -869,7 +914,7 @@ module fuse_fiss_utils
       real                                 :: new_nplant        ! New nplant
       real                                 :: old_size          ! Old size
       real                                 :: new_size          ! New size
-      real                                 :: maxh              ! Canopy top height
+!      real                                 :: maxh              ! Canopy top height
       !------------------------------------------------------------------------------------!
 
 
@@ -878,22 +923,22 @@ module fuse_fiss_utils
       split_mask(:) = .false.
       old_nplant = 0.
       old_size   = 0.
-      maxh       = 0.
+!      maxh       = 0.
       !----- Loop through cohorts ---------------------------------------------------------!
       do ico = 1,cpatch%ncohorts
          ipft = cpatch%pft(ico)
 
-         !---------------------------------------------------------------------------------! 
+         !---------------------------------------------------------------------------------!
          !     STAI is the potential TAI that this cohort has when its leaves are fully    !
          ! flushed.                                                                        !
-         !---------------------------------------------------------------------------------! 
+         !---------------------------------------------------------------------------------!
          stai = cpatch%nplant(ico) * cpatch%balive(ico) * green_leaf_factor(ipft)          &
               * q(ipft) / ( 1.0 + q(ipft) + qsw(ipft) * cpatch%hite(ico) )                 &
               * cpatch%sla(ico) + cpatch%wai(ico)
 
          !----- If the resulting TAI is too large, split this cohort. ---------------------!
          split_mask(ico) = stai > lai_tol
-         
+
          old_nplant = old_nplant + cpatch%nplant(ico)
          old_size   = old_size   + cpatch%nplant(ico) * ( cpatch%balive(ico)               &
                                                         + cpatch%bdead(ico)                &
@@ -901,16 +946,16 @@ module fuse_fiss_utils
 
         !---------- Loop over cohorts to find the maximum height for trees ---------------!
 
-        if (cpatch%hite(ico) > maxh .and. .not. is_liana(ipft)) then
-           maxh = cpatch%hite(ico)
-        end if
+!        if (cpatch%hite(ico) > maxh .and. .not. is_liana(ipft)) then
+!           maxh = cpatch%hite(ico)
+!        end if
 
       end do
 
       !----- Compute the new number of cohorts. -------------------------------------------!
       tobesplit    = count(split_mask)
       ncohorts_new = cpatch%ncohorts + tobesplit
-      
+
       if (tobesplit > 0) then
 
          !----- Allocate the temppatch. ---------------------------------------------------!
@@ -933,7 +978,7 @@ module fuse_fiss_utils
          !----- Remove the temporary patch. -----------------------------------------------!
          call deallocate_patchtype(temppatch)
          deallocate(temppatch)
-     
+
          inew = size(split_mask)
          do ico = 1,size(split_mask)
 
@@ -953,7 +998,7 @@ module fuse_fiss_utils
                !---------------------------------------------------------------------------!
 
                !----- Tweaking bdead, to ensure carbon is conserved. ----------------------!
-               if (is_grass(cpatch%pft(ico)) .and. igrass==1) then 
+               if (is_grass(cpatch%pft(ico)) .and. igrass==1) then
                   !-- use bleaf for grass
                   cpatch%bleaf(ico)  = cpatch%bleaf(ico) * (1.-epsilon)
                   cpatch%dbh  (ico)  = bl2dbh(cpatch%bleaf(ico), cpatch%pft(ico))
@@ -963,35 +1008,35 @@ module fuse_fiss_utils
                   cpatch%dbh  (inew)  = bl2dbh(cpatch%bleaf(inew), cpatch%pft(inew))
                   cpatch%hite (inew)  = bl2h(cpatch%bleaf(inew), cpatch%pft(inew))
 
-               elseif (is_liana(cpatch%pft(ico))) then
-
-                  !---------------------------------- Lianas --------------------------------------!
-                  !--------------------------------------------------------------------------------!
-                  ! For lianas we cannot assign the height resulting from the allometric eq.       !
-                  ! because since the bdead -> dbh is the sum of the two cohorts this could lead   !
-                  ! to lianas that are taller than the tree cohort. So we check that the resulting !
-                  !  height is not greater than the tallest tree cohort. If it is we assign the    !
-                  ! tallest tree height as the liana height and we turn on the at_the_top flag     !
-                  !--------------------------------------------------------------------------------!
-                  cpatch%bdead(ico)  = cpatch%bdead(ico) * (1.-epsilon)
-                  cpatch%dbh  (ico)  = bd2dbh(cpatch%pft(ico), cpatch%bdead(ico))
-                  if (dbh2h(cpatch%pft(ico),  cpatch%dbh(ico)) >= maxh) then
-                     cpatch%hite(ico)  = maxh
-                     cpatch%at_the_top(ico) = .true.
-                  else
-                     cpatch%hite(ico)  = dbh2h(cpatch%pft(ico),  cpatch%dbh(ico))
-                  end if
-
-                  cpatch%bdead(inew) = cpatch%bdead(inew) * (1.+epsilon)
-                  cpatch%dbh  (inew) = bd2dbh(cpatch%pft(inew), cpatch%bdead(inew))
-                  if (dbh2h(cpatch%pft(inew),  cpatch%dbh(inew)) >= maxh) then
-                     cpatch%hite(inew)  = maxh
-                     cpatch%at_the_top(inew) = .true.
-                  else
-                     cpatch%hite(inew)  = dbh2h(cpatch%pft(inew),  cpatch%dbh(inew))
-                  end if
-
-               else
+!               elseif (is_liana(cpatch%pft(ico))) then
+!
+!                  !---------------------------------- Lianas --------------------------------------!
+!                  !--------------------------------------------------------------------------------!
+!                  ! For lianas we cannot assign the height resulting from the allometric eq.       !
+!                  ! because since the bdead -> dbh is the sum of the two cohorts this could lead   !
+!                  ! to lianas that are taller than the tree cohort. So we check that the resulting !
+!                  !  height is not greater than the tallest tree cohort. If it is we assign the    !
+!                  ! tallest tree height as the liana height and we turn on the at_the_top flag     !
+!                  !--------------------------------------------------------------------------------!
+!                  cpatch%bdead(ico)  = cpatch%bdead(ico) * (1.-epsilon)
+!                  cpatch%dbh  (ico)  = bd2dbh(cpatch%pft(ico), cpatch%bdead(ico))
+!                  if (dbh2h(cpatch%pft(ico),  cpatch%dbh(ico)) >= maxh) then
+!                     cpatch%hite(ico)  = maxh
+!                     cpatch%at_the_top(ico) = .true.
+!                  else
+!                     cpatch%hite(ico)  = dbh2h(cpatch%pft(ico),  cpatch%dbh(ico))
+!                  end if
+!
+!                  cpatch%bdead(inew) = cpatch%bdead(inew) * (1.+epsilon)
+!                  cpatch%dbh  (inew) = bd2dbh(cpatch%pft(inew), cpatch%bdead(inew))
+!                  if (dbh2h(cpatch%pft(inew),  cpatch%dbh(inew)) >= maxh) then
+!                     cpatch%hite(inew)  = maxh
+!                     cpatch%at_the_top(inew) = .true.
+!                  else
+!                     cpatch%hite(inew)  = dbh2h(cpatch%pft(inew),  cpatch%dbh(inew))
+!                  end if
+!
+!               else
 
                   !-- use bdead for trees
                   cpatch%bdead(ico)  = cpatch%bdead(ico) * (1.-epsilon)
@@ -1028,7 +1073,7 @@ module fuse_fiss_utils
             call fatal_error('Cohort splitting didn''t conserve plants!!!'                 &
                                         &,'split_cohorts','fuse_fiss_utils.f90')
          end if
-         
+
       end if
       deallocate(split_mask)
       return
@@ -1146,13 +1191,14 @@ module fuse_fiss_utils
           cpatch%dbh(recc)   = bl2dbh(cpatch%bleaf(recc), cpatch%pft(recc))
           cpatch%hite(recc)  = bl2h  (cpatch%bleaf(recc), cpatch%pft(recc))
           !--------------------------------------------------------------------------------!
+
       elseif (is_liana(cpatch%pft(donc))) then
           !---------------------------------- Lianas --------------------------------------!
           cpatch%bdead(recc) = cpatch%bdead(recc) * rnplant + cpatch%bdead(donc) * dnplant
           cpatch%dbh(recc)   = bd2dbh(cpatch%pft(recc), cpatch%bdead(recc))
 
+         maxh = 0.5
          cohortloop: do ico=1,cpatch%ncohorts
-
             !----- Alias for current PFT. ----------------------------------------------------!
             ipft = cpatch%pft(ico)
             !---------------------------------------------------------------------------------!
@@ -1161,22 +1207,22 @@ module fuse_fiss_utils
             if (cpatch%hite(ico) > maxh .and. .not. is_liana(ipft)) then
                maxh = cpatch%hite(ico)
             end if
-
-      end do cohortloop
-
-
+         end do cohortloop
           !--------------------------------------------------------------------------------!
           ! For lianas we cannot assign the height resulting from the allometric eq.       !
           ! because since the bdead -> dbh is the sum of the two cohorts this could lead   !
           ! to lianas that are taller than the tree cohort. So we check that the resulting !
-          !  height is not greater than the tallest tree cohort. If it is we assign the    !
+          ! height is not greater than the tallest tree cohort. If it is we assign the     !
           ! tallest tree height as the liana height and we turn on the at_the_top flag     !
           !--------------------------------------------------------------------------------!
-          if (dbh2h(cpatch%pft(recc),  cpatch%dbh(recc)) >= cpatch%hite(1)) then
-            cpatch%hite(recc)  = cpatch%hite(1)
-            cpatch%at_the_top(recc) = .true.
+          if (cpatch%tracking_co(recc) > 0) then
+            if (dbh2h(cpatch%pft(recc),cpatch%dbh(recc)) >= cpatch%hite(cpatch%tracking_co(recc))) then
+               cpatch%hite(recc) = cpatch%hite(cpatch%tracking_co(recc))
+             else
+               cpatch%hite(recc) = dbh2h(cpatch%pft(recc),cpatch%dbh(recc))
+            end if
           else
-            cpatch%hite(recc)  = dbh2h(cpatch%pft(recc),  cpatch%dbh(recc))
+            cpatch%hite(recc) = min(dbh2h(cpatch%pft(recc),  cpatch%dbh(recc)), maxh)
           end if
           !--------------------------------------------------------------------------------!
       else
@@ -1194,9 +1240,6 @@ module fuse_fiss_utils
       cpatch%krdepth(recc) = dbh2krdepth(cpatch%hite(recc),cpatch%dbh(recc)                &
                                         ,cpatch%pft(recc),lsl)
       !------------------------------------------------------------------------------------!
-
-
-
 
 
       !------------------------------------------------------------------------------------!
@@ -1260,9 +1303,9 @@ module fuse_fiss_utils
          call uextcm2tl(cpatch%leaf_energy(recc),cpatch%leaf_water(recc)                   &
                        ,cpatch%leaf_hcap(recc),cpatch%leaf_temp(recc)                      &
                        ,cpatch%leaf_fliq(recc))
-         
-         
-      else 
+
+
+      else
          !----- Leaf temperature cannot be found using uextcm2tl, this is a singularity. --!
          cpatch%leaf_temp(recc)  = cpatch%leaf_temp(recc) * rnplant                        &
                                  + cpatch%leaf_temp(donc) * dnplant
@@ -1275,13 +1318,13 @@ module fuse_fiss_utils
          call uextcm2tl(cpatch%wood_energy(recc),cpatch%wood_water(recc)                   &
                        ,cpatch%wood_hcap(recc),cpatch%wood_temp(recc)                      &
                        ,cpatch%wood_fliq(recc))
-      else 
+      else
          !----- Wood temperature cannot be found using uextcm2tl, this is a singularity. --!
          cpatch%wood_temp(recc)  = cpatch%wood_temp(recc) * rnplant                        &
                                  + cpatch%wood_temp(donc)  * dnplant
          cpatch%wood_fliq(recc)  = 0.0
       end if
-      
+
       !----- Set time-steps temperatures as the current. ----------------------------------!
       cpatch%leaf_temp_pv(recc) = cpatch%leaf_temp(recc)
       cpatch%wood_temp_pv(recc) = cpatch%wood_temp(recc)
@@ -1300,7 +1343,7 @@ module fuse_fiss_utils
       !     CB and CB_Xmax are scaled by population, as they are in kgC/plant/yr.          !
       !------------------------------------------------------------------------------------!
       ! RK: I think the below comment is no longer true. Per gh-24 reverting again to      !
-      ! calculate CBR from running means of CB and CB_Xmax. 
+      ! calculate CBR from running means of CB and CB_Xmax.
       ! "The relative carbon balance, however, is no longer derived from the annual values !
       ! of CB, CB_LightMax, and CB_MoistMax, but tracked independently as it used to be    !
       ! done in ED-1.0."                                                                   !
@@ -1334,28 +1377,28 @@ module fuse_fiss_utils
       !------------------------------------------------------------------------------------!
       cpatch%today_gpp          (recc) = cpatch%today_gpp          (recc)                  &
                                        + cpatch%today_gpp          (donc)
-                                  
+
       cpatch%today_nppleaf      (recc) = cpatch%today_nppleaf      (recc)                  &
                                        + cpatch%today_nppleaf      (donc)
-                                  
+
       cpatch%today_nppfroot     (recc) = cpatch%today_nppfroot     (recc)                  &
                                        + cpatch%today_nppfroot     (donc)
-                                  
+
       cpatch%today_nppsapwood   (recc) = cpatch%today_nppsapwood   (recc)                  &
                                        + cpatch%today_nppsapwood   (donc)
-                                  
+
       cpatch%today_nppcroot     (recc) = cpatch%today_nppcroot     (recc)                  &
                                        + cpatch%today_nppcroot     (donc)
-                                  
+
       cpatch%today_nppseeds     (recc) = cpatch%today_nppseeds     (recc)                  &
                                        + cpatch%today_nppseeds     (donc)
-                                  
+
       cpatch%today_nppwood      (recc) = cpatch%today_nppwood      (recc)                  &
                                        + cpatch%today_nppwood      (donc)
-                                  
+
       cpatch%today_nppdaily     (recc) = cpatch%today_nppdaily     (recc)                  &
                                        + cpatch%today_nppdaily     (donc)
-                                  
+
       cpatch%today_gpp_pot      (recc) = cpatch%today_gpp_pot      (recc)                  &
                                        + cpatch%today_gpp_pot      (donc)
 
@@ -1803,7 +1846,7 @@ module fuse_fiss_utils
                           ,cpatch%fmean_wood_hcap  (recc),cpatch%fmean_wood_temp (recc)    &
                           ,cpatch%fmean_wood_fliq  (recc))
             !------------------------------------------------------------------------------!
-         else                                                                              
+         else
             !----- Wood temperature can't be found using uextcm2tl (singularity). ---------!
             cpatch%fmean_wood_temp(recc) = cpatch%fmean_wood_temp(recc) * rnplant          &
                                          + cpatch%fmean_wood_temp(donc) * dnplant
@@ -2044,7 +2087,7 @@ module fuse_fiss_utils
             !----- Update temperature and liquid fraction using standard thermodynamics. --!
             call uextcm2tl(cpatch%dmean_leaf_energy(recc),cpatch%dmean_leaf_water(recc)    &
                           ,cpatch%dmean_leaf_hcap  (recc),cpatch%dmean_leaf_temp (recc)    &
-                          ,cpatch%dmean_leaf_fliq  (recc))                                                  
+                          ,cpatch%dmean_leaf_fliq  (recc))
             !------------------------------------------------------------------------------!
 
 
@@ -2060,15 +2103,15 @@ module fuse_fiss_utils
             cpatch%dmean_leaf_vpdef(recc) = cpatch%dmean_leaf_vpdef(recc) * rnplant        &
                                           + cpatch%dmean_leaf_vpdef(donc) * dnplant
             !------------------------------------------------------------------------------!
-         end if                                                                            
+         end if
          !------ Wood. --------------------------------------------------------------------!
-         if ( cpatch%dmean_wood_hcap(recc) > 0. ) then                                     
+         if ( cpatch%dmean_wood_hcap(recc) > 0. ) then
             !----- Update temperature using the standard thermodynamics. ------------------!
             call uextcm2tl(cpatch%dmean_wood_energy(recc),cpatch%dmean_wood_water(recc)    &
                           ,cpatch%dmean_wood_hcap  (recc),cpatch%dmean_wood_temp (recc)    &
                           ,cpatch%dmean_wood_fliq  (recc))
             !------------------------------------------------------------------------------!
-         else                                                                              
+         else
             !----- Wood temperature can't be found using uextcm2tl (singularity). ---------!
             cpatch%dmean_wood_temp(recc) = cpatch%dmean_wood_temp(recc) * rnplant          &
                                          + cpatch%dmean_wood_temp(donc) * dnplant
@@ -2404,7 +2447,7 @@ module fuse_fiss_utils
             !----- Update temperature and liquid fraction using standard thermodynamics. --!
             call uextcm2tl(cpatch%mmean_leaf_energy(recc),cpatch%mmean_leaf_water(recc)    &
                           ,cpatch%mmean_leaf_hcap  (recc),cpatch%mmean_leaf_temp (recc)    &
-                          ,cpatch%mmean_leaf_fliq  (recc))                                                  
+                          ,cpatch%mmean_leaf_fliq  (recc))
             !------------------------------------------------------------------------------!
 
 
@@ -2420,15 +2463,15 @@ module fuse_fiss_utils
             cpatch%mmean_leaf_vpdef(recc) = cpatch%mmean_leaf_vpdef(recc) * rnplant        &
                                           + cpatch%mmean_leaf_vpdef(donc) * dnplant
             !------------------------------------------------------------------------------!
-         end if                                                                            
+         end if
          !------ Wood. --------------------------------------------------------------------!
-         if ( cpatch%mmean_wood_hcap(recc) > 0. ) then                                     
+         if ( cpatch%mmean_wood_hcap(recc) > 0. ) then
             !----- Update temperature using the standard thermodynamics. ------------------!
             call uextcm2tl(cpatch%mmean_wood_energy(recc),cpatch%mmean_wood_water(recc)    &
                           ,cpatch%mmean_wood_hcap  (recc),cpatch%mmean_wood_temp (recc)    &
                           ,cpatch%mmean_wood_fliq  (recc))
             !------------------------------------------------------------------------------!
-         else                                                                              
+         else
             !----- Wood temperature can't be found using uextcm2tl (singularity). ---------!
             cpatch%mmean_wood_temp(recc) = cpatch%mmean_wood_temp(recc) * rnplant          &
                                          + cpatch%mmean_wood_temp(donc) * dnplant
@@ -2701,7 +2744,7 @@ module fuse_fiss_utils
          cpatch%qmean_par_l_diff    (:,recc) = cpatch%qmean_par_l_diff    (:,recc)         &
                                              + cpatch%qmean_par_l_diff    (:,donc)
 
- 
+
 
          cpatch%qmean_rshort_l      (:,recc) = cpatch%qmean_rshort_l      (:,recc)         &
                                              + cpatch%qmean_rshort_l      (:,donc)
@@ -2827,7 +2870,7 @@ module fuse_fiss_utils
       integer                  :: oldpa      ! Index of oldest patch
       logical                  :: sorted     ! Flag: the site is already sorted
       !------------------------------------------------------------------------------------!
-      
+
       !----- No need to sort a site with a single patch. ----------------------------------!
       if (csite%npatches < 2) return
 
@@ -2850,18 +2893,18 @@ module fuse_fiss_utils
       nullify (tempsite)
       allocate(tempsite)
       call allocate_sitetype(tempsite,csite%npatches)
-      
+
       ipa = 0
       !---- Loop until all patches were sorted. -------------------------------------------!
       do while (ipa < csite%npatches)
          ipa = ipa + 1
-      
+
          !----- Find the oldest site. -----------------------------------------------------!
          oldpa = maxloc(csite%age,dim=1)
-         
+
          !----- Copy to patch the scratch structure. --------------------------------------!
          call copy_sitetype(csite,tempsite,oldpa,oldpa,ipa,ipa)
-         
+
          !----- Put a non-sense age so this patch will never "win" again. -----------------!
          csite%age(oldpa) = -huge(1.)
       end do
@@ -3005,8 +3048,8 @@ module fuse_fiss_utils
                   open (unit=72,file=trim(fuse_fout),status='replace',action='write')
                   write(unit=72,fmt='(a)')       '----------------------------------------'
                   write(unit=72,fmt='(a)')       ' Patch Fusion log for: '
-                  write(unit=72,fmt='(a,1x,i5)') ' POLYGON: ',jpy 
-                  write(unit=72,fmt='(a,1x,i5)') ' SITE:    ',jsi 
+                  write(unit=72,fmt='(a,1x,i5)') ' POLYGON: ',jpy
+                  write(unit=72,fmt='(a,1x,i5)') ' SITE:    ',jsi
                   write(unit=72,fmt='(a)')       '----------------------------------------'
                   write(unit=72,fmt='(a)')       ' '
                   close(unit=72,status='keep')
@@ -3033,7 +3076,7 @@ module fuse_fiss_utils
 
       polyloop: do ipy = 1,cgrid%npolygons
          cpoly => cgrid%polygon(ipy)
-         
+
          siteloop: do isi = 1,cpoly%nsites
             csite => cpoly%site(isi)
 
@@ -3130,7 +3173,7 @@ module fuse_fiss_utils
             donloope: do donp=csite%npatches,2,-1
                donpatch => csite%patch(donp)
                don_lu = csite%dist_type(donp)
-               
+
                !----- If patch is not empty, or has already been fused, move on. ----------!
                if ( (.not. fuse_table(donp)) .or.                                          &
                     ( dont_force_fuse .and.  donpatch%ncohorts > 0) ) then
@@ -3273,7 +3316,7 @@ module fuse_fiss_utils
                   donloopa: do donp=csite%npatches,2,-1
                      donpatch => csite%patch(donp)
                      don_lu = csite%dist_type(donp)
-                     
+
                      !----- If patch is not empty, or has already been fused, move on. ----!
                      if ( (.not. fuse_table(donp)) .or.                                    &
                           ( dont_force_fuse .and. donpatch%ncohorts == 0 ) ) then
@@ -3366,7 +3409,7 @@ module fuse_fiss_utils
 
 
 
-                           
+
                            !---------------------------------------------------------------!
                            !    Check whether these bins contain some LAI.  Bins that have !
                            ! tiny cumulative LAI may differ by a lot in the relative       !
@@ -3412,7 +3455,7 @@ module fuse_fiss_utils
                            !---------------------------------------------------------------!
                            llevel_donp = exp(- 0.5 * cumlai_donp)
                            llevel_recp = exp(- 0.5 * cumlai_recp)
-                           
+
                            diff = abs(llevel_donp - llevel_recp )
                            refv =    (llevel_donp + llevel_recp ) * 0.5
                            norm = diff / refv
@@ -3635,7 +3678,7 @@ module fuse_fiss_utils
                         exit recloopp
                      end if
                   end do recloopp
-                 
+
                   if (.not. recp_found) then
                      if (print_fuse_details) then
                         open  (unit=72,file=trim(fuse_fout),status='old',action='write'    &
@@ -3713,7 +3756,7 @@ module fuse_fiss_utils
                      end if
                      !---------------------------------------------------------------------!
 
-                     
+
                      !---------------------------------------------------------------------!
                      !    Check whether these bins contain some LAI.  Bins that have       !
                      ! tiny cumulative LAI may differ by a lot in the relative scale,      !
@@ -3756,7 +3799,7 @@ module fuse_fiss_utils
                      !---------------------------------------------------------------------!
                      llevel_donp = exp(- 0.5 * cumlai_donp)
                      llevel_recp = exp(- 0.5 * cumlai_recp)
-                     
+
                      diff = abs(llevel_donp - llevel_recp )
                      refv =    (llevel_donp + llevel_recp ) * 0.5
                      norm = diff / refv
@@ -3791,7 +3834,7 @@ module fuse_fiss_utils
                   end do hgtloop
                   !------------------------------------------------------------------------!
 
-                 
+
 
                   !------------------------------------------------------------------------!
                   !      Reaching this point means that the patches are sufficiently       !
@@ -3805,7 +3848,7 @@ module fuse_fiss_utils
                                      ,elim_nplant,elim_lai)
                   !------------------------------------------------------------------------!
 
-                  
+
 
                   !----- Record the fusion if requested by the user. ----------------------!
                   if (print_fuse_details) then
@@ -3975,7 +4018,7 @@ module fuse_fiss_utils
                               &,'fuse_patches','fuse_fiss_utils.f90')
             end if
             !------------------------------------------------------------------------------!
-            
+
          end do siteloop
       end do polyloop
 
@@ -3988,7 +4031,7 @@ module fuse_fiss_utils
       tot_nsites    = 0
       do ipy=1,cgrid%npolygons
          cpoly => cgrid%polygon(ipy)
-         tot_nsites = tot_nsites + cpoly%nsites 
+         tot_nsites = tot_nsites + cpoly%nsites
          do isi=1,cpoly%nsites
             csite => cpoly%site(isi)
             tot_npatches = tot_npatches + csite%npatches
@@ -4021,7 +4064,7 @@ module fuse_fiss_utils
                             ,fuse_initial,elim_nplant,elim_lai)
       use update_derived_props_module
       use patch_pft_size_profile_mod
-      use ed_state_vars      , only : sitetype              & ! Structure 
+      use ed_state_vars      , only : sitetype              & ! Structure
                                     , patchtype             ! ! Structure
       use soil_coms          , only : soil                  & ! intent(in), lookup table
                                     , tiny_sfcwater_mass    & ! intent(in)
@@ -4052,7 +4095,7 @@ module fuse_fiss_utils
       integer, dimension(mzg), intent(in)  :: ntext_soil        ! Soil type
       real, dimension(n_pft) , intent(in)  :: green_leaf_factor ! Green leaf factor...
       logical                , intent(in)  :: fuse_initial      ! Initialisation?
-      real                   , intent(out) :: elim_nplant       ! Eliminated nplant 
+      real                   , intent(out) :: elim_nplant       ! Eliminated nplant
       real                   , intent(out) :: elim_lai          ! Eliminated lai
       !----- Local variables --------------------------------------------------------------!
       type(patchtype)        , pointer     :: cpatch            ! Current patch
@@ -4074,7 +4117,7 @@ module fuse_fiss_utils
       ! argument (the "recipient" = recp ), and frees the memory associated with the donor !
       ! patch.                                                                             !
       !------------------------------------------------------------------------------------!
-    
+
       !----- The new area is simply the sum of each patch area. ---------------------------!
       newarea  = csite%area(donp) + csite%area(recp)
       newareai = 1.0/newarea
@@ -4113,12 +4156,12 @@ module fuse_fiss_utils
       csite%structural_soil_C(recp)  = newareai *                                          &
                                      ( csite%structural_soil_C(donp)  * csite%area(donp)   &
                                      + csite%structural_soil_C(recp)  * csite%area(recp) )
-                                     
+
 
       csite%structural_soil_L(recp)  = newareai *                                          &
                                      ( csite%structural_soil_L(donp)  * csite%area(donp)   &
                                      + csite%structural_soil_L(recp)  * csite%area(recp) )
-                                     
+
 
       csite%mineralized_soil_N(recp) = newareai *                                          &
                                      ( csite%mineralized_soil_N(donp) * csite%area(donp)   &
@@ -4180,7 +4223,7 @@ module fuse_fiss_utils
                                      ( csite%ggsoil(donp)             * csite%area(donp)   &
                                      + csite%ggsoil(recp)             * csite%area(recp) )
 
-      
+
       !------------------------------------------------------------------------------------!
       !    There is no guarantee that there will be a minimum amount of mass in the tempo- !
       ! rary layer, nor is there any reason for both patches to have the same number of    !
@@ -4244,7 +4287,7 @@ module fuse_fiss_utils
       !    (Both are done in new_patch_sfc_props).                                         !
       !------------------------------------------------------------------------------------!
       !------------------------------------------------------------------------------------!
-     
+
 
       !----- Merge soil energy and water. -------------------------------------------------!
       do iii=1,mzg
@@ -4314,7 +4357,7 @@ module fuse_fiss_utils
       !------------------------------------------------------------------------------------!
 
 
- 
+
 
 
       !------------------------------------------------------------------------------------!
@@ -4667,7 +4710,7 @@ module fuse_fiss_utils
                                                  *   newareai
          !---------------------------------------------------------------------------------!
 
-        
+
          !---------------------------------------------------------------------------------!
          !      Now we find the derived properties for the canopy air space.               !
          !---------------------------------------------------------------------------------!
@@ -4741,9 +4784,9 @@ module fuse_fiss_utils
 
 
 
-      !------------------------------------------------------------------------------------! 
+      !------------------------------------------------------------------------------------!
       !    Daily means.                                                                    !
-      !------------------------------------------------------------------------------------! 
+      !------------------------------------------------------------------------------------!
       if (writing_long .and.  (.not. fuse_initial) ) then
         if ( all(csite%dmean_can_prss > 10.0) ) then
          csite%dmean_A_decomp           (recp) = ( csite%dmean_A_decomp           (recp)   &
@@ -5071,9 +5114,9 @@ module fuse_fiss_utils
       end if
       !------------------------------------------------------------------------------------!
 
-      !------------------------------------------------------------------------------------! 
+      !------------------------------------------------------------------------------------!
       !    Monthly means.                                                                  !
-      !------------------------------------------------------------------------------------! 
+      !------------------------------------------------------------------------------------!
       if (writing_eorq .and. (.not. fuse_initial)) then
         if( all(csite%mmean_can_prss > 10.0) ) then
 
@@ -5195,7 +5238,7 @@ module fuse_fiss_utils
                                                   , csite%mmsqu_sensible_ac(donp)          &
                                                   , csite%area             (donp)          &
                                                   , corr_patch, .false.)
-         !---------------------------------------------------------------------------------! 
+         !---------------------------------------------------------------------------------!
 
 
          csite%mmean_rh                 (recp) = ( csite%mmean_rh                 (recp)   &
@@ -5556,9 +5599,9 @@ module fuse_fiss_utils
 
 
 
-      !------------------------------------------------------------------------------------! 
+      !------------------------------------------------------------------------------------!
       !    Mean diel.                                                                      !
-      !------------------------------------------------------------------------------------! 
+      !------------------------------------------------------------------------------------!
       if (writing_dcyc .and. (.not. fuse_initial)) then
         if( all(csite%qmean_can_prss > 10.0) ) then
          !---------------------------------------------------------------------------------!

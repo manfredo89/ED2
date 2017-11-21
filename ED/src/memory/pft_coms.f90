@@ -417,7 +417,7 @@ module pft_coms
    real   , dimension(n_pft)    :: rho
    !----- Specific Leaf Area (m�leaf/kg_C]. -----------------------------------------------!
    real   , dimension(n_pft)    :: SLA
-   !----- The initialization parameters for SLA:  SLA = sla_pft_init for non-trop PFTs
+   !----- The initialization parameters for:  SLA = sla_pft_init for non-trop PFTs
    real   , dimension(n_pft)    :: sla_pft_init
    !----- Mass ratio between fine root and leaves [kg_fine_roots]/[kg_leaves]. ------------!
    real   , dimension(n_pft)    :: q

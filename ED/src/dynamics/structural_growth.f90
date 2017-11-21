@@ -53,6 +53,7 @@ contains
       integer                       :: ipft
       integer                       :: prev_month
       integer                       :: imonth
+      integer                       :: n_lianas
       real                          :: salloc
       real                          :: salloci
       real                          :: balive_in
@@ -78,7 +79,6 @@ contains
       real                          :: balive_mort_litter
       real                          :: bstorage_mort_litter
       real                          :: struct_litter
-      real                          :: maxh !< maximum patch height
       real                          :: mort_litter
       real                          :: seed_litter
       real                          :: net_seed_N_uptake
@@ -127,30 +127,50 @@ contains
 
                !------------------------------------------------------------------------------!
                ! Here we must get the tallest tree cohort iside the patch. This will be       !
-               ! then usedto set the maximum height that lianas should aim at. The arrested   !
+               ! then used to set the maximum height that lianas should aim at. The arrested  !
                ! succession (only lianas inside the patch is a bit of a limit case: the max   !
                ! height will be set to (0.5 + 0.5)m. It might still be reasonable.            !
                !------------------------------------------------------------------------------!
-               maxh = 0.5
-               hcohortloop: do ico = 1,cpatch%ncohorts
-                  if (.not. is_liana(cpatch%pft(ico)) .and. cpatch%hite(ico) > maxh) then
-                     maxh = cpatch%hite(ico)
-                  end if
-               end do hcohortloop
-               !------------------------------------------------------------------------------!
+               call sort_cohorts(cpatch, .true.)
 
-               !------------------------------------------------------------------------------!
-               ! Adding 0.5 to maxh has the effect of letting lianas grow 0.5 m above the     !
-               ! tallest tree cohort. This number could be tweaked...                         !
-               !------------------------------------------------------------------------------!
-               maxh = maxh + 0.5
-               !------------------------------------------------------------------------------!
-
+               n_lianas = count(is_liana(cpatch%pft))
+!
+!
+!               allocate (maxh(ntrees))
+!
+!               tree = 0
+!               hcohortloop2: do ico = 1,cpatch%ncohorts
+!                  if (.not. is_liana(cpatch%pft(ico))) then
+!                     maxh(tree) = cpatch%hite(ico)
+!                     tree = tree + 1
+!                  end if
+!               end do hcohortloop2
+!               !------------------------------------------------------------------------------!
+!
+!               !------------------------------------------------------------------------------!
+!               ! Adding 0.5 to maxh has the effect of letting lianas grow 0.5 m above the     !
+!               ! tallest tree cohort. This number could be tweaked...                         !
+!               !------------------------------------------------------------------------------!
+!               !maxh = maxh + 0.5
+!               !------------------------------------------------------------------------------!
+!
+!               liana_index     = 0
+!               not_liana_index = 0
+!
                cohortloop: do ico = 1,cpatch%ncohorts
+
 
                   !----- Assigning an alias for PFT type. ------------------------------------!
                   ipft    = cpatch%pft(ico)
                   !---------------------------------------------------------------------------!
+
+!                  !------- Set the index for lianas and non lianas.---------------------------!
+!                  if (is_liana(ipft)) then
+!                     liana_index = liana_index + 1
+!                  else
+!                     not_liana_index = not_liana_index + 1
+!                  end if
+!                  !---------------------------------------------------------------------------!
 
                   salloc  = 1.0 + q(ipft) + qsw(ipft) * cpatch%hite(ico)
                   salloci = 1.0 / salloc
@@ -202,19 +222,19 @@ contains
 
                   !---- Set which cohort is at the top of the canopy, important for lianas ---!
                   !------ Once lianas reach the top they stay there until they die. ----------!
-                  if (is_liana(ipft)) then
-                     if (.not. cpatch%at_the_top(ico) .and. cpatch%hite(ico) >= maxh) then
-                        cpatch%at_the_top(ico) = .true.
-                     end if
-                  else if (cpatch%hite(ico) >= maxh) then
-                     cpatch%at_the_top(ico) = .true.
-                  end if
+!                  if (is_liana(ipft)) then
+!                     if (.not. cpatch%at_the_top(ico) .and. cpatch%hite(ico) >= maxh) then
+!                        cpatch%at_the_top(ico) = .true.
+!                     end if
+!                  else if (cpatch%hite(ico) >= maxh) then
+!                     cpatch%at_the_top(ico) = .true.
+!                  end if
                   !---------------------------------------------------------------------------!
 
 
                   !----- Determine how to distribute what is in bstorage. --------------------!
                   call plant_structural_allocation(cpatch, ico, cgrid%lat(ipy), bdead_in      &
-                                                  ,bstorage_in,f_bseeds,f_bdead, maxh)
+                                                  , bstorage_in, f_bseeds, f_bdead, n_lianas)
                   !---------------------------------------------------------------------------!
 
 
@@ -534,6 +554,7 @@ contains
          , c2n_stem               & ! intent(in)
          , agf_bs                 & ! intent(in)
          , cbr_severe_stress      & ! intent(in)
+         , is_liana               & ! intent(in)
          , is_grass               ! ! intent(in)
       use ed_max_dims    , only : n_pft                  & ! intent(in)
          , n_dbh                  ! ! intent(in)
@@ -543,6 +564,7 @@ contains
       use physiology_coms, only : ddmort_const           & ! intent(in)
          , iddmort_scheme         & ! intent(in)
          , cbr_scheme             ! ! intent(in)
+      use fuse_fiss_utils, only : sort_cohorts           ! ! subroutine
       implicit none
       !----- Arguments -----------------------------------------------------------------------!
       type(edtype)     , target     :: cgrid
@@ -558,6 +580,7 @@ contains
       integer                       :: ipft
       integer                       :: prev_month
       integer                       :: imonth
+      integer                       :: n_lianas
       real                          :: salloc
       real                          :: salloci
       real                          :: cb_act
@@ -610,6 +633,15 @@ contains
             patchloop: do ipa=1,csite%npatches
                cpatch => csite%patch(ipa)
 
+               call sort_cohorts(cpatch, .true.)
+
+               n_lianas = 0
+               hcohortloop1: do ico = 1,cpatch%ncohorts
+                  if (is_liana(cpatch%pft(ico))) then
+                     n_lianas = n_lianas + 1
+                  end if
+               end do hcohortloop1
+
                cohortloop: do ico = 1,cpatch%ncohorts
                   !----- Assigning an alias for PFT type. ------------------------------------!
                   ipft    = cpatch%pft(ico)
@@ -656,9 +688,8 @@ contains
                      + struct_litter
 
                   !----- Determine how to distribute what is in bstorage. --------------------!
-                  call plant_structural_allocation(cpatch, ico, cgrid%lat(ipy)                &
-                     , bdead_in, bstorage_in                     &
-                     , f_bseeds,f_bdead, cpatch%hite(1))
+                  call plant_structural_allocation(cpatch, ico, cgrid%lat(ipy), bdead_in,     &
+                                                   bstorage_in, f_bseeds,f_bdead, n_lianas)
                   !---------------------------------------------------------------------------!
 
 
@@ -930,7 +961,7 @@ contains
    ! (structural) biomass.                                                                    !
    !------------------------------------------------------------------------------------------!
    subroutine plant_structural_allocation(cpatch, ico, lat, bdead, bstorage, f_bseeds         &
-      , f_bdead, maxh)
+      , f_bdead, n_lianas)
       use pft_coms      , only : phenology    & ! intent(in)
          , repro_min_h  & ! intent(in)
          , r_fract      & ! intent(in)
@@ -949,21 +980,21 @@ contains
       !----- Arguments -----------------------------------------------------------------------!
       type(patchtype)  , target      :: cpatch
       integer          , intent(in)  :: ico
+      integer          , intent(in)  :: n_lianas  !> number of lianas inside the patch
       real             , intent(in)  :: lat
       real             , intent(in)  :: bdead     !> Current dead biomass
       real             , intent(in)  :: bstorage  !> Current storage pool
-      real             , intent(in)  :: maxh      !> Height of the tallest cohort in the patch
       real             , intent(out) :: f_bseeds
       real             , intent(out) :: f_bdead
       !----- Local variables -----------------------------------------------------------------!
       integer                        :: ipft
       integer                        :: phen_status
+      integer                        :: potential_host
       real                           :: hite
       real                           :: dbh
       real                           :: bd_target !> Target Bd to reach maxh height
       real                           :: delta_bd  !> Target Bd - actual Bd
       logical                        :: late_spring
-      logical                        :: at_the_top
       logical          , parameter   :: printout  = .false.
       character(len=13), parameter   :: fracfile  = 'storalloc.txt'
       !----- Locally saved variables. --------------------------------------------------------!
@@ -975,7 +1006,6 @@ contains
       hite        = cpatch%hite(ico)
       dbh         = cpatch%dbh(ico)
       phen_status = cpatch%phenology_status(ico)
-      at_the_top  = cpatch%at_the_top(ico)
 
       !----- First time, and the user wants to print the output.  Make a header. -------------!
       if (first_time) then
@@ -1001,6 +1031,12 @@ contains
          (lat <  0.0 .and. current_time%month == 12)
       !---------------------------------------------------------------------------------------!
 
+      ! tracked tree is the tree that the liana is attached to (now it's just a matter of
+      ! height, I still need to refine this.
+      ! WARNING: This assumes that the cohorts are liana sorted
+      if (is_liana(ipft)) then
+         potential_host = min(ico - cpatch%ncohorts + n_lianas, cpatch%ncohorts - n_lianas)
+      end if
 
       !------------------------------------------------------------------------------------!
       !      Size and age structure.  Calculate fraction of bstorage going to bdead and    !
@@ -1009,7 +1045,7 @@ contains
       ! right time of year (for cold deciduous plants), or if the plants are actively      !
       ! dropping leaves or off allometry.                                                  !
       !------------------------------------------------------------------------------------!
-      if ((phenology(ipft) /= 2   .or.  late_spring) .and. phen_status == 0)    then
+      if ((phenology(ipft) /= 2 .or. late_spring) .and. phen_status == 0) then
          !---------------------------------------------------------------------------------!
          !      This is where allocation to seeds is occuring.  It will need to be         !
          ! modified but I'm leaving it for later --- GRASSES!  Want to add a functional    !
@@ -1064,13 +1100,15 @@ contains
             !   use half the storage for reproduction and leave the half left in the       !
             !   storage. Basically don't grow bdead -> DBH -> Height                       !
             !------------------------------------------------------------------------------!
-            if (is_liana(ipft) .and. .not. at_the_top) then
-               if(hite > maxh) then
+            if (is_liana(ipft) .and. cpatch%tracking_co(ico) < 0) then
+               if(hite > cpatch%hite(potential_host)) then
                   f_bseeds = merge(0.0, r_fract(ipft), hite <= repro_min_h(ipft))
                   f_bdead  = 0.0
-                  at_the_top = .true.
+                  ! Now tracking_co will just be the number of the tree. Later on I can really
+                  ! adapt this variable so as to track a specific tree cohort.
+                  cpatch%tracking_co(ico) = potential_host
                else
-                  bd_target = dbh2bd(h2dbh(maxh,ipft),ipft)
+                  bd_target = dbh2bd(h2dbh(cpatch%hite(potential_host),ipft),ipft)
                   delta_bd = bd_target - bdead
                   !---------------------------------------------------------------------------!
                   ! If bstorage is 0 or lianas have already reached their bd_target don't     !
@@ -1175,15 +1213,15 @@ contains
 
       !----- Get DBH and height --------------------------------------------------------------!
       if (is_grass(ipft) .and. igrass == 1) then
-         !---- New grasses get dbh_effective and height from bleaf. -------------------------!
+         !---- New grasses get dbh_effective and height from bleaf. --------------------------!
          cpatch%dbh(ico)  = bl2dbh(cpatch%bleaf(ico), ipft)
          cpatch%hite(ico) = bl2h  (cpatch%bleaf(ico), ipft)
-      else if(is_liana(ipft) .and. cpatch%at_the_top(ico)) then
-         !------------------------------- Lianas --------------------------------------------!
+      else if(is_liana(ipft) .and. cpatch%tracking_co(ico) > 0) then
+         !------------------------------- Lianas ---------------------------------------------!
          cpatch%dbh(ico)  = bd2dbh(ipft, cpatch%bdead(ico))
-         cpatch%hite(ico) = cpatch%hite(1)
+         cpatch%hite(ico) = cpatch%hite(cpatch%tracking_co(ico))
       else
-         !---- Trees and old grasses get dbh from bdead. ------------------------------------!
+         !---- Trees, old grasses and free standing lianas get dbh from bdead. ---------------!
          cpatch%dbh(ico)  = bd2dbh(ipft, cpatch%bdead(ico))
          cpatch%hite(ico) = dbh2h (ipft, cpatch%dbh  (ico))
       end if

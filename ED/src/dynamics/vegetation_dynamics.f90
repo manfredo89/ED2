@@ -11,7 +11,6 @@ subroutine vegetation_dynamics(new_month,new_year)
    use fire
    use structural_growth_module
    use reproduction_module
-   use structural_growth_module
    use soil_respiration_module
    use phenology_driv
    use update_derived_props_module
@@ -179,8 +178,6 @@ end subroutine vegetation_dynamics
 !------------------------------------------------------------------------------------------!
 subroutine vegetation_dynamics_eq_0(new_month,new_year)
    use fire
-   use phenology_driv
-   use structural_growth_module
    use reproduction_module
    use structural_growth_module
    use phenology_driv
