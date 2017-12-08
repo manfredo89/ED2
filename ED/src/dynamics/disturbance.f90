@@ -2954,6 +2954,72 @@ module disturbance_utils
 
 end subroutine prune_lianas
 
+
+
+subroutine liana_height_reshuffle(cgrid)
+
+   use fuse_fiss_utils, only : sort_cohorts             ! ! sub-routine
+   use allometry,       only : dbh2h                    ! ! sub-routine
+   use pft_coms,        only : is_liana                 ! ! intent(in)
+   use ed_state_vars,   only : edtype                    & ! structure
+                             , polygontype               & ! structure
+                             , sitetype                  & ! structure
+                             , patchtype                 ! ! structure
+   !----- Arguments. -------------------------------------------------------------------!
+   type(edtype)                    , target     :: cgrid
+   !----- Local variables. -------------------------------------------------------------!
+   type(polygontype)               , pointer    :: cpoly
+   type(sitetype)                  , pointer    :: csite
+   type(patchtype)                 , pointer    :: cpatch
+   integer                                      :: ipy
+   integer                                      :: isi
+   integer                                      :: ipa
+   integer                                      :: ico
+   integer                                      :: ipft
+   integer                                      :: potential_host
+   integer                                      :: n_lianas
+   !------------------------------------------------------------------------------------!
+
+
+   polyloop: do ipy = 1,cgrid%npolygons
+   cpoly => cgrid%polygon(ipy)
+
+      siteloop: do isi = 1,cpoly%nsites
+         csite => cpoly%site(isi)
+
+         patchloop: do ipa=1,csite%npatches
+            cpatch => csite%patch(ipa)
+
+            call sort_cohorts(cpatch, .true.)
+
+            n_lianas = count(is_liana(cpatch%pft))
+
+            cohortloop: do ico = 1,cpatch%ncohorts
+
+               !----- Assigning an alias for PFT type. --------------------------!
+               ipft    = cpatch%pft(ico)
+               !-----------------------------------------------------------------!
+
+               if (is_liana(ipft) .and. cpatch%tracking_co(ico) > 0) then
+
+                     potential_host = min(ico - cpatch%ncohorts + n_lianas,      &
+                     cpatch%ncohorts - n_lianas)
+
+                     if (dbh2h(ipft,cpatch%dbh(ico)) >= cpatch%hite(potential_host)) then
+
+                        cpatch%tracking_co(ico) = potential_host
+                        cpatch%hite(ico)        = cpatch%hite(potential_host)
+
+                     end if
+               end if
+            end do cohortloop
+            call sort_cohorts(cpatch)
+         end do patchloop
+      end do siteloop
+   end do polyloop
+
+end subroutine liana_height_reshuffle
+
 end module disturbance_utils
 !==========================================================================================!
 !==========================================================================================!
