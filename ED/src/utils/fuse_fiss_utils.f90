@@ -98,7 +98,6 @@ module fuse_fiss_utils
       ico = 0
       ili = 0
       !---- Loop until all cohorts were sorted. -------------------------------------------!
-!write(*,*) cpatch%pft
       do while(ico < cpatch%ncohorts)
          ico  = ico + 1
          ipos = ico
@@ -121,7 +120,6 @@ module fuse_fiss_utils
                end if
             end if
          end if
-!write(*,*) "ico",ico,"ili",ili,"nco",cpatch%ncohorts,"ipos",ipos,"tallco",tallco, "nli",n_lianas
          !----- Copy to the scratch structure. --------------------------------------------!
          call copy_patchtype(cpatch,temppatch,tallco,tallco,ipos,ipos)
 
