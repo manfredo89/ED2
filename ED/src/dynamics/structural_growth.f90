@@ -134,43 +134,13 @@ contains
                call sort_cohorts(cpatch, .true.)
 
                n_lianas = count(is_liana(cpatch%pft))
-!
-!
-!               allocate (maxh(ntrees))
-!
-!               tree = 0
-!               hcohortloop2: do ico = 1,cpatch%ncohorts
-!                  if (.not. is_liana(cpatch%pft(ico))) then
-!                     maxh(tree) = cpatch%hite(ico)
-!                     tree = tree + 1
-!                  end if
-!               end do hcohortloop2
-!               !------------------------------------------------------------------------------!
-!
-!               !------------------------------------------------------------------------------!
-!               ! Adding 0.5 to maxh has the effect of letting lianas grow 0.5 m above the     !
-!               ! tallest tree cohort. This number could be tweaked...                         !
-!               !------------------------------------------------------------------------------!
-!               !maxh = maxh + 0.5
-!               !------------------------------------------------------------------------------!
-!
-!               liana_index     = 0
-!               not_liana_index = 0
-!
+
                cohortloop: do ico = 1,cpatch%ncohorts
 
 
                   !----- Assigning an alias for PFT type. ------------------------------------!
                   ipft    = cpatch%pft(ico)
                   !---------------------------------------------------------------------------!
-
-!                  !------- Set the index for lianas and non lianas.---------------------------!
-!                  if (is_liana(ipft)) then
-!                     liana_index = liana_index + 1
-!                  else
-!                     not_liana_index = not_liana_index + 1
-!                  end if
-!                  !---------------------------------------------------------------------------!
 
                   salloc  = 1.0 + q(ipft) + qsw(ipft) * cpatch%hite(ico)
                   salloci = 1.0 / salloc
@@ -219,18 +189,6 @@ contains
                   cpatch%monthly_dndt  (ico) = 0.0
                   cpatch%monthly_dlnndt(ico) = 0.0
                   !---------------------------------------------------------------------------!
-
-                  !---- Set which cohort is at the top of the canopy, important for lianas ---!
-                  !------ Once lianas reach the top they stay there until they die. ----------!
-!                  if (is_liana(ipft)) then
-!                     if (.not. cpatch%at_the_top(ico) .and. cpatch%hite(ico) >= maxh) then
-!                        cpatch%at_the_top(ico) = .true.
-!                     end if
-!                  else if (cpatch%hite(ico) >= maxh) then
-!                     cpatch%at_the_top(ico) = .true.
-!                  end if
-                  !---------------------------------------------------------------------------!
-
 
                   !----- Determine how to distribute what is in bstorage. --------------------!
                   call plant_structural_allocation(cpatch, ico, cgrid%lat(ipy), bdead_in      &
@@ -635,12 +593,7 @@ contains
 
                call sort_cohorts(cpatch, .true.)
 
-               n_lianas = 0
-               hcohortloop1: do ico = 1,cpatch%ncohorts
-                  if (is_liana(cpatch%pft(ico))) then
-                     n_lianas = n_lianas + 1
-                  end if
-               end do hcohortloop1
+               n_lianas = count(is_liana(cpatch%pft))
 
                cohortloop: do ico = 1,cpatch%ncohorts
                   !----- Assigning an alias for PFT type. ------------------------------------!
@@ -1034,6 +987,8 @@ contains
       ! tracked tree is the tree that the liana is attached to (now it's just a matter of
       ! height, I still need to refine this.
       ! WARNING: This assumes that the cohorts are liana sorted
+      ! The tallest liana cohorts tracks the tallest tree cohort, the second tallest ecc.
+      ! until we reach the shortest tree cohort to which all liana cohorts left are attached
       if (is_liana(ipft)) then
          potential_host = min(ico - cpatch%ncohorts + n_lianas, cpatch%ncohorts - n_lianas)
       end if

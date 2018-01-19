@@ -3002,15 +3002,15 @@ subroutine liana_height_reshuffle(cgrid)
 
                if (is_liana(ipft) .and. cpatch%tracking_co(ico) > 0) then
 
-                     potential_host = min(ico - cpatch%ncohorts + n_lianas,      &
+                  potential_host = min(ico - cpatch%ncohorts + n_lianas,      &
                      cpatch%ncohorts - n_lianas)
 
-                     if (dbh2h(ipft,cpatch%dbh(ico)) >= cpatch%hite(potential_host)) then
+                  if (dbh2h(ipft,cpatch%dbh(ico)) >= cpatch%hite(potential_host)) then
 
-                        cpatch%tracking_co(ico) = potential_host
-                        cpatch%hite(ico)        = cpatch%hite(potential_host)
+                     cpatch%tracking_co(ico) = potential_host
+                     cpatch%hite(ico)        = cpatch%hite(potential_host)
 
-                     end if
+                  end if
                end if
             end do cohortloop
             call sort_cohorts(cpatch)
