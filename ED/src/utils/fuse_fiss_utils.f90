@@ -77,6 +77,7 @@ module fuse_fiss_utils
                ipft2 = cpatch%pft(ico + 1)
                pftdiffs = merge(pftdiffs + 1, pftdiffs, is_liana(ipft) .neqv. is_liana(ipft2))
             end do l_sortcheck
+
             if (pftdiffs > 1) l_sorted = .false.
          sorted = h_sorted .and. l_sorted
          end if

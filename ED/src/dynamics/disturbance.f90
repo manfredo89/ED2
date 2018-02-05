@@ -219,46 +219,41 @@ module disturbance_utils
             !------------------------------------------------------------------------------!
 
 
-            !------------------------------------------------------------------------------!
-            !     Prepare the current site to receive the newly disturbed patches.  This   !
-            ! step is done differently depending on whether this is a big leaf or a SAS    !
-            ! simulation.                                                                  !
-            !------------------------------------------------------------------------------!
-               !---------------------------------------------------------------------------!
-               !     Size-and-age structure.                                               !
-               !---------------------------------------------------------------------------!
+            !---------------------------------------------------------------------------!
+            !     Prepare the current site to receive the newly disturbed patches.      !
+            !---------------------------------------------------------------------------!
 
-               !---------------------------------------------------------------------------!
-               !     Transfer the original patch values to a temporary patch.  Then re-    !
-               ! -allocate csite with room for new patches, and transfer the original      !
-               ! patches back.                                                             !
-               !---------------------------------------------------------------------------!
-               call allocate_sitetype  (tsite,onsp)
-               call copy_sitetype      (csite,tsite,1,onsp,1,onsp)
-               call deallocate_sitetype(csite)
-               call allocate_sitetype  (csite,onsp + n_dist_types)
-               call copy_sitetype      (tsite,csite,1,onsp,1,onsp)
-               call deallocate_sitetype(tsite)
-               !---------------------------------------------------------------------------!
+            !---------------------------------------------------------------------------!
+            !     Transfer the original patch values to a temporary patch.  Then re-    !
+            ! -allocate csite with room for new patches, and transfer the original      !
+            ! patches back.                                                             !
+            !---------------------------------------------------------------------------!
+            call allocate_sitetype  (tsite,onsp)
+            call copy_sitetype      (csite,tsite,1,onsp,1,onsp)
+            call deallocate_sitetype(csite)
+            call allocate_sitetype  (csite,onsp + n_dist_types)
+            call copy_sitetype      (tsite,csite,1,onsp,1,onsp)
+            call deallocate_sitetype(tsite)
+            !---------------------------------------------------------------------------!
 
 
-               !----- Allocate and initialise a disturbance mask vector. ------------------!
-               allocate(disturb_mask(onsp + n_dist_types))
-               disturb_mask(:)      = .false.
-               disturb_mask(1:onsp) = .true.
-               !---------------------------------------------------------------------------!
+            !----- Allocate and initialise a disturbance mask vector. ------------------!
+            allocate(disturb_mask(onsp + n_dist_types))
+            disturb_mask(:)      = .false.
+            disturb_mask(1:onsp) = .true.
+            !---------------------------------------------------------------------------!
 
 
-               !---------------------------------------------------------------------------!
-               !      Initialize all the potential as well as implemented disturbance      !
-               ! patches.  n_dist_types new patches will be created, each one containing a !
-               ! different patch type.  In case no conversion to that kind of patch has    !
-               ! happened, or if the newly created patch is tiny, it will be removed soon. !
-               !---------------------------------------------------------------------------!
-               init_dist_sas: do new_lu = onsp+1, onsp+n_dist_types
-                  call initialize_disturbed_patch(csite,cpoly%met(isi)%atm_tmp,new_lu      &
-                                                 ,cpoly%lsl(isi))
-               end do init_dist_sas
+            !---------------------------------------------------------------------------!
+            !      Initialize all the potential as well as implemented disturbance      !
+            ! patches.  n_dist_types new patches will be created, each one containing a !
+            ! different patch type.  In case no conversion to that kind of patch has    !
+            ! happened, or if the newly created patch is tiny, it will be removed soon. !
+            !---------------------------------------------------------------------------!
+            init_dist_sas: do new_lu = onsp+1, onsp+n_dist_types
+               call initialize_disturbed_patch(csite,cpoly%met(isi)%atm_tmp,new_lu      &
+                  ,cpoly%lsl(isi))
+            end do init_dist_sas
                !---------------------------------------------------------------------------!
 
 
@@ -474,13 +469,8 @@ module disturbance_utils
                                              ,' for dist_type=',new_lu
 
                   !------------------------------------------------------------------------!
-                  !    Fix flags for new patches.  Here it matters whether this simulation !
-                  ! is big-leaf or SAS.                                                    !
+                  !    Fix flags for new patches.                                          !
                   !------------------------------------------------------------------------!
-                     !---------------------------------------------------------------------!
-                     !     Size-and-age structure.                                         !
-                     !---------------------------------------------------------------------!
-
 
                      !---------------------------------------------------------------------!
                      !     Set the flag that this patch should be kept as a newly created  !
@@ -2849,7 +2839,7 @@ module disturbance_utils
 
       end do cohortloop
 
-!      maxh = maxval (cpatch%hite, .not. is_liana(cpatch%pft))
+      !maxh = maxval (cpatch%hite, .not. is_liana(cpatch%pft))
 
       !------------- pruning_factor, how much should I reduce the height ------------------!
       h_pruning_factor    = maxh / hgt_max(17)

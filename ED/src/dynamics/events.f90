@@ -210,23 +210,30 @@ subroutine prescribed_event(year,doy)
               !fol_frac
               !agb_frac
 
-              call libxml2f90__ll_exist('DOWN','fire',nrep)
-              if(nrep .gt. 0) then
-                 print*,"FIRE, FIRE, FIRE"
-                 do j = 1,nrep
-                    call libxml2f90__ll_selecttag('DOWN','fire',j)
-
-                    call event_fire()
-
-                    call libxml2f90__ll_selecttag('UP','event',i)
-                 end do
-              end if
-
               call libxml2f90__ll_exist('DOWN','pathogen',nrep)
               if(nrep .gt. 0) print*,"How can you not love the Beatles"
 
               call libxml2f90__ll_exist('DOWN','invasive',nrep)
               if(nrep .gt. 0) print*,"introduced species"
+
+
+              call libxml2f90__ll_exist('DOWN','cutting',nrep)
+              if(nrep .gt. 0) then
+                 do j = 1,nrep
+                    call libxml2f90__ll_selecttag('DOWN','cutting',j)
+
+                    call getConfigINT   ('pft','cutting',j,pft(1),texist)
+                    if(.not.texist) then
+                       PRINT*,"Cutting prescribed but PFT not specified"
+                       stop
+                    endif
+                    call event_cutting(pft(1))
+
+                    call libxml2f90__ll_selecttag('UP','event',i)
+                 end do
+              end if
+
+
 
               !! PLANTING (assumed to occur AFTER the other events)
               call libxml2f90__ll_exist('DOWN','plant',nrep)
@@ -444,6 +451,153 @@ subroutine event_harvest(agb_frac8,bgb_frac8,fol_frac8,stor_frac8)
   print*,"done HARVEST"
 
 end subroutine event_harvest
+
+
+
+subroutine event_cutting(pft2cut)
+   use stable_cohorts
+   use update_derived_props_module
+   use grid_coms, only : ngrids
+   use ed_state_vars,only: edgrid_g,edtype,polygontype,sitetype,patchtype
+   use ed_therm_lib, only: calc_veg_hcap,update_veg_energy_cweh
+   use fuse_fiss_utils, only: terminate_cohorts
+   use allometry, only : area_indices, ed_biomass
+   use budget_utils     , only : update_budget
+   use pft_coms,        only : l2n_stem                 & ! intent(in)
+                             , c2n_stem                 & ! intent(in)
+                             , c2n_leaf                 ! ! intent(in)
+   use decomp_coms, only : f_labile                 ! ! intent(in)
+
+   implicit none
+   integer(kind=4),intent(in) :: pft2cut
+   real :: old_leaf_hcap
+   real :: old_wood_hcap
+   real :: delta_alive
+   real :: delta_dead
+   real :: struct_cohort
+   real :: fast_litter
+   real :: struct_litter
+   real :: struct_lignin
+   real :: fast_litter_n
+   real :: elim_nplant
+   real :: elim_lai
+   integer :: ifm,ipy,isi,ipa,ico,ipft
+   type(edtype), pointer :: cgrid
+   type(polygontype), pointer :: cpoly
+   type(sitetype),pointer :: csite
+   type(patchtype),pointer :: cpatch
+
+   print*,"----------------------------"
+   print*,"----------------------------"
+   print*,"----------------------------"
+   print*,"----------------------------"
+   print*,"         CUTTING            "
+   print*,"----------------------------"
+   print*,"----------------------------"
+   print*,"----------------------------"
+   print*,"----------------------------"
+   print*,""
+
+   do ifm = 1,ngrids
+      cgrid => edgrid_g(ifm)
+      do ipy = 1,cgrid%npolygons
+
+         cpoly => cgrid%polygon(ipy)
+
+         do isi = 1,cpoly%nsites
+
+            csite => cpoly%site(isi)
+
+            do ipa=1,csite%npatches
+
+               cpatch => csite%patch(ipa)
+
+               if(cpatch%ncohorts > 0) then
+
+                  do ico=1,cpatch%ncohorts
+
+                     ipft = cpatch%pft(ico)
+
+                     if (ipft == pft2cut) then
+
+
+                        !-- Compute the amount of carbon lost due to pruning and send to litter --!
+                        delta_alive = cpatch%bsapwoodb(ico) + cpatch%bsapwooda(ico) + &
+                           cpatch%bleaf(ico) + cpatch%broot(ico) + cpatch%bstorage(ico)
+                        delta_dead  = cpatch%bdead(ico)
+
+                        fast_litter   = fast_litter + (f_labile(ipft) * delta_alive) * cpatch%nplant(ico)
+                        fast_litter_n = fast_litter_n + (f_labile(ipft) * delta_alive / c2n_leaf(ipft))   &
+                           * cpatch%nplant(ico)
+
+                        struct_cohort = (delta_dead + (1. - f_labile(ipft)) * delta_alive )     &
+                           * cpatch%nplant(ico)
+
+                        struct_litter = struct_litter + struct_cohort
+                        struct_lignin = struct_lignin + struct_cohort * l2n_stem / c2n_stem(ipft)
+                        !-----------------------------------------------------------------------!
+
+                        cpatch%balive(ico)           = 0.0
+                        cpatch%broot(ico)            = 0.0
+                        cpatch%bsapwooda(ico)        = 0.0
+                        cpatch%bsapwoodb(ico)        = 0.0
+                        cpatch%bdead(ico)            = 0.0
+                        cpatch%bstorage(ico)         = 0.0
+                        cpatch%elongf(ico)           = 0.0
+                        cpatch%bleaf(ico)            = 0.0
+                        cpatch%dbh(ico)              = 0.0
+                        cpatch%hite(ico)             = 0.0
+                        cpatch%basarea(ico)          = 0.0
+                        cpatch%agb(ico)              = 0.0
+                        cpatch%phenology_status(ico) = -2
+
+                        !----- Update LAI, WAI, and CAI ------------------------------------------!
+                        call area_indices(cpatch, ico)
+
+                        !-------------------------------------------------------------------------!
+                        !    Here we are leaving all water in the branches and twigs... Do not    !
+                        ! worry, if there is any, it will go down through shedding the next       !
+                        ! step.                                                                   !
+                        !-------------------------------------------------------------------------!
+                        old_leaf_hcap = cpatch%leaf_hcap(ico)
+                        old_wood_hcap = cpatch%wood_hcap(ico)
+                        call calc_veg_hcap(cpatch%bleaf(ico),cpatch%bdead(ico)                    &
+                           ,cpatch%bsapwooda(ico),cpatch%nplant(ico)               &
+                           ,cpatch%pft(ico)                                        &
+                           ,cpatch%leaf_hcap(ico),cpatch%wood_hcap(ico))
+                        call update_veg_energy_cweh(csite,ipa,ico,old_leaf_hcap,old_wood_hcap)
+
+                        !----- Update flags telling whether leaves and branches can be solved. ---!
+                        call is_resolvable(csite,ipa,ico)
+
+                     end if
+
+                  enddo
+
+                  !----- Load disturbance litter directly into carbon and N pools. -------------!
+                  csite%fast_soil_C(ipa)       = csite%fast_soil_C(ipa)       + fast_litter
+                  csite%structural_soil_C(ipa) = csite%structural_soil_C(ipa) + struct_litter
+                  csite%structural_soil_L(ipa) = csite%structural_soil_L(ipa) + struct_lignin
+                  csite%fast_soil_N(ipa)       = csite%fast_soil_N(ipa)       + fast_litter_n
+                  !-----------------------------------------------------------------------------!
+
+                  !! remove small cohorts
+                  call terminate_cohorts(csite,ipa,elim_nplant,elim_lai)
+                  call update_patch_derived_props(csite,ipa)
+                  call update_budget(csite, cpoly%lsl(isi),ipa)
+               end if  !! check to make sure there ARE cohorts
+
+            enddo
+            ! Update site properties. ## THINK ABOUT WHAT TO SET FLAG##########
+            call update_site_derived_props(cpoly,0,isi)
+         end do
+      end do
+
+   end do
+
+   print*,"done CUTTING"
+
+end subroutine event_cutting
 
 
 subroutine event_planting(pft,density8)
@@ -669,22 +823,6 @@ subroutine event_irrigate(rval8)
 
 end subroutine
 
-subroutine event_fire()
-  implicit none
-  print*,"----------------------------"
-  print*,"----------------------------"
-  print*,"----------------------------"
-  print*,"----------------------------"
-  print*,"         FIRE           "
-  print*,"----------------------------"
-  print*,"----------------------------"
-  print*,"----------------------------"
-  print*,"----------------------------"
-  print*,""
-  print*,"<<---- CURRENTLY UNIMPLEMENTED ---->>"
-
-
-end subroutine event_fire
 
 subroutine event_till(rval8)
   use update_derived_props_module

@@ -967,8 +967,8 @@ contains
          if (printout) then
             open (unit=66,file=fracfile,status='replace',action='write')
             write (unit=66,fmt='(15(a,1x))')                                                  &
-               ,'        YEAR','       MONTH','         DAY','         PFT','   PHENOLOGY'     &
-               ,' PHEN_STATUS',' LATE_SPRING','       GRASS','      HEIGHT','   REPRO_HGT'     &
+               ,'        YEAR','       MONTH','         DAY','         PFT','   PHENOLOGY'    &
+               ,' PHEN_STATUS',' LATE_SPRING','       GRASS','      HEIGHT','   REPRO_HGT'    &
                ,'         DBH','    DBH_CRIT','   F_STORAGE','     F_SEEDS','     F_BDEAD'
             close (unit=66,status='keep')
          end if
@@ -1095,8 +1095,8 @@ contains
       !---------------------------------------------------------------------------------------!
       if (printout) then
          open (unit=66,file=fracfile,status='old',position='append',action='write')
-         write (unit=66,fmt='(6(i12,1x),2(11x,l1,1x),7(f12.4,1x))')                           &
-            current_time%year,current_time%month,current_time%date,ipft,phenology(ipft)    &
+         write (unit=66,fmt='(6(i12,1x),2(11x,l1,1x),7(f12.4,1x))')                         &
+            current_time%year,current_time%month,current_time%date,ipft,phenology(ipft)     &
             ,phen_status,late_spring,is_grass(ipft),hite,repro_min_h(ipft),dbh              &
             ,dbh_crit(ipft),st_fract(ipft),f_bseeds,f_bdead
          close (unit=66,status='keep')

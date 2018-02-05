@@ -104,7 +104,7 @@ subroutine vegetation_dynamics(new_month,new_year)
             !----- Update the disturbance rates. ------------------------------------------!
             call site_disturbance_rates(current_time%year, cgrid)
             call apply_disturbances(cgrid)
-            call liana_height_reshuffle(cgrid)
+            !call liana_height_reshuffle(cgrid)
             !------------------------------------------------------------------------------!
          end if
          !---------------------------------------------------------------------------------!
