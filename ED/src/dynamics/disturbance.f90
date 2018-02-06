@@ -776,12 +776,17 @@ module disturbance_utils
             end do old_lu_l4th
             !------------------------------------------------------------------------------!
 
-            if (include_pft(17)) then
-            prune_loop: do new_lu=1,n_dist_types
-            !----------------------- Prune the lianas -------------------------------------!
-               call prune_lianas(csite, onsp + new_lu, cpoly%lsl(isi))
             !------------------------------------------------------------------------------!
-            end do prune_loop
+            !    We have to rescale the height of the lianas that survived the treefall    !
+            !------------------------------------------------------------------------------!
+            if (include_pft(17)) then
+               prune_loop: do new_lu=1,n_dist_types
+                  !-------- Prune lianas only if this is a Treefall disturbance -----------!
+                  select case (new_lu)
+                     case (3)
+                        call prune_lianas(csite, onsp + new_lu, cpoly%lsl(isi))
+                  end select
+               end do prune_loop
             end if
 
             !------------------------------------------------------------------------------!
@@ -2821,25 +2826,9 @@ module disturbance_utils
       real                                         :: delta_dead
       !------------------------------------------------------------------------------------!
 
-
-      maxh = 0.0
-
       cpatch => csite%patch(np)
 
-      cohortloop: do ico=1,cpatch%ncohorts
-
-         !----- Alias for current PFT. ----------------------------------------------------!
-         ipft = cpatch%pft(ico)
-         !---------------------------------------------------------------------------------!
-
-         !---------- Loop over cohorts to find the maximum height for trees ---------------!
-         if (cpatch%hite(ico) > maxh .and. .not. is_liana(ipft)) then
-            maxh = cpatch%hite(ico)
-         end if
-
-      end do cohortloop
-
-      !maxh = maxval (cpatch%hite, .not. is_liana(cpatch%pft))
+      maxh = maxval (cpatch%hite, .not. is_liana(cpatch%pft))
 
       !------------- pruning_factor, how much should I reduce the height ------------------!
       h_pruning_factor    = maxh / hgt_max(17)
