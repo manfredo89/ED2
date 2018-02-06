@@ -784,6 +784,7 @@ module disturbance_utils
                   !-------- Prune lianas only if this is a Treefall disturbance -----------!
                   select case (new_lu)
                      case (3)
+                        if (csite%patch(onsp + new_lu)%ncohorts > 0) &
                         call prune_lianas(csite, onsp + new_lu, cpoly%lsl(isi))
                   end select
                end do prune_loop
