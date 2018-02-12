@@ -359,17 +359,17 @@ subroutine ed_model()
          !     Compute phenology, growth, mortality, recruitment, disturbance, and check   !
          ! whether we will apply them to the ecosystem or not.                             !
          !---------------------------------------------------------------------------------!
-         select case (ivegt_dynamics)
-         case (0)
+         !select case (ivegt_dynamics)
+         !case (0)
             !------------------------------------------------------------------------------!
             !     Dummy vegetation dynamics, we compute the tendencies but we don't really !
             ! apply to the vegetation, so they will remain constant throughout the entire  !
             ! simulation.                                                                  !
             !------------------------------------------------------------------------------!
-            call vegetation_dynamics_eq_0(new_month,new_year)
+            !call vegetation_dynamics_eq_0(new_month,new_year)
             !------------------------------------------------------------------------------!
 
-         case (1)
+         !case (1)
             !------------------------------------------------------------------------------!
             !     Actual vegetation dynamics, we compute the tendencies and apply to the   !
             ! vegetation.                                                                  !
@@ -377,7 +377,7 @@ subroutine ed_model()
             call vegetation_dynamics(new_month,new_year)
             !------------------------------------------------------------------------------!
 
-         end select
+         !end select
          !---------------------------------------------------------------------------------!
 
          !----- First day of a month. -----------------------------------------------------!

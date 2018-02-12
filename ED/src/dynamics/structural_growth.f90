@@ -135,6 +135,10 @@ contains
 
                n_lianas = count(is_liana(cpatch%pft))
 
+               !debugloop: do ico = 1,cpatch%ncohorts
+               !write(*,*) "cohort n",ico, "pft=", cpatch%pft(ico)
+               !end do debugloop
+
                cohortloop: do ico = 1,cpatch%ncohorts
 
 
@@ -989,8 +993,16 @@ contains
       ! WARNING: This assumes that the cohorts are liana sorted
       ! The tallest liana cohorts tracks the tallest tree cohort, the second tallest ecc.
       ! until we reach the shortest tree cohort to which all liana cohorts left are attached
+
+
       if (is_liana(ipft)) then
          potential_host = min(ico - cpatch%ncohorts + n_lianas, cpatch%ncohorts - n_lianas)
+         if(potential_host <=0) then
+         write(*,*) "!!!!!!!!!!!!!! ABORTING !!!!!!!!!!!!"
+         write(*,*) "Potential host is negative=", potential_host
+         write(*,*) ico, cpatch%ncohorts, n_lianas
+         call exit(1)
+         end if
       end if
 
       !------------------------------------------------------------------------------------!
@@ -1055,13 +1067,14 @@ contains
             !   use half the storage for reproduction and leave the half left in the       !
             !   storage. Basically don't grow bdead -> DBH -> Height                       !
             !------------------------------------------------------------------------------!
-            if (is_liana(ipft) .and. cpatch%tracking_co(ico) < 0) then
-               if(hite > cpatch%hite(potential_host)) then
+            if (is_liana(ipft) .and. cpatch%tracking_co(ico) == 0) then
+               if(hite >= cpatch%hite(potential_host)) then
                   f_bseeds = merge(0.0, r_fract(ipft), hite <= repro_min_h(ipft))
                   f_bdead  = 0.0
                   ! Now tracking_co will just be the number of the tree. Later on I can really
                   ! adapt this variable so as to track a specific tree cohort.
                   cpatch%tracking_co(ico) = potential_host
+                  cpatch%tracking_co(potential_host) = ico
                else
                   bd_target = dbh2bd(h2dbh(cpatch%hite(potential_host),ipft),ipft)
                   delta_bd = bd_target - bdead
@@ -1175,6 +1188,9 @@ contains
          !------------------------------- Lianas ---------------------------------------------!
          cpatch%dbh(ico)  = bd2dbh(ipft, cpatch%bdead(ico))
          cpatch%hite(ico) = cpatch%hite(cpatch%tracking_co(ico))
+         if (cpatch%pft(cpatch%tracking_co(ico)) == 17) then
+         write(*,*) "DANGER: !! liana co n", ico, "is tracking liana co n", cpatch%tracking_co(ico)
+         end if
       else
          !---- Trees, old grasses and free standing lianas get dbh from bdead. ---------------!
          cpatch%dbh(ico)  = bd2dbh(ipft, cpatch%bdead(ico))

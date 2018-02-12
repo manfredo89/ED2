@@ -65,12 +65,20 @@ module fuse_fiss_utils
 
       sorted = h_sorted
 
+      !--------------------------------------------------------------------------------------!
+      ! This is the liana sort. For my structural growth I want to first update the lianas   !
+      ! so here I am rearranging all the liana cohorts at the end of the patch.              !
+      !--------------------------------------------------------------------------------------!
+
       if (present(lianasort)) then
          if(lianasort) then
 
             n_lianas = count(is_liana(cpatch%pft))
 
             l_sorted = .true.
+
+            ! I want to check how many L/T pft there are in the PFT sequence. If there is more
+            ! than one inversion it means that the lianas are not all at the end
             pftdiffs = 0
             l_sortcheck: do ico=1,cpatch%ncohorts-1
                ipft  = cpatch%pft(ico    )
@@ -78,7 +86,9 @@ module fuse_fiss_utils
                pftdiffs = merge(pftdiffs + 1, pftdiffs, is_liana(ipft) .neqv. is_liana(ipft2))
             end do l_sortcheck
 
-            if (pftdiffs > 1) l_sorted = .false.
+            ! I have to include the case L L L T T so I am adding a false for when the first
+            ! cohort is a liana
+            if (pftdiffs > 1 .or. is_liana(cpatch%pft(1))) l_sorted = .false.
          sorted = h_sorted .and. l_sorted
          end if
       end if
@@ -121,6 +131,10 @@ module fuse_fiss_utils
                end if
             end if
          end if
+
+         !----- We must now reorder the cohort tracking indices ---------------------------!
+         cpatch%tracking_co(tallco) = cpatch%tracking_co(ipos)
+
          !----- Copy to the scratch structure. --------------------------------------------!
          call copy_patchtype(cpatch,temppatch,tallco,tallco,ipos,ipos)
 
