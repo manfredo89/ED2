@@ -17,7 +17,8 @@ module mortality
                                , mort2                      & ! intent(in)
                                , mort3                      & ! intent(in)
                                , plant_min_temp             & ! intent(in)
-                               , frost_mort                 ! ! intent(in)
+                               , frost_mort                 & ! intent(in)
+                               , is_liana                   ! ! intent(in)
       use disturb_coms  , only : treefall_disturbance_rate  & ! intent(in)
                                , treefall_hite_threshold    & ! intent(in)
                                , time2canopy                ! ! intent(in)
@@ -31,8 +32,11 @@ module mortality
       real           , intent(in) :: avg_daily_temp  ! Mean temperature yesterday
       real           , intent(in) :: patch_age       ! Patch age
       !----- Local variables --------------------------------------------------------------!
-      integer                     :: ipft            ! PFT 
+      integer                     :: ipft            ! PFT
       real                        :: temp_dep        ! Temp. function  (frost mortality)
+      real                        :: tot_ll_area     !> Liana coverage for tree cohort
+      real                        :: COI             !> Equivalent of Crown Occupancy Index
+      real                        :: factor          !> Added mortality due to liana load
       real                        :: expmort         ! Carbon-balance term
       !------------------------------------------------------------------------------------!
 
@@ -68,7 +72,6 @@ module mortality
       !------------------------------------------------------------------------------------!
 
 
-
       !------------------------------------------------------------------------------------!
       ! 4.   Mortality due to cold, after:                                                 !
       !      Albani, M.; D. Medvigy; G. C. Hurtt; P. R. Moorcroft, 2006: The contributions !
@@ -81,13 +84,29 @@ module mortality
       !------------------------------------------------------------------------------------!
 
 
+      !------------------------------------------------------------------------------------!
+      ! 5.  Mortality due to liana load.                                                   !
+      !------------------------------------------------------------------------------------!
+      !if (.not. is_liana(ipft) .and. cpatch%tracking_co(ico) > 0) then
+      !    tot_ll_area = sum(cpatch%sla * cpatch%bleaf,                                     &
+      !    cpatch%tracking_co == ico .and. is_liana(cpatch%pft))
+      !    COI = tot_ll_area / (tot_ll_area + cpatch%bleaf(ico) * cpatch%sla(ico))
+      !    ! This is the rescaling factor so that for a COI of 87.5% the mortality is
+      !    ! doubled 100% more mortality (see Ingwell 2011)
+      !    factor = log(0.875 / COI)
+      !    cpatch%mort_rate(5,ico) = sum(cpatch%mort_rate(1:3,ico)) * factor
+      !else
+          cpatch%mort_rate(5,ico) = 0.0
+      !end if
+       !------------------------------------------------------------------------------------!
+
 
       !------------------------------------------------------------------------------------!
-      ! 5. Disturbance rate mortality.  This is not used by the cohort dynamics, instead   !
+      ! 6. Disturbance rate mortality.  This is not used by the cohort dynamics, instead   !
       !    this is just to account for the lost density due to the patch creation.  This   !
       !    mortality will be determined by the disturbance_mortality subroutine, not here. !
       !------------------------------------------------------------------------------------!
-      !cpatch%mort_rate(5,ico) = TBD
+      !cpatch%mort_rate(6,ico) = TBD
       !------------------------------------------------------------------------------------!
 
       return
@@ -127,7 +146,7 @@ module mortality
       cpatch => csite%patch(ipa)
       do ico=1,cpatch%ncohorts
          f_survival = survivorship(new_lu,dist_path,mindbh_harvest,cpatch,ico)
-         cpatch%mort_rate(5,ico) = cpatch%mort_rate(5,ico)                                 &
+         cpatch%mort_rate(6,ico) = cpatch%mort_rate(6,ico)                                 &
                                  - log( f_survival                                         &
                                       + (1.0 - f_survival) * exp(- disturbance_rate) )
       end do
@@ -163,12 +182,13 @@ module mortality
       use ed_state_vars, only : patchtype                ! ! structure
       use disturb_coms , only : treefall_hite_threshold  & ! intent(in)
                               , fire_hite_threshold      ! ! intent(in)
-      use pft_coms     , only : treefall_s_ltht          & ! intent(in)
+      use pft_coms     , only : is_liana                 & ! intent(in)
+                              , treefall_s_ltht          & ! intent(in)
                               , treefall_s_gtht          & ! intent(in)
                               , fire_s_ltht              & ! intent(in)
                               , fire_s_gtht              ! ! intent(in)
       use ed_max_dims  , only : n_pft                    ! ! intent(in)
-      
+
       implicit none
       !----- Arguments. -------------------------------------------------------------------!
       type(patchtype)                 , target     :: cpatch
@@ -222,14 +242,22 @@ module mortality
          !---------------------------------------------------------------------------------!
 
       case (3)
-         !---------------------------------------------------------------------------------!
-         !     Tree fall.  Mortality depends on the cohort height and PFT.                 !
-         !---------------------------------------------------------------------------------!
-         if (cpatch%hite(ico) < treefall_hite_threshold) then
-            survivorship = treefall_s_ltht(ipft)
-         else
-            survivorship = treefall_s_gtht(ipft)
-         end if
+          !---------------------------------------------------------------------------------!
+          !     Tree fall.  Mortality depends on the cohort height and PFT.                 !
+          !---------------------------------------------------------------------------------!
+          if(is_liana(ipft)) then
+              if(cpatch%tracking_co(ico) > 0) then
+                  survivorship = treefall_s_gtht(ipft)
+              else
+                  survivorship = treefall_s_ltht(ipft)
+              end if
+          else
+              if (cpatch%hite(ico) < treefall_hite_threshold) then
+                  survivorship = treefall_s_ltht(ipft)
+              else
+                  survivorship = treefall_s_gtht(ipft)
+              end if
+          end if
          !---------------------------------------------------------------------------------!
 
       case (4)

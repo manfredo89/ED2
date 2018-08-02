@@ -1988,9 +1988,7 @@ subroutine init_pft_resp_params()
 
    f_labile(1:5)                  = 1.0
    f_labile(6:11)                 = 0.79
-   f_labile(12:15)                = 1.0
-   f_labile(16)                   = 1.0
-   f_labile(17)                   = 1.0
+   f_labile(12:17)                = 1.0
 
    !---------------------------------------------------------------------------------------!
    !    This variable sets the contribution of roots to respiration at the reference       !
@@ -2270,7 +2268,9 @@ subroutine init_pft_mort_params()
    treefall_s_ltht(6:11)    = 0.10
    treefall_s_ltht(12:15)   = 0.25
    treefall_s_ltht(16)      = 0.25
-   treefall_s_ltht(17)      = 0.10
+   treefall_s_ltht(17)      = 0.10 ! This should also have higher rates of survivorship but
+   ! in fact that should depend more on tracking_co rather than on height. For now I assume
+   ! that these "short" lianas are freestanding, probably that's not very accurate.
    !---------------------------------------------------------------------------------------!
 
 
@@ -2527,7 +2527,7 @@ subroutine init_pft_alloc_params()
    init_density(12:13) = 0.1
    init_density(14:15) = 0.1
    init_density(16)    = init_density_grass
-   init_density(17)    = 0.1
+   init_density(17)    = 0.01
    !---------------------------------------------------------------------------------------!
 
 
@@ -2673,10 +2673,10 @@ subroutine init_pft_alloc_params()
    end do
    !---------------------------------------------------------------------------------------!
    ! For lianas dbh_adult is chosen so as to be the intersection between the Putz          !
-   ! allometry without intercept and the early successional Bleaf equation for IALLOM = 2  !
-   ! That is:         0.0856*(x)^2 = 0.1575*(x)^0.975   ---> x=1.81279                     !
+   ! allometry without intercept and the early successional Bleaf equation for IALLOM = 3  !
+   ! That is:         0.0856*(x)^2 = ...   ---> x=2.9                                      !
    !---------------------------------------------------------------------------------------!
-   dbh_adult(17) = 1.81
+   dbh_adult(17) = 2.9
 
    !---------------------------------------------------------------------------------------!
    !    This is the typical DBH that all big leaf plants will have.  Because the big-leaf  !
@@ -2898,6 +2898,10 @@ subroutine init_pft_alloc_params()
    b1Bs_large(17) = b1Bs_small(17)
    b2Bs_small(17) = 2.69373
    b2Bs_large(17) = b2Bs_small(17)
+!   b1Bs_small(17) = 0.898
+!  b1Bs_large(17) = b1Bs_small(17)
+!   b2Bs_small(17) = 2.102
+!   b2Bs_large(17) = b2Bs_small(17)
    !-------------------------------------------------------------------------------------!
 
 
@@ -3359,47 +3363,27 @@ subroutine init_pft_repro_params()
       , repro_min_h        ! ! intent(out)
    implicit none
 
-   r_fract(1)              = 0.3
-   r_fract(2:4)            = 0.3
-   r_fract(5)              = 0.3
-   r_fract(6:11)           = 0.3
-   r_fract(12:15)          = 0.3
-   r_fract(16)             = 0.3
-   r_fract(17)             = 0.3
+   r_fract(1:16)           = 0.3
+   r_fract(17)             = 0.85
 
-   st_fract(1)             = 0.0
-   st_fract(2:4)           = 0.0
-   st_fract(5)             = 0.0
-   st_fract(6:11)          = 0.0
-   st_fract(12:15)         = 0.0
-   st_fract(16)            = 0.0
-   st_fract(17)            = 0.0
+   st_fract(1:16)          = 0.0
+   st_fract(17)            = 0.1
 
-   nonlocal_dispersal(1)   =  1.000 ! 1.000
-   nonlocal_dispersal(2)   =  1.000 ! 0.900
-   nonlocal_dispersal(3)   =  1.000 ! 0.550
-   nonlocal_dispersal(4)   =  1.000 ! 0.200
-   nonlocal_dispersal(5)   =  1.000 ! 1.000
-   nonlocal_dispersal(6)   =  0.766 ! 0.766
-   nonlocal_dispersal(7)   =  0.766 ! 0.766
-   nonlocal_dispersal(8)   =  0.001 ! 0.001
-   nonlocal_dispersal(9)   =  1.000 ! 1.000
-   nonlocal_dispersal(10)  =  0.325 ! 0.325
-   nonlocal_dispersal(11)  =  0.074 ! 0.074
-   nonlocal_dispersal(12)  =  1.000 ! 1.000
-   nonlocal_dispersal(13)  =  1.000 ! 1.000
-   nonlocal_dispersal(14)  =  1.000 ! 1.000
-   nonlocal_dispersal(15)  =  1.000 ! 1.000
-   nonlocal_dispersal(16)  =  1.000 ! 1.000
-   nonlocal_dispersal(17)  =  1.000 ! 0.600
+   nonlocal_dispersal(1:5)   =  1.000 ! 1.000
+   nonlocal_dispersal(6:7)   =  0.766 ! 0.766
+   nonlocal_dispersal(8)     =  0.001 ! 0.001
+   nonlocal_dispersal(9)     =  1.000 ! 1.000
+   nonlocal_dispersal(10)    =  0.325 ! 0.325
+   nonlocal_dispersal(11)    =  0.074 ! 0.074
+   nonlocal_dispersal(12:16) =  1.000 ! 1.000
+   nonlocal_dispersal(17)    =  0.5
 
    repro_min_h(1)          =  0.0
    repro_min_h(2:4)        = 18.0
    repro_min_h(5)          =  0.0
    repro_min_h(6:11)       = 18.0
-   repro_min_h(12:15)      =  0.0
-   repro_min_h(16)         =  0.0
-   repro_min_h(17)         = 18.0
+   repro_min_h(12:16)      =  0.0
+   repro_min_h(17)         =  9.0
 
    return
 end subroutine init_pft_repro_params

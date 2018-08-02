@@ -295,7 +295,7 @@ subroutine event_harvest(agb_frac8,bgb_frac8,fol_frac8,stor_frac8)
   use grid_coms, only : ngrids
   use ed_state_vars,only: edgrid_g, &
        edtype,polygontype,sitetype, &
-       patchtype,allocate_patchtype,copy_patchtype,deallocate_patchtype
+       patchtype
   use pft_coms, only: qsw,q,hgt_min, agf_bs, is_grass
   use ed_therm_lib, only: calc_veg_hcap,update_veg_energy_cweh
   use fuse_fiss_utils, only: terminate_cohorts
@@ -606,8 +606,7 @@ subroutine event_planting(pft,density8)
   use grid_coms, only : ngrids,nzg,nzs
   use ed_state_vars,only: edgrid_g, &
        edtype,polygontype,sitetype, &
-       patchtype,allocate_patchtype,copy_patchtype,deallocate_patchtype, &
-       filltab_alltypes
+       patchtype, filltab_alltypes
   use disturbance_utils,only: plant_patch
   use budget_utils     , only : update_budget
   use ed_type_init
@@ -678,7 +677,7 @@ subroutine event_fertilize(rval8)
   use grid_coms, only : ngrids
   use ed_state_vars,only: edgrid_g, &
        edtype,polygontype,sitetype, &
-       patchtype,allocate_patchtype,copy_patchtype,deallocate_patchtype
+       patchtype
   use budget_utils     , only : update_budget
   real(kind=8),intent(in),dimension(5) :: rval8
 
@@ -829,7 +828,7 @@ subroutine event_till(rval8)
   use grid_coms, only : ngrids
   use ed_state_vars,only: edgrid_g, &
        edtype,polygontype,sitetype, &
-       patchtype,allocate_patchtype,copy_patchtype,deallocate_patchtype
+       patchtype
   use pft_coms, only: c2n_storage,c2n_leaf,c2n_stem,l2n_stem
   use decomp_coms, only: f_labile
   use fuse_fiss_utils, only: terminate_cohorts

@@ -322,6 +322,7 @@ subroutine sfcrad_ed(cosaoi,csite,mzg,mzs,ntext_soil,ncol_soil,tuco,rlong,twilig
    !$OMP downward_rshort_below_diffuse,               &
    !$OMP il,nir_v_beam,nir_v_diffuse,                 &
    !$OMP abs_ground_par,abs_ground_nir )
+   ! could maybe use !$OMP PARALLEL DO DEFAULT(PRIVATE) SHARED(csite)
 
 
    !----- Loop over the patches -----------------------------------------------------------!

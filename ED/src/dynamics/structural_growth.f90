@@ -37,7 +37,8 @@ contains
       use physiology_coms, only : ddmort_const           & ! intent(in)
          , iddmort_scheme         & ! intent(in)
          , cbr_scheme             ! ! intent(in)
-      use fuse_fiss_utils, only : sort_cohorts           ! ! subroutine
+      use fuse_fiss_utils, only : sort_cohorts!       & ! intent(in)
+!         , tracking_sanity_check, grid_check    ! ! subroutine
       implicit none
       !----- Arguments -----------------------------------------------------------------------!
       type(edtype)     , target     :: cgrid
@@ -52,14 +53,11 @@ contains
       integer                       :: ico
       integer                       :: ipft
       integer                       :: prev_month
-      integer                       :: imonth
       integer                       :: n_lianas
+      integer                       :: imonth
       real                          :: salloc
       real                          :: salloci
-      real                          :: balive_in
       real                          :: bdead_in
-      real                          :: bleaf_in
-      real                          :: hite_in
       real                          :: dbh_in
       real                          :: nplant_in
       real                          :: bstorage_in
@@ -131,13 +129,11 @@ contains
                ! succession (only lianas inside the patch is a bit of a limit case: the max   !
                ! height will be set to (0.5 + 0.5)m. It might still be reasonable.            !
                !------------------------------------------------------------------------------!
+!               call tracking_sanity_check(cpatch,78)
                call sort_cohorts(cpatch, .true.)
-
                n_lianas = count(is_liana(cpatch%pft))
+ !              call tracking_sanity_check(cpatch,7)
 
-               !debugloop: do ico = 1,cpatch%ncohorts
-               !write(*,*) "cohort n",ico, "pft=", cpatch%pft(ico)
-               !end do debugloop
 
                cohortloop: do ico = 1,cpatch%ncohorts
 
@@ -150,10 +146,7 @@ contains
                   salloci = 1.0 / salloc
 
                   !----- Remember inputs in order to calculate increments later on. ----------!
-                  balive_in   = cpatch%balive  (ico)
                   bdead_in    = cpatch%bdead   (ico)
-                  bleaf_in    = cpatch%bleaf   (ico)
-                  hite_in     = cpatch%hite    (ico)
                   dbh_in      = cpatch%dbh     (ico)
                   nplant_in   = cpatch%nplant  (ico)
                   bstorage_in = cpatch%bstorage(ico)
@@ -475,6 +468,8 @@ contains
                end do cohortloop
                !------------------------------------------------------------------------------!
 
+               call sort_cohorts(cpatch)
+
                !----- Age the patch if this is not agriculture. ------------------------------!
                if (csite%dist_type(ipa) /= 1) csite%age(ipa) = csite%age(ipa) + 1.0/12.0
                !------------------------------------------------------------------------------!
@@ -492,426 +487,6 @@ contains
 
 
 
-
-
-
-   !==========================================================================================!
-   !==========================================================================================!
-   !     This subroutine will compute the seed allocation and carbon balance stuff, but it    !
-   ! won't apply to cohorts.                                                                  !
-   ! IMPORTANT: Do not change the order of operations below unless you know what you are      !
-   !            doing.  Changing the order can affect the C/N budgets.                        !
-   !------------------------------------------------------------------------------------------!
-   subroutine structural_growth_eq_0(cgrid, month)
-      use stable_cohorts
-      use ed_state_vars  , only : edtype                 & ! structure
-         , polygontype            & ! structure
-         , sitetype               & ! structure
-         , patchtype              ! ! structure
-      use pft_coms       , only : q                      & ! intent(in)
-         , qsw                    & ! intent(in)
-         , seedling_mortality     & ! intent(in)
-         , c2n_storage            & ! intent(in)
-         , c2n_recruit            & ! intent(in)
-         , c2n_stem               & ! intent(in)
-         , agf_bs                 & ! intent(in)
-         , cbr_severe_stress      & ! intent(in)
-         , is_liana               & ! intent(in)
-         , is_grass               ! ! intent(in)
-      use ed_max_dims    , only : n_pft                  & ! intent(in)
-         , n_dbh                  ! ! intent(in)
-      use ed_therm_lib   , only : calc_veg_hcap          & ! function
-         , update_veg_energy_cweh ! ! function
-      use ed_misc_coms   , only : igrass                 ! ! intent(in)
-      use physiology_coms, only : ddmort_const           & ! intent(in)
-         , iddmort_scheme         & ! intent(in)
-         , cbr_scheme             ! ! intent(in)
-      use fuse_fiss_utils, only : sort_cohorts           ! ! subroutine
-      implicit none
-      !----- Arguments -----------------------------------------------------------------------!
-      type(edtype)     , target     :: cgrid
-      integer          , intent(in) :: month
-      !----- Local variables -----------------------------------------------------------------!
-      type(polygontype), pointer    :: cpoly
-      type(sitetype)   , pointer    :: csite
-      type(patchtype)  , pointer    :: cpatch
-      integer                       :: ipy
-      integer                       :: isi
-      integer                       :: ipa
-      integer                       :: ico
-      integer                       :: ipft
-      integer                       :: prev_month
-      integer                       :: imonth
-      integer                       :: n_lianas
-      real                          :: salloc
-      real                          :: salloci
-      real                          :: cb_act
-      real                          :: cb_lightmax
-      real                          :: cb_moistmax
-      real                          :: cb_mlmax
-      real                          :: cbr_light
-      real                          :: cbr_moist
-      real                          :: cbr_ml
-      real                          :: balive_in
-      real                          :: bleaf_in
-      real                          :: broot_in
-      real                          :: bsapwooda_in
-      real                          :: bsapwoodb_in
-      real                          :: bdead_in
-      real                          :: hite_in
-      real                          :: dbh_in
-      real                          :: nplant_in
-      real                          :: bstorage_in
-      real                          :: agb_in
-      real                          :: ba_in
-      real                          :: phenstatus_in
-      real                          :: lai_in
-      real                          :: wai_in
-      real                          :: cai_in
-      integer                       :: krdepth_in
-      real                          :: f_bseeds
-      real                          :: f_bdead
-      real                          :: balive_mort_litter
-      real                          :: bstorage_mort_litter
-      real                          :: struct_litter
-      real                          :: mort_litter
-      real                          :: seed_litter
-      real                          :: net_seed_N_uptake
-      real                          :: net_stem_N_uptake
-      real                          :: old_leaf_hcap
-      real                          :: old_wood_hcap
-      !---------------------------------------------------------------------------------------!
-
-      polyloop: do ipy = 1,cgrid%npolygons
-         cpoly => cgrid%polygon(ipy)
-
-         !----- Initialization. --------------------------------------------------------------!
-         cpoly%basal_area(:,:,:) = 0.0
-         cpoly%agb(:,:,:)        = 0.0
-
-         siteloop: do isi = 1,cpoly%nsites
-            csite => cpoly%site(isi)
-
-            patchloop: do ipa=1,csite%npatches
-               cpatch => csite%patch(ipa)
-
-               call sort_cohorts(cpatch, .true.)
-
-               n_lianas = count(is_liana(cpatch%pft))
-
-               cohortloop: do ico = 1,cpatch%ncohorts
-                  !----- Assigning an alias for PFT type. ------------------------------------!
-                  ipft    = cpatch%pft(ico)
-
-                  salloc  = 1.0 + q(ipft) + qsw(ipft) * cpatch%hite(ico)
-                  salloci = 1.0 / salloc
-
-                  !---------------------------------------------------------------------------!
-                  !      Remember inputs in order to calculate increments and revert back to  !
-                  ! these values later on.                                                    !
-                  !---------------------------------------------------------------------------!
-                  balive_in     = cpatch%balive          (ico)
-                  bdead_in      = cpatch%bdead           (ico)
-                  bleaf_in      = cpatch%bleaf           (ico)
-                  broot_in      = cpatch%broot           (ico)
-                  bsapwooda_in  = cpatch%bsapwooda       (ico)
-                  bsapwoodb_in  = cpatch%bsapwoodb       (ico)
-                  hite_in       = cpatch%hite            (ico)
-                  dbh_in        = cpatch%dbh             (ico)
-                  nplant_in     = cpatch%nplant          (ico)
-                  bstorage_in   = cpatch%bstorage        (ico)
-                  agb_in        = cpatch%agb             (ico)
-                  ba_in         = cpatch%basarea         (ico)
-                  phenstatus_in = cpatch%phenology_status(ico)
-                  lai_in        = cpatch%lai             (ico)
-                  wai_in        = cpatch%wai             (ico)
-                  cai_in        = cpatch%crown_area      (ico)
-                  krdepth_in    = cpatch%krdepth         (ico)
-                  !---------------------------------------------------------------------------!
-                  !    Apply mortality, and do not allow nplant < negligible_nplant (such a   !
-                  ! sparse cohort is about to be terminated, anyway).                         !
-                  ! NB: monthly_dndt may be negative.                                         !
-                  !---------------------------------------------------------------------------!
-                  cpatch%monthly_dndt  (ico) = 0.0
-                  cpatch%monthly_dlnndt(ico) = 0.0
-                  !---------------------------------------------------------------------------!
-
-
-                  !----- Calculate litter owing to mortality. --------------------------------!
-                  balive_mort_litter   = - cpatch%balive(ico)   * cpatch%monthly_dndt(ico)
-                  bstorage_mort_litter = - cpatch%bstorage(ico) * cpatch%monthly_dndt(ico)
-                  struct_litter        = - cpatch%bdead(ico)    * cpatch%monthly_dndt(ico)
-                  mort_litter          = balive_mort_litter + bstorage_mort_litter            &
-                     + struct_litter
-
-                  !----- Determine how to distribute what is in bstorage. --------------------!
-                  call plant_structural_allocation(cpatch, ico, cgrid%lat(ipy), bdead_in,     &
-                                                   bstorage_in, f_bseeds,f_bdead, n_lianas)
-                  !---------------------------------------------------------------------------!
-
-
-
-                  !----- Grow plants; bdead gets fraction f_bdead of bstorage. ---------------!
-                  cpatch%bdead(ico) = cpatch%bdead(ico) + f_bdead * cpatch%bstorage(ico)
-
-
-                  !------ NPP allocation to wood and coarse roots in KgC /m2 -----------------!
-                  cpatch%today_NPPwood(ico) = agf_bs(ipft) * f_bdead * cpatch%bstorage(ico)   &
-                     * cpatch%nplant(ico)
-                  cpatch%today_NPPcroot(ico) = (1. - agf_bs(ipft)) * f_bdead                  &
-                     * cpatch%bstorage(ico) * cpatch%nplant(ico)
-
-                  !---------------------------------------------------------------------------!
-                  !      Rebalance the plant nitrogen uptake considering the actual alloc-    !
-                  ! ation to structural growth.  This is necessary because c2n_stem does not  !
-                  ! necessarily equal c2n_storage.                                            !
-                  !---------------------------------------------------------------------------!
-                  net_stem_N_uptake = (cpatch%bdead(ico) - bdead_in) * cpatch%nplant(ico)     &
-                     * ( 1.0 / c2n_stem(cpatch%pft(ico)) - 1.0 / c2n_storage)
-
-                  !---------------------------------------------------------------------------!
-                  !      Calculate total seed production and seed litter.  The seed pool gets !
-                  ! a fraction f_bseeds of bstorage.                                          !
-                  !---------------------------------------------------------------------------!
-                  cpatch%bseeds(ico) = f_bseeds * cpatch%bstorage(ico)
-
-                  cpatch%today_NPPseeds(ico) = f_bseeds * cpatch%bstorage(ico)                &
-                     * cpatch%nplant(ico)
-
-                  !---------------------------------------------------------------------------!
-                  ! ALS. If agriculture: set seedling_mortality very low or zero              !
-                  !      to keep all of the seeds for harvest later in the season             !
-                  !---------------------------------------------------------------------------!
-                  seed_litter        = cpatch%bseeds(ico) * cpatch%nplant(ico)                &
-                     * seedling_mortality(ipft)
-
-
-                  !---------------------------------------------------------------------------!
-                  !      Rebalance the plant nitrogen uptake considering the actual alloc-    !
-                  ! ation to seeds.  This is necessary because c2n_recruit does not have to   !
-                  ! be equal to c2n_storage.                                                  !
-                  !---------------------------------------------------------------------------!
-                  net_seed_N_uptake = cpatch%bseeds(ico) * cpatch%nplant(ico)                 &
-                     * (1.0 / c2n_recruit(ipft) - 1.0 / c2n_storage)
-                  !---------------------------------------------------------------------------!
-
-
-
-                  !----- Decrement the storage pool. -----------------------------------------!
-                  cpatch%bstorage(ico) = cpatch%bstorage(ico) * (1.0 - f_bdead - f_bseeds)
-                  !---------------------------------------------------------------------------!
-
-                  !---------------------------------------------------------------------------!
-                  !     Calculate some derived cohort properties:                             !
-                  ! - DBH                                                                     !
-                  ! - Height                                                                  !
-                  ! - Recruit and census status                                               !
-                  ! - Phenology status                                                        !
-                  ! - Area indices                                                            !
-                  ! - Basal area                                                              !
-                  ! - AGB                                                                     !
-                  ! - Rooting depth                                                           !
-                  !---------------------------------------------------------------------------!
-                  call update_derived_cohort_props(cpatch,ico,cpoly%lsl(isi))
-                  !---------------------------------------------------------------------------!
-
-
-
-                  !----- Update annual average carbon balances for mortality. ----------------!
-                  if (month == 1) then
-                     prev_month = 12
-                  else
-                     prev_month = month - 1
-                  end if
-                  cpatch%cb          (prev_month,ico) = cpatch%cb          (13,ico)
-                  cpatch%cb_lightmax (prev_month,ico) = cpatch%cb_lightmax (13,ico)
-                  cpatch%cb_moistmax (prev_month,ico) = cpatch%cb_moistmax (13,ico)
-                  cpatch%cb_mlmax    (prev_month,ico) = cpatch%cb_mlmax    (13,ico)
-                  !---------------------------------------------------------------------------!
-
-
-
-                  !----- If monthly files are written, save the current carbon balance. ------!
-                  if (associated(cpatch%mmean_cb)) then
-                     cpatch%mmean_cb(ico)         = cpatch%cb(13,ico)
-                  end if
-                  !---------------------------------------------------------------------------!
-
-
-
-                  !---------------------------------------------------------------------------!
-                  !      Reset the current month integrator.  The initial value may depend    !
-                  ! on the storage.  By including this term we make sure that plants won't    !
-                  ! start dying as soon as they shed their leaves, but only when they are in  !
-                  ! negative carbon balance and without storage.  This is done only when      !
-                  ! iddmort_scheme is set to 1, otherwise the initial value is 0.             !
-                  !---------------------------------------------------------------------------!
-                  select case (iddmort_scheme)
-                     case (0)
-                        !------ Storage is not accounted. ---------------------------------------!
-                        cpatch%cb          (13,ico) = 0.0
-                        cpatch%cb_lightmax (13,ico) = 0.0
-                        cpatch%cb_moistmax (13,ico) = 0.0
-                        cpatch%cb_mlmax    (13,ico) = 0.0
-                     case (1)
-                        !------ Storage is accounted. -------------------------------------------!
-                        cpatch%cb          (13,ico) = cpatch%bstorage(ico)
-                        cpatch%cb_lightmax (13,ico) = cpatch%bstorage(ico)
-                        cpatch%cb_moistmax (13,ico) = cpatch%bstorage(ico)
-                        cpatch%cb_mlmax    (13,ico) = cpatch%bstorage(ico)
-                  end select
-                  !---------------------------------------------------------------------------!
-
-                  !---------------------------------------------------------------------------!
-                  !  Set up CB/CBmax as running sums and use that in the calculate cbr        !
-                  !---------------------------------------------------------------------------!
-
-                  !----- Initialize with 0 ---------------------------------------------------!
-                  cb_act       = 0.0
-                  cb_lightmax  = 0.0
-                  cb_moistmax  = 0.0
-                  cb_mlmax     = 0.0
-
-                  !----- Compute the relative carbon balance. --------------------------------!
-                  if (is_grass(ipft).and. igrass==1) then  !!Grass loop, use past month's cb only
-                     cb_act      =  cpatch%cb          (prev_month,ico)
-                     cb_lightmax =  cpatch%cb_lightmax (prev_month,ico)
-                     cb_moistmax =  cpatch%cb_moistmax (prev_month,ico)
-                     cb_mlmax    =  cpatch%cb_mlmax    (prev_month,ico)
-                  else  !!Tree loop, use annual average carbon balance
-                     do imonth = 1,12
-                        cb_act      = cb_act      + cpatch%cb          (imonth,ico)
-                        cb_lightmax = cb_lightmax + cpatch%cb_lightmax (imonth,ico)
-                        cb_moistmax = cb_moistmax + cpatch%cb_moistmax (imonth,ico)
-                        cb_mlmax    = cb_mlmax    + cpatch%cb_mlmax    (imonth,ico)
-                     end do
-                  end if
-                  !---------------------------------------------------------------------------!
-
-                  !----- Light-related carbon balance. ---------------------------------------!
-                  if (cb_lightmax > 0.0) then
-                     cbr_light = min(1.0, cb_act / cb_lightmax)
-                  else
-                     cbr_light = cbr_severe_stress(ipft)
-                  end if
-
-                  !----- Soil moisture-related carbon balance. -------------------------------!
-                  if (cb_moistmax > 0.0) then
-                     cbr_moist = min(1.0, cb_act / cb_moistmax )
-                  else
-                     cbr_moist = cbr_severe_stress(ipft)
-                  end if
-
-                  !----- Soil moisture+light related carbon balance. -------------------------!
-                  if (cb_mlmax > 0.0) then
-                     cbr_ml    = min(1.0, cb_act / cb_mlmax )
-                  else
-                     cbr_ml    = cbr_severe_stress(ipft)
-                  end if
-
-                  !---------------------------------------------------------------------------!
-                  !  calculate CBR according to the specified CBR_SCHEME                      !
-                  !---------------------------------------------------------------------------!
-                  select case (cbr_scheme)
-                     case (0)
-                        !----- CBR from absolute max CB ------------------------------------------!
-                        cpatch%cbr_bar(ico) = max(cbr_ml, cbr_severe_stress(ipft))
-
-                     case (1)
-                        !----- CBR from combination of light & moist CBR -------------------------!
-                        !----- Relative carbon balance: a combination of the two factors. --------!
-                        if ( cbr_light <= cbr_severe_stress(ipft) .and.                           &
-                           cbr_moist <= cbr_severe_stress(ipft)       ) then
-                           cpatch%cbr_bar(ico) = cbr_severe_stress(ipft)
-                        else
-                           cpatch%cbr_bar(ico) = cbr_severe_stress(ipft)                           &
-                              + ( cbr_light - cbr_severe_stress(ipft) )                       &
-                              * ( cbr_moist - cbr_severe_stress(ipft) )                       &
-                              / (        ddmort_const  * cbr_moist                            &
-                              + (1.0 - ddmort_const) * cbr_light                            &
-                              - cbr_severe_stress(ipft) )
-                        end if
-
-                     case (2)
-                        !----- CBR from most limiting CBR ----------------------------------------!
-                        cpatch%cbr_bar(ico) = max(min(cbr_moist, cbr_light), cbr_severe_stress(ipft))
-
-                  end select
-                  !---------------------------------------------------------------------------!
-
-
-
-                  !----- Update interesting output quantities. -------------------------------!
-                  call update_vital_rates(cpatch,ico,dbh_in,nplant_in,agb_in,ba_in            &
-                     ,csite%area(ipa),cpoly%basal_area(:,:,isi)           &
-                     ,cpoly%agb(:,:,isi),cpoly%basal_area_growth(:,:,isi) &
-                     ,cpoly%agb_growth(:,:,isi)                           &
-                     ,cpoly%basal_area_mort(:,:,isi)                      &
-                     ,cpoly%agb_mort(:,:,isi))
-                  !---------------------------------------------------------------------------!
-
-
-
-
-                  !---------------------------------------------------------------------------!
-                  !     Revert back to previous values:                                       !
-                  !---------------------------------------------------------------------------!
-                  cpatch%balive          (ico) = balive_in
-                  cpatch%bdead           (ico) = bdead_in
-                  cpatch%bleaf           (ico) = bleaf_in
-                  cpatch%broot           (ico) = broot_in
-                  cpatch%bsapwooda       (ico) = bsapwooda_in
-                  cpatch%bsapwoodb       (ico) = bsapwoodb_in
-                  cpatch%hite            (ico) = hite_in
-                  cpatch%dbh             (ico) = dbh_in
-                  cpatch%nplant          (ico) = nplant_in
-                  cpatch%bstorage        (ico) = bstorage_in
-                  cpatch%agb             (ico) = agb_in
-                  cpatch%basarea         (ico) = ba_in
-                  cpatch%phenology_status(ico) = phenstatus_in
-                  cpatch%lai             (ico) = lai_in
-                  cpatch%wai             (ico) = wai_in
-                  cpatch%crown_area      (ico) = cai_in
-                  cpatch%krdepth         (ico) = krdepth_in
-                  !---------------------------------------------------------------------------!
-
-
-
-                  !---------------------------------------------------------------------------!
-                  ! MLO. We now update the heat capacity and the vegetation internal energy.  !
-                  !      Since no energy or water balance is done here, we simply update the  !
-                  !      energy in order to keep the same temperature and water as before.    !
-                  !      Internal energy is an extensive variable, we just account for the    !
-                  !      difference in the heat capacity to update it.                        !
-                  !---------------------------------------------------------------------------!
-                  old_leaf_hcap = cpatch%leaf_hcap(ico)
-                  old_wood_hcap = cpatch%wood_hcap(ico)
-                  call calc_veg_hcap(cpatch%bleaf(ico),cpatch%bdead(ico),cpatch%bsapwooda(ico)&
-                     ,cpatch%nplant(ico),cpatch%pft(ico)                       &
-                     ,cpatch%leaf_hcap(ico),cpatch%wood_hcap(ico) )
-                  call update_veg_energy_cweh(csite,ipa,ico,old_leaf_hcap,old_wood_hcap)
-                  call is_resolvable(csite,ipa,ico)
-                  !---------------------------------------------------------------------------!
-               end do cohortloop
-               !------------------------------------------------------------------------------!
-            end do patchloop
-            !---------------------------------------------------------------------------------!
-         end do siteloop
-         !------------------------------------------------------------------------------------!
-      end do polyloop
-      !---------------------------------------------------------------------------------------!
-
-
-      return
-   end subroutine structural_growth_eq_0
-   !==========================================================================================!
-   !==========================================================================================!
-
-
-
-
-
-
    !==========================================================================================!
    !==========================================================================================!
    !     This subroutine will decide the partition of storage biomass into seeds and dead     !
@@ -924,6 +499,7 @@ contains
          , r_fract      & ! intent(in)
          , st_fract     & ! intent(in)
          , dbh_crit     & ! intent(in)
+         , dbh_adult    & ! intent(in)
          , hgt_max      & ! intent(in)
          , is_grass     & ! intent(in)
          , is_liana     ! ! intent(in)
@@ -932,6 +508,7 @@ contains
       use allometry     , only : dbh2bd       & ! intent(in)
          , h2dbh        ! ! intent(in)
       use ed_state_vars , only : patchtype    ! ! Structure
+!      use fuse_fiss_utils , only : tracking_sanity_check
 
       implicit none
       !----- Arguments -----------------------------------------------------------------------!
@@ -947,6 +524,7 @@ contains
       integer                        :: ipft
       integer                        :: phen_status
       integer                        :: potential_host
+      integer                        :: ico2
       real                           :: hite
       real                           :: dbh
       real                           :: bd_target !> Target Bd to reach maxh height
@@ -963,6 +541,7 @@ contains
       hite        = cpatch%hite(ico)
       dbh         = cpatch%dbh(ico)
       phen_status = cpatch%phenology_status(ico)
+      potential_host = -1
 
       !----- First time, and the user wants to print the output.  Make a header. -------------!
       if (first_time) then
@@ -988,78 +567,74 @@ contains
          (lat <  0.0 .and. current_time%month == 12)
       !---------------------------------------------------------------------------------------!
 
-      ! tracked tree is the tree that the liana is attached to (now it's just a matter of
-      ! height, I still need to refine this.
-      ! WARNING: This assumes that the cohorts are liana sorted
-      ! The tallest liana cohorts tracks the tallest tree cohort, the second tallest ecc.
-      ! until we reach the shortest tree cohort to which all liana cohorts left are attached
 
+    !    call tracking_sanity_check(cpatch,6)
+    ! WARNING: This assumes that the cohorts are liana sorted
+    ! The tallest liana cohorts tracks the tallest tree cohort, the second tallest ecc.
+    ! until we reach the shortest tree cohort to which all liana cohorts left are attached
+    ! If you are the shortest tree sorry. There's not much else I could do.
+    if (is_liana(ipft) .and. cpatch%tracking_co(ico) == 0) then
+        potential_host = min(ico - cpatch%ncohorts + n_lianas, cpatch%ncohorts - n_lianas)
+        ! I am setting the potential host to the negative number because I will use this in the next
+        ! subroutine (update_derived_cohort_props) to distinguish between newly tracking and old
+        ! tracking. There the tracking_co index will also be made positive.
+        cpatch%tracking_co(ico) = - potential_host
+    end if
 
-      if (is_liana(ipft)) then
-         potential_host = min(ico - cpatch%ncohorts + n_lianas, cpatch%ncohorts - n_lianas)
-         if(potential_host <=0) then
-         write(*,*) "!!!!!!!!!!!!!! ABORTING !!!!!!!!!!!!"
-         write(*,*) "Potential host is negative=", potential_host
-         write(*,*) ico, cpatch%ncohorts, n_lianas
-         call exit(1)
-         end if
-      end if
-
-      !------------------------------------------------------------------------------------!
-      !      Size and age structure.  Calculate fraction of bstorage going to bdead and    !
-      ! reproduction.  First we must make sure that the plant should do something here.  A !
-      ! plant should not allocate anything to reproduction or growth if it is not the      !
-      ! right time of year (for cold deciduous plants), or if the plants are actively      !
-      ! dropping leaves or off allometry.                                                  !
-      !------------------------------------------------------------------------------------!
-      if ((phenology(ipft) /= 2 .or. late_spring) .and. phen_status == 0) then
-         !---------------------------------------------------------------------------------!
-         !      This is where allocation to seeds is occuring.  It will need to be         !
-         ! modified but I'm leaving it for later --- GRASSES!  Want to add a functional    !
-         ! form to constrain this throughout the season - also consider moving this to     !
-         ! growth_balive since it isn't actually structural growth                         !
-         !---------------------------------------------------------------------------------!
-         if (is_grass(ipft)) then
+    !------------------------------------------------------------------------------------!
+    !      Size and age structure.  Calculate fraction of bstorage going to bdead and    !
+    ! reproduction.  First we must make sure that the plant should do something here.  A !
+    ! plant should not allocate anything to reproduction or growth if it is not the      !
+    ! right time of year (for cold deciduous plants), or if the plants are actively      !
+    ! dropping leaves or off allometry.                                                  !
+    !------------------------------------------------------------------------------------!
+    if ((phenology(ipft) /= 2 .or. late_spring) .and. phen_status == 0) then
+        !---------------------------------------------------------------------------------!
+        !      This is where allocation to seeds is occuring.  It will need to be         !
+        ! modified but I'm leaving it for later --- GRASSES!  Want to add a functional    !
+        ! form to constrain this throughout the season - also consider moving this to     !
+        ! growth_balive since it isn't actually structural growth                         !
+        !---------------------------------------------------------------------------------!
+        if (is_grass(ipft)) then
             select case(igrass)
-               case (0)
-                  !----- Bonsai grasses. -----------------------------------------------------!
-                  if (dbh >= dbh_crit(ipft)) then
-                     !------------------------------------------------------------------------!
-                     !    Grasses have reached the maximum height, stop growing in size and   !
-                     ! send everything to reproduction.                                       !
-                     !------------------------------------------------------------------------!
-                     f_bseeds = 1.0 - st_fract(ipft)
-                  else
-                     !------------------------------------------------------------------------!
-                     !    If Medium-sized bonsai, use prescribed reproduction rate otherwise  !
-                     !    invest all you can in growth.                                       !
-                     !------------------------------------------------------------------------!
-                     f_bseeds = merge(0.0, r_fract(ipft), hite <= repro_min_h(ipft))
-                  end if
-                  f_bdead  = 1.0 - st_fract(ipft) - f_bseeds
-                  !---------------------------------------------------------------------------!
+                case (0)
+                    !----- Bonsai grasses. -----------------------------------------------------!
+                    if (dbh >= dbh_crit(ipft)) then
+                        !------------------------------------------------------------------------!
+                        !    Grasses have reached the maximum height, stop growing in size and   !
+                        ! send everything to reproduction.                                       !
+                        !------------------------------------------------------------------------!
+                        f_bseeds = 1.0 - st_fract(ipft)
+                    else
+                        !------------------------------------------------------------------------!
+                        !    If Medium-sized bonsai, use prescribed reproduction rate otherwise  !
+                        !    invest all you can in growth.                                       !
+                        !------------------------------------------------------------------------!
+                        f_bseeds = merge(0.0, r_fract(ipft), hite <= repro_min_h(ipft))
+                    end if
+                    f_bdead  = 1.0 - st_fract(ipft) - f_bseeds
+                   !---------------------------------------------------------------------------!
 
 
-               case (1)
-                  !----- New grasses loop. ---------------------------------------------------!
-                  if ((hite * (1 + 1.0e-4)) >= hgt_max(ipft)) then
-                     !------------------------------------------------------------------------!
-                     !   Grasses have reached the maximum height, stop growing in size and    !
-                     ! send everything to reproduction.                                       !
-                     !------------------------------------------------------------------------!
-                     f_bseeds = 1.0 - st_fract(ipft)
-                  elseif ((hite * (1 + epsilon(1.))) <= repro_min_h(ipft)) then
-                     !----- The plant is too short, invest as much as it can in growth. ------!
-                     f_bseeds = 0.0
-                  else ! repro_min_h < hite< hgt_max
-                     !----- Medium-sized grass, use prescribed reproduction rate. ------------!
-                     f_bseeds = r_fract(ipft)
-                  end if
-                  f_bdead  = 0.0
+                case (1)
+                    !----- New grasses loop. ---------------------------------------------------!
+                    if ((hite * (1 + 1.0e-4)) >= hgt_max(ipft)) then
+                        !------------------------------------------------------------------------!
+                        !   Grasses have reached the maximum height, stop growing in size and    !
+                        ! send everything to reproduction.                                       !
+                        !------------------------------------------------------------------------!
+                        f_bseeds = 1.0 - st_fract(ipft)
+                    elseif ((hite * (1 + epsilon(1.))) <= repro_min_h(ipft)) then
+                        !----- The plant is too short, invest as much as it can in growth. ------!
+                        f_bseeds = 0.0
+                    else ! repro_min_h < hite< hgt_max
+                        !----- Medium-sized grass, use prescribed reproduction rate. ------------!
+                        f_bseeds = r_fract(ipft)
+                    end if
+                    f_bdead  = 0.0
             end select
-            !------------------------------------------------------------------------------!
+           !------------------------------------------------------------------------------!
 
-         else
             !------------------------------------------------------------------------------!
             !   If Medium-sized tree, use prescribed reproduction rate otherwise           !
             !   invest all you can in growth. If you are a liana however you first check   !
@@ -1067,54 +642,49 @@ contains
             !   use half the storage for reproduction and leave the half left in the       !
             !   storage. Basically don't grow bdead -> DBH -> Height                       !
             !------------------------------------------------------------------------------!
-            if (is_liana(ipft) .and. cpatch%tracking_co(ico) == 0) then
-               if(hite >= cpatch%hite(potential_host)) then
-                  f_bseeds = merge(0.0, r_fract(ipft), hite <= repro_min_h(ipft))
-                  f_bdead  = 0.0
-                  ! Now tracking_co will just be the number of the tree. Later on I can really
-                  ! adapt this variable so as to track a specific tree cohort.
-                  cpatch%tracking_co(ico) = potential_host
-                  cpatch%tracking_co(potential_host) = ico
-               else
-                  bd_target = dbh2bd(h2dbh(cpatch%hite(potential_host),ipft),ipft)
-                  delta_bd = bd_target - bdead
-                  !---------------------------------------------------------------------------!
-                  ! If bstorage is 0 or lianas have already reached their bd_target don't     !
-                  ! grow otherwise invest what you need (or everything if it's not enough) to !
-                  ! reach bd_target.                                                          !
-                  ! For seeds first check if you have reached repro_min_h. If that's the case !
-                  ! then check that you have enough left to invest r_fract in reproduction.   !
-                  ! If that's the case invest r_fract in reproduction and the rest will stay  !
-                  ! in storage. If that's not the case invest everything in reproduction.     !
-                  ! Finally if you haven't reached repro_min_h leave everything in storage.   !
-                  !---------------------------------------------------------------------------!
-                  f_bdead   = merge(0.0, min(delta_bd / bstorage, 1.0),                       &
-                     bstorage * delta_bd <= 0.0)
-                  f_bseeds  = merge(0.0, merge(r_fract(ipft), 1.0 - f_bdead,                  &
-                     r_fract(ipft) < 1.0 - f_bdead), hite <= repro_min_h(ipft))
-               end if
+        else if (is_liana(ipft) .and. cpatch%tracking_co(ico) <= 0) then
+
+
+                bd_target = dbh2bd(h2dbh(cpatch%hite(potential_host),ipft),ipft)
+                delta_bd = bd_target - bdead
+
+                !---------------------------------------------------------------------------!
+                ! If bstorage is 0 or lianas have already reached their bd_target don't     !
+                ! grow otherwise invest what you need (or everything if it's not enough) to !
+                ! reach bd_target.                                                          !
+                ! For seeds first check if you have reached repro_min_h. If that's the case !
+                ! then check that you have enough left to invest r_fract in reproduction.   !
+                ! If that's the case invest r_fract in reproduction and the rest will stay  !
+                ! in storage. If that's not the case invest everything in reproduction.     !
+                ! Finally if you haven't reached repro_min_h leave everything in storage.   !
+                !---------------------------------------------------------------------------!
+                f_bdead   = merge(0.0, min(delta_bd / bstorage, 1.0),                       &
+                    bstorage * delta_bd <= 0.0)
+                f_bseeds  = merge(0.0, merge(r_fract(ipft), 1.0 - f_bdead,                  &
+                    r_fract(ipft) < 1.0 - f_bdead), hite <= repro_min_h(ipft))
             else
-               f_bseeds = merge(0.0, r_fract(ipft), hite <= repro_min_h(ipft))
-               f_bdead  = 1.0 - st_fract(ipft) - f_bseeds
+
+                f_bseeds = merge(0.0, r_fract(ipft), hite <= repro_min_h(ipft))
+                f_bdead  = 1.0 - st_fract(ipft) - f_bseeds
+
             end if
-         end if
-      else  !-- Plant should not allocate carbon to seeds or grow new biomass. ------------!
-         f_bdead  = 0.0
-         f_bseeds = 0.0
-      end if
-         !------------------------------------------------------------------------------------!
+    else  !-- Plant should not allocate carbon to seeds or grow new biomass. ------------!
+        f_bdead  = 0.0
+        f_bseeds = 0.0
+    end if
+      !------------------------------------------------------------------------------------!
 
 
-      !---------------------------------------------------------------------------------------!
+      !------------------------------------------------------------------------------------!
       if (printout) then
          open (unit=66,file=fracfile,status='old',position='append',action='write')
-         write (unit=66,fmt='(6(i12,1x),2(11x,l1,1x),7(f12.4,1x))')                         &
-            current_time%year,current_time%month,current_time%date,ipft,phenology(ipft)     &
-            ,phen_status,late_spring,is_grass(ipft),hite,repro_min_h(ipft),dbh              &
+         write (unit=66,fmt='(6(i12,1x),2(11x,l1,1x),7(f12.4,1x))')                        &
+            current_time%year,current_time%month,current_time%date,ipft,phenology(ipft)    &
+            ,phen_status,late_spring,is_grass(ipft),hite,repro_min_h(ipft),dbh             &
             ,dbh_crit(ipft),st_fract(ipft),f_bseeds,f_bdead
          close (unit=66,status='keep')
       end if
-      !---------------------------------------------------------------------------------------!
+      !------------------------------------------------------------------------------------!
 
       return
    end subroutine plant_structural_allocation
@@ -1135,7 +705,8 @@ contains
 
       use ed_state_vars , only : patchtype           ! ! structure
       use pft_coms      , only : is_grass            & ! function
-         , is_liana
+         , is_liana                                  & ! function
+         , dbh_adult
       use allometry     , only : bd2dbh              & ! function
          , dbh2h               & ! function
          , dbh2krdepth         & ! function
@@ -1151,6 +722,7 @@ contains
          , yr1st_census        & ! intent(in)
          , mon1st_census       & ! intent(in)
          , min_recruit_dbh     ! ! intent(in)
+!         use fuse_fiss_utils , only : tracking_sanity_check
       implicit none
       !----- Arguments -----------------------------------------------------------------------!
       type(patchtype), target     :: cpatch
@@ -1158,8 +730,10 @@ contains
       integer        , intent(in) :: lsl
       !----- Local variables -----------------------------------------------------------------!
       real                        :: bleaf_max
+      real                        :: potential_height
       integer                     :: ipft
       integer                     :: elapsed_months
+      integer                     :: tracked_n
       logical                     :: census_time
       !---------------------------------------------------------------------------------------!
 
@@ -1179,6 +753,20 @@ contains
 
       ipft    = cpatch%pft(ico)
 
+      ! First we set the proper tracking indices
+      if(is_liana(ipft) .and. cpatch%tracking_co(ico) < 0) then
+          potential_height = dbh2h(ipft,bd2dbh(ipft,cpatch%bdead(ico)))
+          if (potential_height >= cpatch%hite(abs(cpatch%tracking_co(ico))) .and. &
+              cpatch%dbh(ico) >= dbh_adult(ico)) then
+              ! The liana has effectively reached the desired height, start tracking
+              cpatch%tracking_co(ico) = -cpatch%tracking_co(ico)
+              cpatch%tracking_co(cpatch%tracking_co(ico)) = cpatch%tracking_co(cpatch%tracking_co(ico)) + 1
+          else
+              ! Liana is not tall enough make it free standing again
+              cpatch%tracking_co(ico) = 0
+          end if
+      end if
+
       !----- Get DBH and height --------------------------------------------------------------!
       if (is_grass(ipft) .and. igrass == 1) then
          !---- New grasses get dbh_effective and height from bleaf. --------------------------!
@@ -1188,16 +776,12 @@ contains
          !------------------------------- Lianas ---------------------------------------------!
          cpatch%dbh(ico)  = bd2dbh(ipft, cpatch%bdead(ico))
          cpatch%hite(ico) = cpatch%hite(cpatch%tracking_co(ico))
-         if (cpatch%pft(cpatch%tracking_co(ico)) == 17) then
-         write(*,*) "DANGER: !! liana co n", ico, "is tracking liana co n", cpatch%tracking_co(ico)
-         end if
       else
          !---- Trees, old grasses and free standing lianas get dbh from bdead. ---------------!
          cpatch%dbh(ico)  = bd2dbh(ipft, cpatch%bdead(ico))
          cpatch%hite(ico) = dbh2h (ipft, cpatch%dbh  (ico))
       end if
       !---------------------------------------------------------------------------------------!
-
 
       !---------------------------------------------------------------------------------------!
       !     Update the recruitment flag regarding DBH if needed.                              !
@@ -1245,10 +829,6 @@ contains
    end subroutine update_derived_cohort_props
    !==========================================================================================!
    !==========================================================================================!
-
-
-
-
 
 
    !==========================================================================================!

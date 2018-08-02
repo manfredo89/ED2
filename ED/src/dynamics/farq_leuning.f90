@@ -188,7 +188,7 @@ module farq_leuning
       met(ib)%can_prss     = dble(can_prss )
       met(ib)%can_o2       = o2_ref8
       !----- 2. Convert specific humidity to mol/mol. -------------------------------------!
-      met(ib)%can_shv      = epi8 * dble(can_shv) 
+      met(ib)%can_shv      = epi8 * dble(can_shv)
       !----- 3. Convert CO2 to mol/mol. ---------------------------------------------------!
       met(ib)%can_co2      = dble(can_co2) * umol_2_mol8
       !----- 4. Convert W/m2 to mol/m2/s. -------------------------------------------------!
@@ -355,7 +355,7 @@ module farq_leuning
                                 , ko2_refval8           & ! intent(out)
                                 , ko2_hor8              & ! intent(out)
                                 , ko2_q108              ! ! intent(out)
-      use c34constants   , only : met                   & ! intent(in) 
+      use c34constants   , only : met                   & ! intent(in)
                                 , aparms                & ! intent(in)
                                 , thispft               ! ! intent(in)
       use consts_coms    , only : lnexp_min8            & ! intent(in)
@@ -377,7 +377,7 @@ module farq_leuning
       real(kind=8)             :: greeness          ! Leaf "Greeness"           [   0 to 1]
       integer                  :: ib
       !------------------------------------------------------------------------------------!
-      
+
       ib = 1
       !$ ib = OMP_get_thread_num()+1
 
@@ -958,7 +958,7 @@ module farq_leuning
                        ciroot1 <= min(c34smax_lint_co28,met(ib)%can_co2)
             bounded2 = ciroot2 >= c34smin_lint_co28 .and.                                  &
                        ciroot2 <= min(c34smax_lint_co28,met(ib)%can_co2)
-             
+
             if (bounded1 .and. bounded2) then
                !----- Both intercellular CO2 work, pick the highest and warn the user. ----!
                if (ciroot1 >= ciroot2) then
@@ -1104,7 +1104,7 @@ module farq_leuning
       fun = funa
       !------------------------------------------------------------------------------------!
 
-      if (fun == 0.d0) then 
+      if (fun == 0.d0) then
          !----- We have actually hit the jackpot, the answer is ciz. ----------------------!
          ci        = ciz
          converged = .true.
@@ -1141,12 +1141,13 @@ module farq_leuning
             converged = 2.d0 * abs(cia-ciz) < tolerfl8 * (abs(cia)+abs(ciz))
             !------------------------------------------------------------------------------!
 
- 
+
             !------------------------------------------------------------------------------!
             !    At this point we test the current status of the guess.                    !
             !------------------------------------------------------------------------------!
             if (ciz < cimin .or. ciz > cimax) then
                !----- This guess went off-bounds, we give up on Newton's. -----------------!
+               converged = .false.
                exit newloop
             elseif (converged) then
                !----- Converged, find the root as the mid-point. --------------------------!
@@ -1155,7 +1156,7 @@ module farq_leuning
             else
                !----- Not there yet, update the function evaluation and the derivative. ---!
                call iter_solver_step(.true.,ciz,fun,deriv)
-               if (fun == 0.d0) then 
+               if (fun == 0.d0) then
                   !----- We have actually hit the jackpot, the answer is ciz. -------------!
                   ci        = ciz
                   converged = .true.
@@ -1170,7 +1171,7 @@ module farq_leuning
 
 
       !------------------------------------------------------------------------------------!
-      if (.not. converged) then 
+      if (.not. converged) then
 
          !---------------------------------------------------------------------------------!
          !     If we have reached this point it means that Newton's method failed.  We     !
@@ -1466,7 +1467,7 @@ module farq_leuning
                              , aparms  & ! intent(in)
                              , met     ! ! intent(in)
       !$ use omp_lib
-      
+
       implicit none
       !----- Arguments. -------------------------------------------------------------------!
       logical     , intent(in)  :: newton              ! Newton's method step  [       T|F]
@@ -1486,7 +1487,7 @@ module farq_leuning
       real(kind=8)              :: eprime3             ! Derivative of the 3rd term
       integer                   :: ib
       !------------------------------------------------------------------------------------!
-      
+
       ib = 1
       !$ ib = OMP_get_thread_num()+1
 
@@ -1560,7 +1561,7 @@ module farq_leuning
       real(kind=8), intent(in) :: lint_co2 ! Intercellular CO2 concentration    [  mol/mol]
       !------------------------------------------------------------------------------------!
       integer                  :: ib
-      
+
       ib = 1
       !$ ib = OMP_get_thread_num()+1
 
@@ -1594,7 +1595,7 @@ module farq_leuning
 
       ib = 1
       !$ ib = OMP_get_thread_num()+1
-      
+
       calc_co2_demand_prime = ( aparms(ib)%rho                                             &
                               - aparms(ib)%xi * (co2_demand - aparms(ib)%nu))              &
                             / ( aparms(ib)%xi  * lint_co2 + aparms(ib)%tau  )
@@ -1660,7 +1661,7 @@ module farq_leuning
       real(kind=8), intent(in) :: co2_demand_prime ! Derivative of CO2 demand  [1/mol/m�/s]
       !------------------------------------------------------------------------------------!
       integer :: ib
-      
+
       ib = 1
       !$ ib = OMP_get_thread_num()+1
 
@@ -1899,7 +1900,7 @@ module farq_leuning
    ! reference value.                                                                      !
    !---------------------------------------------------------------------------------------!
    real(kind=8) function arrhenius(temp,refval,hor)
-      use physiology_coms, only : tphysrefi8 ! ! intent(in)  
+      use physiology_coms, only : tphysrefi8 ! ! intent(in)
       use consts_coms    , only : lnexp_min8 ! ! intent(in)
       implicit none
       !----- Arguments. -------------------------------------------------------------------!
@@ -1989,7 +1990,7 @@ module farq_leuning
       integer :: ib
       ib = 1
       !$ ib = OMP_get_thread_num()+1
-      
+
       find_twilight_min = ( aparms(ib)%leaf_resp                                           &
                           * (met(ib)%can_co2 + 2.d0 * aparms(ib)%compp) )                  &
                         / ( aparms(ib)%alpha                                               &

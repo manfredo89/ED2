@@ -170,6 +170,9 @@ module ed_state_vars
       ! Crown area (m2 crown / m2 ground)
       real ,pointer,dimension(:) :: crown_area
 
+      ! Cohort tracking index, lianas have the tree index and trees the bearing
+      integer, pointer, dimension(:) :: tracking_co
+
       ! Logical test to check whether the cohort leaves can be resolved...
       logical, pointer, dimension(:) :: leaf_resolvable
       logical, pointer, dimension(:) :: wood_resolvable
@@ -479,9 +482,6 @@ module ed_state_vars
       real, pointer, dimension(:) :: llspan
       real, pointer, dimension(:) :: vm_bar
       real, pointer, dimension(:) :: sla
-
-      ! Bool to set cohorts that are at the top of the canopy (important for lianas)
-      integer, pointer, dimension(:) :: tracking_co
 
       !------------------------------------------------------------------------------------!
       ! These are diagnostic variables, averaged over various time scales.                 !
@@ -4604,7 +4604,7 @@ module ed_state_vars
       allocate(cpatch%llspan                       (                    ncohorts))
       allocate(cpatch%vm_bar                       (                    ncohorts))
       allocate(cpatch%sla                          (                    ncohorts))
-      allocate(cpatch%tracking_co                 (                    ncohorts))
+      allocate(cpatch%tracking_co                  (                    ncohorts))
       allocate(cpatch%fmean_gpp                    (                    ncohorts))
       allocate(cpatch%fmean_npp                    (                    ncohorts))
       allocate(cpatch%fmean_leaf_resp              (                    ncohorts))
@@ -4647,11 +4647,9 @@ module ed_state_vars
       allocate(cpatch%fmean_light_level            (                    ncohorts))
       allocate(cpatch%fmean_light_level_beam       (                    ncohorts))
       allocate(cpatch%fmean_light_level_diff       (                    ncohorts))
-
       allocate(cpatch%fmean_par_level_beam         (                    ncohorts))
       allocate(cpatch%fmean_par_level_diffu        (                    ncohorts))
       allocate(cpatch%fmean_par_level_diffd        (                    ncohorts))
-
       allocate(cpatch%fmean_par_l                  (                    ncohorts))
       allocate(cpatch%fmean_par_l_beam             (                    ncohorts))
       allocate(cpatch%fmean_par_l_diff             (                    ncohorts))
@@ -4723,11 +4721,9 @@ module ed_state_vars
          allocate(cpatch%dmean_light_level         (                    ncohorts))
          allocate(cpatch%dmean_light_level_beam    (                    ncohorts))
          allocate(cpatch%dmean_light_level_diff    (                    ncohorts))
-         
          allocate(cpatch%dmean_par_level_beam      (                    ncohorts))
          allocate(cpatch%dmean_par_level_diffu     (                    ncohorts))
          allocate(cpatch%dmean_par_level_diffd     (                    ncohorts))
-
          allocate(cpatch%dmean_par_l               (                    ncohorts))
          allocate(cpatch%dmean_par_l_beam          (                    ncohorts))
          allocate(cpatch%dmean_par_l_diff          (                    ncohorts))
@@ -4914,6 +4910,15 @@ module ed_state_vars
          allocate(cpatch%qmsqu_sensible_wc         (            ndcycle,ncohorts))
          allocate(cpatch%qmsqu_vapor_wc            (            ndcycle,ncohorts))
       end if
+
+     !-------------------------------------------------------------------------------------!
+     ! ----- MDP It looks to me like this allocation does not automatically initialize     !
+     ! any variables. For the tracking_co matrix this need to be done before filling in    !
+     ! the logical values with a copy_patchtype. Otherwise we could have spurious          !
+     ! trackings that will then be propagated by the simmetrization conditions.            !
+     !-------------------------------------------------------------------------------------!
+     cpatch%tracking_co = .false.
+     !-------------------------------------------------------------------------------------!
 
       return
    end subroutine allocate_patchtype
@@ -7323,7 +7328,7 @@ module ed_state_vars
       if(associated(cpatch%llspan              )) deallocate(cpatch%llspan              )
       if(associated(cpatch%vm_bar              )) deallocate(cpatch%vm_bar              )
       if(associated(cpatch%sla                 )) deallocate(cpatch%sla                 )
-      if(associated(cpatch%tracking_co        )) deallocate(cpatch%tracking_co        )
+      if(associated(cpatch%tracking_co         )) deallocate(cpatch%tracking_co         )
       if(associated(cpatch%fmean_gpp           )) deallocate(cpatch%fmean_gpp           )
       if(associated(cpatch%fmean_npp           )) deallocate(cpatch%fmean_npp           )
       if(associated(cpatch%fmean_leaf_resp     )) deallocate(cpatch%fmean_leaf_resp     )
@@ -9091,11 +9096,9 @@ module ed_state_vars
          opatch%light_level           (oco) = ipatch%light_level           (ico)
          opatch%light_level_beam      (oco) = ipatch%light_level_beam      (ico)
          opatch%light_level_diff      (oco) = ipatch%light_level_diff      (ico)
-         
          opatch%par_level_beam        (oco) = ipatch%par_level_beam        (ico)
          opatch%par_level_diffu       (oco) = ipatch%par_level_diffu       (ico)
          opatch%par_level_diffd       (oco) = ipatch%par_level_diffd       (ico)
-
          opatch%par_l                 (oco) = ipatch%par_l                 (ico)
          opatch%par_l_beam            (oco) = ipatch%par_l_beam            (ico)
          opatch%par_l_diffuse         (oco) = ipatch%par_l_diffuse         (ico)
@@ -9137,7 +9140,6 @@ module ed_state_vars
          opatch%llspan                (oco) = ipatch%llspan                (ico)
          opatch%vm_bar                (oco) = ipatch%vm_bar                (ico)
          opatch%sla                   (oco) = ipatch%sla                   (ico)
-         opatch%tracking_co          (oco) = ipatch%tracking_co          (ico)
          opatch%fmean_gpp             (oco) = ipatch%fmean_gpp             (ico)
          opatch%fmean_npp             (oco) = ipatch%fmean_npp             (ico)
          opatch%fmean_leaf_resp       (oco) = ipatch%fmean_leaf_resp       (ico)
@@ -9180,11 +9182,9 @@ module ed_state_vars
          opatch%fmean_light_level     (oco) = ipatch%fmean_light_level     (ico)
          opatch%fmean_light_level_beam(oco) = ipatch%fmean_light_level_beam(ico)
          opatch%fmean_light_level_diff(oco) = ipatch%fmean_light_level_diff(ico)
-         
          opatch%fmean_par_level_beam  (oco) = ipatch%fmean_par_level_beam  (ico)
          opatch%fmean_par_level_diffu (oco) = ipatch%fmean_par_level_diffu (ico)
          opatch%fmean_par_level_diffd (oco) = ipatch%fmean_par_level_diffd (ico)
-
          opatch%fmean_par_l           (oco) = ipatch%fmean_par_l           (ico)
          opatch%fmean_par_l_beam      (oco) = ipatch%fmean_par_l_beam      (ico)
          opatch%fmean_par_l_diff      (oco) = ipatch%fmean_par_l_diff      (ico)
@@ -9203,6 +9203,23 @@ module ed_state_vars
          opatch%fmean_wshed_wg        (oco) = ipatch%fmean_wshed_wg        (ico)
          opatch%fmean_lai             (oco) = ipatch%fmean_lai             (ico)
          opatch%fmean_bdead           (oco) = ipatch%fmean_bdead           (ico)
+         !---------------------------------------------------------------------------------!
+
+         !--------- Cohort tracking matrix ------------------------------------------------!
+         ! This is just a first copy, as it is it's verry error prone. Unfortunately the
+         ! right way to copy the tracking info depend on the specific case. Please make sure
+         ! you check each time you use copy_patchtype that it is taken care in the relevvane
+         ! section.
+         !---------------------------------------------------------------------------------!
+         if(opatch%pft(oco) == 17) then
+             if(ipatch%tracking_co(ico) > 0) then
+                 opatch%tracking_co(oco) = ipatch%tracking_co(ico) + ocoa - 1
+             else
+                 opatch%tracking_co(oco) = 0
+             end if
+         else
+             opatch%tracking_co(oco) = count(ipatch%tracking_co(icoa:icoz) == ico .and. ipatch%pft(icoa:icoz) == 17)
+         end if
          !---------------------------------------------------------------------------------!
 
 
@@ -9598,6 +9615,7 @@ module ed_state_vars
    ! copy_patchtype_mask.                                                                  !
    !---------------------------------------------------------------------------------------!
    subroutine copy_patchtype_mask_inst(ipatch,opatch,z,lmask,isize)
+
       implicit none
       !----- Arguments. -------------------------------------------------------------------!
       type(patchtype)         , target     :: ipatch
@@ -9607,6 +9625,8 @@ module ed_state_vars
       logical,dimension(isize), intent(in) :: lmask
       !----- Local variables. -------------------------------------------------------------!
       integer                              :: m
+      integer                              :: n
+      integer,dimension(z)                 :: old_pos
       !------------------------------------------------------------------------------------!
 
 
@@ -9738,7 +9758,31 @@ module ed_state_vars
       opatch%llspan                (1:z) = pack(ipatch%llspan                    ,lmask)
       opatch%vm_bar                (1:z) = pack(ipatch%vm_bar                    ,lmask)
       opatch%sla                   (1:z) = pack(ipatch%sla                       ,lmask)
-      opatch%tracking_co          (1:z) = pack(ipatch%tracking_co              ,lmask)
+      !------------------------------------------------------------------------------------!
+
+
+      !------------------- Cohort tracking matrix -----------------------------------------!
+      do m = 1, z
+          do n = 1, size(lmask)
+              if (count(lmask(1:n)) == m) then
+                  old_pos(m) = n
+                  exit
+              end if
+          end do
+      end do
+
+      do m = 1, z
+          if (opatch%pft(m) == 17) then
+              ! Check that the liana is tracking and that the tracked tree has been copied
+              if (ipatch%tracking_co(old_pos(m)) /= 0 .or. any(old_pos == ipatch%tracking_co(old_pos(m)))) then
+                  opatch%tracking_co(m) = findloc(old_pos, ipatch%tracking_co(old_pos(m)),1)
+              else
+                  opatch%tracking_co(m) = 0
+              end if
+          else
+              opatch%tracking_co(m) = count(ipatch%pft == 17 .and. ipatch%tracking_co == old_pos(m) .and. lmask)
+          end if
+      end do
       !------------------------------------------------------------------------------------!
 
 
@@ -9757,7 +9801,6 @@ module ed_state_vars
          opatch%mort_rate(m,1:z) = pack(ipatch%mort_rate  (m,:),lmask)
       end do
       !------------------------------------------------------------------------------------!
-
 
       !------ Radiation profile variables. ------------------------------------------------!
       do m=1,n_radprof
@@ -23410,6 +23453,13 @@ module ed_state_vars
          call metadata_edio(nvar,igr,'Plant Functional Type','[-]','NA') 
       end if
 
+      if (associated(cpatch%tracking_co)) then
+         nvar=nvar+1
+           call vtable_edio_i(npts,cpatch%tracking_co,nvar,igr,init,cpatch%coglob_id, &
+           var_len,var_len_global,max_ptrs,'TRACKING_CO :40:hist:anal:dail:mont:dcyc:year')
+         call metadata_edio(nvar,igr,'Tracking Cohort Index','[-]','NA')
+      end if
+
 
       if (associated(cpatch%phenology_status)) then
          nvar=nvar+1
@@ -27428,6 +27478,60 @@ module ed_state_vars
    !=======================================================================================!
    !=======================================================================================!
 
+
+
+!
+!   !=======================================================================================!
+!   !=======================================================================================!
+!   !     This routine will fill the pointer table with the cohort-level variables          !
+!   ! (patchtype) that have two dimensions (ncohorts,ncohorts) and are logicals             !
+!   ! MDP rant: Thanks to who had the brilliant idea of going from linked lists to vectors  !
+!   ! This way we can have an amazing 30k line file.                                        !
+!   !---------------------------------------------------------------------------------------!
+!   subroutine filltab_patchtype_bool(cpatch,igr,init,var_len,var_len_global,max_ptrs,nvar)
+!      use ed_var_tables, only : vtable_edio_r  & ! sub-routine
+!                              , metadata_edio  ! ! sub-routine
+!
+!      implicit none
+!      !----- Arguments. -------------------------------------------------------------------!
+!      type(patchtype), target        :: cpatch
+!      integer        , intent(in)    :: init
+!      integer        , intent(in)    :: igr
+!      integer        , intent(in)    :: var_len
+!      integer        , intent(in)    :: max_ptrs
+!      integer        , intent(in)    :: var_len_global
+!      integer        , intent(inout) :: nvar
+!      !----- Local variables. -------------------------------------------------------------!
+!      integer                        :: npts
+!      !------------------------------------------------------------------------------------!
+!
+!
+!      !------------------------------------------------------------------------------------!
+!      !------------------------------------------------------------------------------------!
+!      !       This part should have only 2-D vectors, with dimension ncohorts and 13       !
+!      ! months.  Notice that they all use the same npts.  Here you should only add vari-   !
+!      ! ables of type 49.                                                                  !
+!      !------------------------------------------------------------------------------------!
+!      npts = cpatch%ncohorts * cpatch%ncohorts
+!
+!
+!      if (associated(cpatch%tracking_co)) then
+!         nvar=nvar+1
+!         call vtable_edio_r(npts,cpatch%tracking_co,nvar,igr,init,cpatch%coglob_id                  &
+!                           ,var_len,var_len_global,max_ptrs                                &
+!                           ,'CB :49:hist:mont:dcyc:year')
+!         call metadata_edio(nvar,igr,'carbon balance previous 12 months+current'           &
+!                           ,'[kgC/plant]','13 - icohort')
+!      end if
+!
+!      !------------------------------------------------------------------------------------!
+!      !------------------------------------------------------------------------------------!
+!
+!      return
+!   end subroutine filltab_patchtype_bool
+!   !=======================================================================================!
+!   !=======================================================================================!
+!
 
 
 

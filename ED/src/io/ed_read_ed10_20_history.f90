@@ -19,6 +19,7 @@ subroutine read_ed10_ed20_history_file
                              , min_dbh             & ! intent(in)
                              , min_bdead           & ! intent(in)
                              , is_grass            & ! intent(in)
+                             , is_liana            & ! intent(in)
                              , include_pft         & ! intent(in)
                              , include_pft_ag      & ! intent(in)
                              , pft_1st_check       & ! intent(in)
@@ -78,6 +79,7 @@ subroutine read_ed10_ed20_history_file
    integer               , dimension(huge_patch)          :: sitenum
    integer               , dimension(huge_cohort)         :: leaves_on
    integer               , dimension(huge_cohort)         :: ipft
+   integer               , dimension(huge_cohort)         :: tracking_co
    integer                                                :: year
    integer                                                :: igr
    integer                                                :: ipy
@@ -624,9 +626,12 @@ subroutine read_ed10_ed20_history_file
 
             case (2,3,6)
                !----- ED-2.0 file. --------------------------------------------------------!
+               ! MDP I am not sure I should add the tracking information here. I  do not plan
+               ! to use css/pss initialization for lianas for the moment but it will need
+               ! to be taken care of at some point.
                read(unit=12,fmt=*,iostat=ierr) ctime(ic),cpname(ic),cname(ic),dbh(ic)      &
                                               ,hite(ic),ipft(ic),nplant(ic),bdead(ic)      &
-                                              ,balive(ic),avgRg(ic)
+                                              ,balive(ic),avgRg(ic),tracking_co(ic)
                !---------------------------------------------------------------------------!
                !     Check whether the file has hit the end, and if so, leave the loop.    !
                !---------------------------------------------------------------------------!
@@ -728,6 +733,8 @@ subroutine read_ed10_ed20_history_file
                   call allocate_patchtype(cpatch,csite%cohort_count(ipa))
                   csite%plant_ag_biomass(ipa) = 0.
                   ic2 = 0
+                  ! MDP I need to liana sort (lianas at last) because of the tracking
+                  call sort_cohorts(cpatch,.true.)
                   do ic = 1,ncohorts
 
                      if (trim(csite%pname(ipa)) == trim(cpname(ic) ) .and.                 &
@@ -735,6 +742,7 @@ subroutine read_ed10_ed20_history_file
 
                         ic2 = ic2 + 1
                         cpatch%pft(ic2) = ipft(ic)
+                        cpatch%tracking_co(ic2) = tracking_co(ic)
 
 
                         !------------------------------------------------------------------!
@@ -761,25 +769,38 @@ subroutine read_ed10_ed20_history_file
                            !----- Inventory.  Read DBH and find the other stuff. ----------!
                            cpatch%dbh(ic2)   = max(dbh(ic),min_dbh(ipft(ic)))
                            cpatch%hite(ic2)  = dbh2h(ipft(ic),dbh(ic))
+                           if (is_liana(ipft(ic)) .and. tracking_co(ic) > 0) then
+                               cpatch%hite(ic2)  = cpatch%hite(tracking_co(ic))
+                           else
+                               cpatch%hite(ic2)  = dbh2h(ipft(ic),dbh(ic))
+                           end if
                            cpatch%bdead(ic2) = dbh2bd(dbh(ic),ipft(ic))
 
                         case default
-                           !---------------------------------------------------------------!
-                           !    Old ED files.  Check whether bdead is valid.  If it is, we !
-                           ! initialise DBH and height from BDEAD, othewise we use DBH     !
-                           ! instead.  This is because allometry may be different, and ED  !
-                           ! biomass varies less than DBH under different allometric       !
-                           ! equations.                                                    !
-                           !---------------------------------------------------------------!
-                           if (bdead(ic) > 0.0) then
-                              cpatch%bdead(ic2) = max(bdead(ic),min_bdead(ipft(ic)))
-                              cpatch%dbh(ic2)   = bd2dbh(ipft(ic),bdead(ic))
-                              cpatch%hite(ic2)  = dbh2h(ipft(ic),dbh(ic))
-                           else
-                              cpatch%dbh(ic2)   = dbh(ic)
-                              cpatch%hite(ic2)  = dbh2h(ipft(ic),dbh(ic))
-                              cpatch%bdead(ic2) = dbh2bd(dbh(ic),ipft(ic))
-                           end if
+                            !---------------------------------------------------------------!
+                            !    Old ED files.  Check whether bdead is valid.  If it is, we !
+                            ! initialise DBH and height from BDEAD, othewise we use DBH     !
+                            ! instead.  This is because allometry may be different, and ED  !
+                            ! biomass varies less than DBH under different allometric       !
+                            ! equations.                                                    !
+                            !---------------------------------------------------------------!
+                            if (bdead(ic) > 0.0) then
+                                cpatch%bdead(ic2) = max(bdead(ic),min_bdead(ipft(ic)))
+                                cpatch%dbh(ic2)   = bd2dbh(ipft(ic),bdead(ic))
+                                if (is_liana(ipft(ic)) .and. tracking_co(ic) > 0) then
+                                    cpatch%hite(ic2)  = cpatch%hite(tracking_co(ic))
+                                else
+                                    cpatch%hite(ic2)  = dbh2h(ipft(ic),dbh(ic))
+                                end if
+                            else
+                                cpatch%dbh(ic2)   = dbh(ic)
+                                if (is_liana(ipft(ic)) .and. tracking_co(ic) > 0) then
+                                    cpatch%hite(ic2)  = cpatch%hite(tracking_co(ic))
+                                else
+                                    cpatch%hite(ic2)  = dbh2h(ipft(ic),dbh(ic))
+                                end if
+                                cpatch%bdead(ic2) = dbh2bd(dbh(ic),ipft(ic))
+                            end if
                         end select
                         !------------------------------------------------------------------!
 
@@ -858,6 +879,8 @@ subroutine read_ed10_ed20_history_file
                                                     + cpatch%agb(ic2) * cpatch%nplant(ic2)
                      end if
                   end do
+                  ! MDP resort
+                  call sort_cohorts(cpatch)
                end if
             end do loop_patches
          end do loop_sites

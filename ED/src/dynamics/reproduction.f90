@@ -34,7 +34,8 @@ subroutine reproduction(cgrid,month)
                                  , terminate_cohorts        & ! subroutine
                                  , fuse_cohorts             & ! subroutine
                                  , split_cohorts            & ! subroutine
-                                 , rescale_patches          ! ! subroutine
+                                 , rescale_patches!     &
+   !   , tracking_sanity_check          ! ! subroutine
    use phenology_coms     , only : repro_scheme             ! ! intent(in)
    use mem_polygons       , only : maxcohort                ! ! intent(in)
    use consts_coms        , only : pio4                     ! ! intent(in)
@@ -117,6 +118,7 @@ subroutine reproduction(cgrid,month)
             !------------------------------------------------------------------------------!
             patchloop_sort: do ipa = 1,csite%npatches
                cpatch => csite%patch(ipa)
+!               call tracking_sanity_check(cpatch,81)
                call sort_cohorts(cpatch)
             end do patchloop_sort
          end do siteloop_sort
@@ -452,17 +454,19 @@ subroutine reproduction(cgrid,month)
             !------------------------------------------------------------------------------!
             update_patch_loop: do ipa = 1,csite%npatches
                cpatch => csite%patch(ipa)
+!               call tracking_sanity_check(cpatch,17)
 
                !----- Update the cohort distribution. -------------------------------------!
                if(cpatch%ncohorts > 0 .and. maxcohort >= 0) then
-                  call terminate_cohorts(csite,ipa,elim_nplant,elim_lai)
                   call fuse_cohorts(csite,ipa,cpoly%lsl(isi),.false.)
+                  call terminate_cohorts(csite,ipa,elim_nplant,elim_lai)
                   call split_cohorts(cpatch, cpoly%green_leaf_factor(:,isi))
                end if
                !---------------------------------------------------------------------------!
 
 
                !----- Sort cohorts by height. ---------------------------------------------!
+!               call tracking_sanity_check(cpatch,89)
                call sort_cohorts(cpatch)
                !---------------------------------------------------------------------------!
 

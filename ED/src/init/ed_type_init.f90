@@ -39,8 +39,8 @@ subroutine init_ed_cohort_vars(cpatch,ico, lsl)
    cpatch%wood_resolvable(ico) = .false.
    !---------------------------------------------------------------------------------------!
 
-   !----------------------------- Set the tree tacking index ------------------------------!
-   cpatch%tracking_co(ico)= 0
+   !----------------------------- Set the tree tracking index -----------------------------!
+   cpatch%tracking_co(ico) = .false.
    !---------------------------------------------------------------------------------------!
 
 

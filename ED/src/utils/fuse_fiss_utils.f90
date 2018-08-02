@@ -41,15 +41,19 @@ module fuse_fiss_utils
       integer                                    :: tallco      ! Index of tallest cohort
       integer                                    :: n_lianas    ! N of lianas in patch
       integer                                    :: pftdiffs    ! N of swaps in the order
+      integer                                    :: old_tracked_tree ! index of the old tree
       real                                       :: tophgt      ! Maximum height considered
       logical                                    :: sorted      ! Patch is already h sorted
       logical                                    :: h_sorted    ! Patch is already h sorted
       logical                                    :: l_sorted    ! Patch is already l sorted
       logical        , dimension(:), allocatable :: attop       ! Top cohorts, for tie-break
+      integer        , dimension(:), allocatable :: new_pos     ! New position for tracking
+      integer        , dimension(:), allocatable :: old_pos     ! New position for tracking
       !------------------------------------------------------------------------------------!
 
       !----- No need to sort an empty patch or a patch with a single cohort. --------------!
       if (cpatch%ncohorts < 2) return
+!      call tracking_sanity_check(cpatch,13)
 
       !------------------------------------------------------------------------------------!
       !     Check whether this patch is already sorted.   We don't want to do the entire   !
@@ -87,7 +91,7 @@ module fuse_fiss_utils
             end do l_sortcheck
 
             ! I have to include the case L L L T T so I am adding a false for when the first
-            ! cohort is a liana
+            ! cohort is a liana. This fails only in the case where I only have L in the patch
             if (pftdiffs > 1 .or. is_liana(cpatch%pft(1))) l_sorted = .false.
          sorted = h_sorted .and. l_sorted
          end if
@@ -106,8 +110,16 @@ module fuse_fiss_utils
       !----- Allocate the logical flag for tie-breaking. ----------------------------------!
       allocate(attop(cpatch%ncohorts))
 
+      !----- Allocate the array to hold the old position for tracking ---------------------!
+      allocate(new_pos(cpatch%ncohorts))
+      allocate(old_pos(cpatch%ncohorts))
+
       ico = 0
       ili = 0
+
+!      print *, "(", cpatch%pft,")"
+!      write(*,*), "|", cpatch%tracking_co, "|"
+
       !---- Loop until all cohorts were sorted. -------------------------------------------!
       do while(ico < cpatch%ncohorts)
          ico  = ico + 1
@@ -123,20 +135,26 @@ module fuse_fiss_utils
 
          if (present(lianasort)) then
             if (lianasort) then
-               if(is_liana(cpatch%pft(ico))) then
+               if(is_liana(cpatch%pft(tallco))) then
                   ili  = ili + 1
                   ipos = cpatch%ncohorts - n_lianas + ili
+                  !write(*,*) "ico=",ico,"pft=",cpatch%pft(ico),"insort", cpatch%ncohorts, n_lianas, ili
                else
                   ipos = ico - ili
                end if
             end if
          end if
 
-         !----- We must now reorder the cohort tracking indices ---------------------------!
-         cpatch%tracking_co(tallco) = cpatch%tracking_co(ipos)
+         !write(*,*) "IPOS=", ipos
+         !write(*,*) "tallco PFT=", cpatch%pft(tallco)
 
          !----- Copy to the scratch structure. --------------------------------------------!
          call copy_patchtype(cpatch,temppatch,tallco,tallco,ipos,ipos)
+
+         !----- We must now reorder the cohort tracking indices ---------------------------!
+         new_pos(tallco) = ipos
+         old_pos(ipos) = tallco
+         !print*, "new pos create",ipos,tallco
 
          !----- Put a non-sense DBH so this will never "win" again. -----------------------!
          cpatch%hite(tallco) = -huge(1.)
@@ -144,13 +162,45 @@ module fuse_fiss_utils
 
       end do
 
+      !--------------------------------------------------------------------------------------!
+      ! I need to reshuffle the tracking indices to account for the sorting.
+      ! This code is fairly convoluted, unclear, and proably inefficient. Can you improve it?
+      !--------------------------------------------------------------------------------------!
+!
+!      print *, "(", temppatch%pft,")"
+!      write(*,*), "|", temppatch%tracking_co, "|"
+!
+!      print *, "|", new_pos,"|"
+
+      ! MDP the copy_patch subroutine does not preserve the tracking unless the whole block
+      ! of pfts is copied. So here I need to reorganize the tracking indices
+      do ico=1,temppatch%ncohorts
+          if (is_liana(temppatch%pft(ico))) then
+              old_tracked_tree = cpatch%tracking_co(old_pos(ico))
+              if (old_tracked_tree > 0) then
+                  temppatch%tracking_co(ico) = new_pos(old_tracked_tree)
+              else
+                  temppatch%tracking_co(ico) = 0
+              end if
+          else
+              !temppatch%tracking_co(ico) = count(.not. is_liana(cpatch%pft) .and. cpatch%tracking_co(old_pos(ico)) == old_pos(ico))
+              temppatch%tracking_co(ico) = count(is_liana(cpatch%pft) .and. cpatch%tracking_co == old_pos(ico))
+          end if
+      end do
+
       !------ Copy the scratch patch to the regular one and deallocate it. ----------------!
       call copy_patchtype(temppatch,cpatch,1,cpatch%ncohorts,1,cpatch%ncohorts)
       call deallocate_patchtype(temppatch)
       deallocate(temppatch)
 
+
+!      call tracking_sanity_check(cpatch,11)
+
+
       !----- De-allocate the logical flag. ------------------------------------------------!
       deallocate(attop)
+      deallocate(old_pos)
+      deallocate(new_pos)
 
       return
 
@@ -173,10 +223,9 @@ module fuse_fiss_utils
                                     , l2n_stem         & ! intent(in)
                                     , c2n_stem         & ! intent(in)
                                     , c2n_storage      & ! intent(in), lookup table
-                                    , c2n_leaf         ! ! intent(in), lookup table
-
+                                    , c2n_leaf         & ! intent(in), lookup table
+                                    , is_liana
       use decomp_coms        , only : f_labile         ! ! intent(in), lookup table
-
       use ed_state_vars      , only : patchtype        & ! structure
                                     , sitetype         ! ! structure
       implicit none
@@ -195,8 +244,7 @@ module fuse_fiss_utils
       !------------------------------------------------------------------------------------!
 
       cpatch => csite%patch(ipa)
-      elim_nplant = 0.
-      elim_lai    = 0.
+!      call tracking_sanity_check(cpatch,12)
 
       !----- Initialize the temporary patch structures and the remain/terminate table -----!
       nullify(temppatch)
@@ -217,37 +265,98 @@ module fuse_fiss_utils
          if ( csize < min_cohort_size(ipft) ) then
             !----- Cohort is indeed too small, it won't remain ----------------------------!
             remain_table(ico) = .false.
-            elim_nplant = elim_nplant + cpatch%nplant(ico) * csite%area(ipa)
-            elim_lai    = elim_lai    + cpatch%lai(ico)    * csite%area(ipa)
 
-            !----- Update litter pools ----------------------------------------------------!
-            csite%fsc_in(ipa) = csite%fsc_in(ipa) + cpatch%nplant(ico)                     &
-                              * (f_labile(ipft)*cpatch%balive(ico) + cpatch%bstorage(ico))
 
-            csite%fsn_in(ipa) = csite%fsn_in(ipa) + cpatch%nplant(ico)                     &
-                              * ( f_labile(ipft) * cpatch%balive(ico) / c2n_leaf(ipft)     &
-                                + cpatch%bstorage(ico) / c2n_storage)
+            !            if (cpatch%tracking_co(ico) > 0) then
+            !                ! I am detaching the lianas, this is pretty dangerous I guess but I am
+            !                ! not sure what else I could do.
+            !                if (is_liana(ipft)) then
+            !                    cpatch%tracking_co(cpatch%tracking_co(ico)) = cpatch%tracking_co(cpatch%tracking_co(ico)) - 1
+            !                else
+            !                    where (is_liana(cpatch%pft) .and. cpatch%tracking_co == ico) cpatch%tracking_co = 0
+            !                end if
+            !                ! Just for safety I am putting this to zero.
+            !                cpatch%tracking_co(ico) = 0
+            !            end if
+            !
+            !            elim_nplant = elim_nplant + cpatch%nplant(ico) * csite%area(ipa)
+            !            elim_lai    = elim_lai    + cpatch%lai(ico)    * csite%area(ipa)
+            !
+            !            !----- Update litter pools ----------------------------------------------------!
+            !            csite%fsc_in(ipa) = csite%fsc_in(ipa) + cpatch%nplant(ico)                     &
+            !                              * (f_labile(ipft)*cpatch%balive(ico) + cpatch%bstorage(ico))
+            !
+            !            csite%fsn_in(ipa) = csite%fsn_in(ipa) + cpatch%nplant(ico)                     &
+            !                              * ( f_labile(ipft) * cpatch%balive(ico) / c2n_leaf(ipft)     &
+            !                                + cpatch%bstorage(ico) / c2n_storage)
+            !
+            !            csite%ssc_in(ipa) = csite%ssc_in(ipa) + cpatch%nplant(ico)                     &
+            !                              * ( (1.0 - f_labile(ipft)) * cpatch%balive(ico)              &
+            !                                + cpatch%bdead(ico))
+            !
+            !            csite%ssl_in(ipa) = csite%ssl_in(ipa) + cpatch%nplant(ico)                     &
+            !                              * ( (1.0 - f_labile(ipft)) * cpatch%balive(ico)              &
+            !                                + cpatch%bdead(ico) ) * l2n_stem/c2n_stem(ipft)
+            if (cpatch%tracking_co(ico) > 0) then
+                ! I am removing the lianas, this is pretty dangerous I guess but I am
+                ! not sure what else I could do.
+                if (is_liana(ipft)) then
+                    cpatch%tracking_co(cpatch%tracking_co(ico)) = cpatch%tracking_co(cpatch%tracking_co(ico)) - 1
+                else
+                    where (is_liana(cpatch%pft) .and. cpatch%tracking_co == ico)
+                        cpatch%tracking_co = 0
+                        remain_table = .false.
+                    endwhere
 
-            csite%ssc_in(ipa) = csite%ssc_in(ipa) + cpatch%nplant(ico)                     &
-                              * ( (1.0 - f_labile(ipft)) * cpatch%balive(ico)              &
-                                + cpatch%bdead(ico))
+                end if
+                ! Just for safety I am putting this to zero.
+                cpatch%tracking_co(ico) = 0
+            end if
+        end if
+    end do
 
-            csite%ssl_in(ipa) = csite%ssl_in(ipa) + cpatch%nplant(ico)                     &
-                              * ( (1.0 - f_labile(ipft)) * cpatch%balive(ico)              &
-                                + cpatch%bdead(ico) ) * l2n_stem/c2n_stem(ipft)
+    elim_nplant = sum(cpatch%nplant * csite%area(ipa), remain_table == .false.)
+    elim_lai    = sum(cpatch%lai * csite%area(ipa), remain_table == .false.)
 
-         end if
-      end do
+    !----- Update litter pools ----------------------------------------------------!
+    csite%fsc_in(ipa) = csite%fsc_in(ipa) + sum(cpatch%nplant                     &
+        * (f_labile(cpatch%pft) * cpatch%balive + cpatch%bstorage)                &
+        , remain_table == .false.)
+
+    csite%fsn_in(ipa) = csite%fsn_in(ipa) + sum(cpatch%nplant                     &
+        * (f_labile(cpatch%pft) * cpatch%balive / c2n_leaf(cpatch%pft)            &
+        + cpatch%bstorage / c2n_storage), remain_table == .false.)
+
+    csite%ssc_in(ipa) = csite%ssc_in(ipa) + sum(cpatch%nplant                     &
+        * ( (1.0 - f_labile(cpatch%pft)) * cpatch%balive                          &
+        + cpatch%bdead), remain_table == .false.)
+
+    csite%ssl_in(ipa) = csite%ssl_in(ipa) + sum(cpatch%nplant                     &
+        * ( (1.0 - f_labile(cpatch%pft)) * cpatch%balive                          &
+        + cpatch%bdead) * l2n_stem/c2n_stem(cpatch%pft)                           &
+        , remain_table == .false.)
+!
+!print *, "!!!!!!!!!!!!!!!! this is the remain_table   !!!!!!!!!!!!!!!"
+!print *, remain_table
+!    write(*,'(a,1x,<cpatch%ncohorts>(1x,i2,2x))') "cPFT:  ", cpatch%pft
+!    write(*,'(a,1x,<cpatch%ncohorts>(f4.1,1x))') "cHITE: ", cpatch%hite
+!    write(*,'(a,1x,<cpatch%ncohorts>(f4.1,1x))') "cDBH:  ", cpatch%dbh
+!    write(*,'(a,1x,<cpatch%ncohorts>(1x,i2,2x))') "cTRACK:", cpatch%tracking_co
+!    print*, ""
+
 
       !----- Copy the remaining cohorts to a temporary patch ------------------------------!
       call allocate_patchtype(temppatch,count(remain_table))
       call copy_patchtype_mask(cpatch,temppatch,remain_table,size(remain_table)            &
                               ,count(remain_table))
+!      call tracking_sanity_check(temppatch,79)
 
       !----- Reallocate the new patch and populate with the saved cohorts -----------------!
       call deallocate_patchtype(cpatch)
       call allocate_patchtype(cpatch,count(remain_table))
       call copy_patchtype(temppatch,cpatch,1,cpatch%ncohorts,1,cpatch%ncohorts)
+
+!      call tracking_sanity_check(cpatch,30)
       call sort_cohorts(cpatch)
 
       !----- Deallocate the temporary patch -----------------------------------------------!
@@ -653,6 +762,7 @@ module fuse_fiss_utils
       tolerance_mult = 1.0
 
       cpatch => csite%patch(ipa)
+!      call tracking_sanity_check(cpatch,1)
 
       !------------------------------------------------------------------------------------!
       !     Return if maxcohort is 0 (flag for no cohort fusion), or if the patch is empty !
@@ -755,9 +865,6 @@ module fuse_fiss_utils
                                                      + cpatch%bdead(recc)                  &
                                                      + cpatch%bstorage(recc) )
 
-
-
-
                   !------------------------------------------------------------------------!
                   !    Six conditions must be met to allow two cohorts to be fused:        !
                   ! 1. Both cohorts must have the same PFT;                                !
@@ -771,9 +878,13 @@ module fuse_fiss_utils
                   ! 6. Both cohorts must have the same recruitment status with respect to  !
                   !    the census.                                                         !
                   ! 7. Both cohorts must have the same phenology status.                   !
-                  ! 8. For lianas both lianas must be either free standing or tracking the !
-                  !    same tree cohort (trees should have tracking_co set to -1 always)   !
                   !------------------------------------------------------------------------!
+
+                  !------------------------------------------------------------------------!
+                  ! MDP why are we checking the PFT(donc) == PFT(recc) only here? All the  !
+                  ! calculations up here are useless if the two PFTs are different         !
+                  !------------------------------------------------------------------------!
+
                   if (     cpatch%pft(donc)              == cpatch%pft(recc)               &
                      .and. lai_max                        < lai_fuse_tol*tolerance_mult    &
                      .and. cpatch%first_census(donc)     == cpatch%first_census(recc)      &
@@ -781,7 +892,6 @@ module fuse_fiss_utils
                      .and. cpatch%recruit_dbh     (donc) == cpatch%recruit_dbh(recc)       &
                      .and. cpatch%census_status   (donc) == cpatch%census_status(recc)     &
                      .and. cpatch%phenology_status(donc) == cpatch%phenology_status(recc)  &
-                     .and. cpatch%tracking_co     (donc) == cpatch%tracking_co(recc)       &
                      ) then
 
                      !----- Proceed with fusion -------------------------------------------!
@@ -840,20 +950,36 @@ module fuse_fiss_utils
          tolerance_mult = tolerance_mult * 1.01
          ncohorts_old = count(fuse_table)
       end do force_fusion
+!      call tracking_sanity_check(cpatch,102)
 
       !----- If any fusion has happened, then we need to rearrange cohorts. ---------------!
       any_fusion = .not. all(fuse_table)
       if (any_fusion) then
 
-         !---------------------------------------------------------------------------------!
+!print *, "!!!!!!!!!!!!!!!! this is the fuse_table   !!!!!!!!!!!!!!!"
+!print *, fuse_table
+!    write(*,'(a,1x,<cpatch%ncohorts>(1x,i2,2x))') "cPFT:  ", cpatch%pft
+!    write(*,'(a,1x,<cpatch%ncohorts>(f4.1,1x))') "cHITE: ", cpatch%hite
+!    write(*,'(a,1x,<cpatch%ncohorts>(f4.1,1x))') "cDBH:  ", cpatch%dbh
+!    write(*,'(a,1x,<cpatch%ncohorts>(1x,i2,2x))') "cTRACK:", cpatch%tracking_co
+!    print*, ""
+!
+!         !---------------------------------------------------------------------------------!
          !     Now copy the merged patch to a temporary patch using the fuse_table as a    !
          ! mask.  Then allocate a temporary patch, copy the remaining cohorts there.       !
          !---------------------------------------------------------------------------------!
          nullify (temppatch)
          allocate(temppatch)
-         call allocate_patchtype(temppatch,cpatch%ncohorts)
+         call allocate_patchtype(temppatch,count(fuse_table))
          call copy_patchtype_mask(cpatch,temppatch,fuse_table,size(fuse_table)             &
                                  ,count(fuse_table))
+
+!    write(*,'(a,1x,<temppatch%ncohorts>(1x,i2,2x))') "tPFT:  ", temppatch%pft
+!    write(*,'(a,1x,<temppatch%ncohorts>(f4.1,1x))') "tHITE: ", temppatch%hite
+!    write(*,'(a,1x,<temppatch%ncohorts>(f4.1,1x))') "tDBH:  ", temppatch%dbh
+!    write(*,'(a,1x,<temppatch%ncohorts>(1x,i2,2x))') "tTRACK:", temppatch%tracking_co
+!    print*, ""
+!
 
          !----- Now I reallocate the current patch with its new reduced size. -------------!
          call deallocate_patchtype(cpatch)
@@ -865,11 +991,19 @@ module fuse_fiss_utils
          call copy_patchtype_mask(temppatch,cpatch,fuse_table,size(fuse_table)             &
                                  ,count(fuse_table))
 
+!    write(*,'(a,1x,<cpatch%ncohorts>(1x,i2,2x))') "cPFT:  ", cpatch%pft
+!    write(*,'(a,1x,<cpatch%ncohorts>(f4.1,1x))') "cHITE: ", cpatch%hite
+!    write(*,'(a,1x,<cpatch%ncohorts>(f4.1,1x))') "cDBH:  ", cpatch%dbh
+!    write(*,'(a,1x,<cpatch%ncohorts>(1x,i2,2x))') "cTRACK:", cpatch%tracking_co
+!    print*, ""
+
+
          !----- Discard the scratch patch. ------------------------------------------------!
          call deallocate_patchtype(temppatch)
          deallocate(temppatch)
 
          !----- Sort cohorts by size again, and update the cohort census for this patch. --!
+!         call tracking_sanity_check(cpatch,101)
          call sort_cohorts(cpatch)
          csite%cohort_count(ipa) = count(fuse_table)
       end if
@@ -919,16 +1053,22 @@ module fuse_fiss_utils
       logical, dimension(:)  , allocatable :: split_mask        ! Flag: split this cohort
       integer                              :: ico               ! Counter
       integer                              :: inew              ! Counter
+      integer                              :: itrack            ! Counter
       integer                              :: ncohorts_new      ! New # of cohorts
+      integer                              :: ncohorts_old      ! New # of cohorts
       integer                              :: tobesplit         ! # of cohorts to be split
       integer                              :: ipft              ! PFT type
+      integer                              :: new_potential_host! New liana host
       real                                 :: stai              ! Potential TAI
       real                                 :: old_nplant        ! Old nplant
       real                                 :: new_nplant        ! New nplant
       real                                 :: old_size          ! Old size
       real                                 :: new_size          ! New size
+      real                                 :: potential_h       ! Potential liana height
+      logical                              :: even_liana        ! Index for the liana move
       !------------------------------------------------------------------------------------!
 
+!               call tracking_sanity_check(cpatch,15)
 
       !----- Initialize the vector with splitting table -----------------------------------!
       allocate(split_mask(cpatch%ncohorts))
@@ -959,10 +1099,14 @@ module fuse_fiss_utils
 
       !----- Compute the new number of cohorts. -------------------------------------------!
       tobesplit    = count(split_mask)
+      ncohorts_old = cpatch%ncohorts
       ncohorts_new = cpatch%ncohorts + tobesplit
 
       if (tobesplit > 0) then
 
+         ! MDP Instead of doing thic convoluted thing (copying cpatch to temppatch, deallocate
+         ! cpatch and reallocate it with ncohorts_new, why not directly create a new patch with
+         ! ncohorts_new and copy cpatch to that one
          !----- Allocate the temppatch. ---------------------------------------------------!
          nullify(temppatch)
          allocate(temppatch)
@@ -973,7 +1117,6 @@ module fuse_fiss_utils
 
          !----- Deallocate the current patch. ---------------------------------------------!
          call deallocate_patchtype(cpatch)
-
          !----- Re-allocate the current patch. --------------------------------------------!
          call allocate_patchtype(cpatch,ncohorts_new)
 
@@ -984,8 +1127,8 @@ module fuse_fiss_utils
          call deallocate_patchtype(temppatch)
          deallocate(temppatch)
 
-         inew = size(split_mask)
-         do ico = 1,size(split_mask)
+         inew = size(split_mask) !size(split_mask) is ncohorts
+         do ico = 1, inew
 
             if (split_mask(ico)) then
 
@@ -996,11 +1139,48 @@ module fuse_fiss_utils
                call update_cohort_extensive_props(cpatch,ico,ico,0.5)
                !---------------------------------------------------------------------------!
 
-
                !----- Apply these values to the new cohort. -------------------------------!
                inew = inew+1
                call copy_patchtype(cpatch,cpatch,ico,ico,inew,inew)
                !---------------------------------------------------------------------------!
+
+               if (cpatch%tracking_co(ico) > 0) then
+                   ! the two splitted lianas will both track the same tree cohort as they did
+                   if (is_liana(cpatch%pft(ico))) then
+
+                       potential_h = dbh2h(ipft,cpatch%dbh(ico))
+                       new_potential_host = maxloc(cpatch%hite(1:ncohorts_old), dim=1,     &
+                           mask=cpatch%hite(1:ncohorts_old) <= potential_h .and. .not.     &
+                           is_liana(cpatch%pft(1:ncohorts_old)))
+
+!                       cpatch%tracking_co(inew) = cpatch%tracking_co(ico)
+!                      cpatch%tracking_co(cpatch%tracking_co(ico)) = cpatch%tracking_co(cpatch%tracking_co(ico)) + 1
+
+                       cpatch%tracking_co(inew) = new_potential_host
+                       cpatch%tracking_co(new_potential_host) = cpatch%tracking_co(new_potential_host) + 1
+                   ! this is going to be a bit messy. Tree can host multiple lianas. So for now
+                   ! we will partition the tracking lianas 50-50. That is I loop over the tracking
+                   ! cohorts and I assign them one to ico and one to inew until the loop is done.
+                   else
+                       even_liana = .true.
+                       do itrack = 1, cpatch%ncohorts
+                           if(cpatch%tracking_co(itrack) == ico) then
+
+                               if (even_liana) then
+                                   cpatch%tracking_co(itrack) = ico
+                               else
+                                   cpatch%tracking_co(itrack) = inew
+                                   cpatch%tracking_co(ico ) = cpatch%tracking_co(ico ) - 1
+                                   cpatch%tracking_co(inew) = cpatch%tracking_co(inew) + 1
+                               end if
+                               even_liana = .not. even_liana
+                           end if
+                       end do
+                   end if
+               end if
+
+               !call tracking_sanity_check(cpatch,2)
+
 
                !----- Tweaking bdead, to ensure carbon is conserved. ----------------------!
                if (is_grass(cpatch%pft(ico)) .and. igrass==1) then
@@ -1013,14 +1193,23 @@ module fuse_fiss_utils
                   cpatch%dbh  (inew)  = bl2dbh(cpatch%bleaf(inew), cpatch%pft(inew))
                   cpatch%hite (inew)  = bl2h(cpatch%bleaf(inew), cpatch%pft(inew))
 
+               else
                   !-- use bdead for trees
                   cpatch%bdead(ico)  = cpatch%bdead(ico) * (1.-epsilon)
                   cpatch%dbh  (ico)  = bd2dbh(cpatch%pft(ico), cpatch%bdead(ico))
-                  cpatch%hite (ico)  = dbh2h(cpatch%pft(ico), cpatch%dbh(ico))
+                  if(is_liana(cpatch%pft(ico)) .and. cpatch%tracking_co(ico) > 0) then
+                      cpatch%hite (ico)  = cpatch%hite(cpatch%tracking_co(ico))
+                  else
+                      cpatch%hite (ico)  = dbh2h(cpatch%pft(ico), cpatch%dbh(ico))
+                  end if
 
                   cpatch%bdead(inew) = cpatch%bdead(inew) * (1.+epsilon)
                   cpatch%dbh  (inew) = bd2dbh(cpatch%pft(inew), cpatch%bdead(inew))
-                  cpatch%hite (inew) = dbh2h(cpatch%pft(inew), cpatch%dbh(inew))
+                  if(is_liana(cpatch%pft(inew)) .and. cpatch%tracking_co(inew) > 0) then
+                      cpatch%hite (inew)  = cpatch%hite(cpatch%tracking_co(inew))
+                  else
+                      cpatch%hite (inew)  = dbh2h(cpatch%pft(inew), cpatch%dbh(inew))
+                  end if
                end if
                !---------------------------------------------------------------------------!
 
@@ -1028,6 +1217,7 @@ module fuse_fiss_utils
          end do
 
          !----- After splitting, cohorts may need to be sorted again... -------------------!
+!         call tracking_sanity_check(cpatch,19)
          call sort_cohorts(cpatch)
 
          !----- Checking whether the total # of plants is conserved... --------------------!
@@ -1055,10 +1245,6 @@ module fuse_fiss_utils
    end subroutine split_cohorts
    !=======================================================================================!
    !=======================================================================================!
-
-
-
-
 
 
    !=======================================================================================!
@@ -1105,7 +1291,7 @@ module fuse_fiss_utils
       integer                      :: imty              ! Mortality type
       integer                      :: ico               ! Cohort index
       integer                      :: ipft              ! PFT
-      real                         :: maxh              ! Patch max height
+!      real                         :: maxh              ! Patch max height
       real                         :: newni             ! Inverse of new nplants
       real                         :: exp_mort_donc     ! Exp(mortality) donor
       real                         :: exp_mort_recc     ! Exp(mortality) receptor
@@ -1154,6 +1340,62 @@ module fuse_fiss_utils
       end if
       !------------------------------------------------------------------------------------!
 
+      !------------------------------------------------------------------------------------!
+      !     First we need to update the liana cohort tracking indices. I first update the  !
+      !  liana indices for the case where the two lianas are tracking two different tree   !
+      !  cohorts. In this case I pick the host of the receiving cohort as the host for the !
+      !  new fused liana cohort.                                                           !
+      !  else: If lianas are free standing they can fuse normally (tracking_co is false)   !
+      !  If one liana is tracking a tree and the other is not the resulting cohort will be !
+      !  tracking the tree.                                                                !
+      !------------------------------------------------------------------------------------!
+!      call tracking_sanity_check(cpatch,18)
+!    write(*,'(a,1x,<cpatch%ncohorts>(1x,i2,2x))') "PFT:  ", cpatch%pft
+!    write(*,'(a,1x,<cpatch%ncohorts>(f4.1,1x))') "HITE: ", cpatch%hite
+!    write(*,'(a,1x,<cpatch%ncohorts>(f4.1,1x))') "DBH:  ", cpatch%dbh
+!    write(*,'(a,1x,<cpatch%ncohorts>(1x,i2,2x))') "TRACK:", cpatch%tracking_co
+!    write(*,*) "DONC:", donc, "RECC:",recc
+
+      if (is_liana(cpatch%pft(recc)))  then
+          if (cpatch%tracking_co(recc) > 0 .and. cpatch%tracking_co(donc) > 0) then
+              if (cpatch%tracking_co(recc) == cpatch%tracking_co(donc)) then
+                  ! If it's the same tracked tree reduce the number of cohorts that are tracking
+                  cpatch%tracking_co(cpatch%tracking_co(recc)) = cpatch%tracking_co(cpatch%tracking_co(recc)) - 1
+              else
+                  ! If it's a different tree reduce the number of cohorts tracking the tree that will go
+                  cpatch%tracking_co(cpatch%tracking_co(donc)) = merge( &
+                  cpatch%tracking_co(cpatch%tracking_co(donc)) - 1, 0, cpatch%tracking_co(cpatch%tracking_co(donc)) > 0)
+              end if
+              ! Remove the tracking index from the donor liana
+              cpatch%tracking_co(donc) = 0
+          else
+              ! If only one or none of the lianas are tracking the resulting tracked tree
+              ! is the sum of the tracking index. So the resulting liana will track the tree
+              ! cohort that eihter one was tracking or will stay free if both lianas were free
+              cpatch%tracking_co(recc) = cpatch%tracking_co(recc) + cpatch%tracking_co(donc)
+              if (cpatch%tracking_co(donc) > 0) cpatch%tracking_co(donc) = 0
+          end if
+      else
+          ! This is for when I fuse 2 trees. The only case I am interested in is when at least
+          ! one tree has a liana. If both trees have one or more lianas the result is the same
+          ! we end up with one tree with all lianas. Remember that for now this is just a matter
+          ! of height so this can be logically justified. This following condition could be merged
+          ! with the previous one for lianas but for now I will keep it like this as it is more clear
+          if (cpatch%tracking_co(recc) > 0 .or. cpatch%tracking_co(donc) > 0) then
+              cpatch%tracking_co(recc) = cpatch%tracking_co(recc) + cpatch%tracking_co(donc)
+              cpatch%tracking_co(donc) = 0
+              where (cpatch%tracking_co == donc .and. is_liana(cpatch%pft)) cpatch%tracking_co = recc
+          end if
+
+      end if
+      !------------------------------------------------------------------------------------!
+!    write(*,'(a,1x,<cpatch%ncohorts>(1x,i2,2x))') "PFT:  ", cpatch%pft
+!    write(*,'(a,1x,<cpatch%ncohorts>(f4.1,1x))') "HITE: ", cpatch%hite
+!    write(*,'(a,1x,<cpatch%ncohorts>(f4.1,1x))') "DBH:  ", cpatch%dbh
+!    write(*,'(a,1x,<cpatch%ncohorts>(1x,i2,2x))') "TRACK:", cpatch%tracking_co
+!    write(*,*) "DONC:", donc, "RECC:",recc
+!
+!      call tracking_sanity_check(cpatch,3)
 
 
 
@@ -1172,17 +1414,17 @@ module fuse_fiss_utils
           cpatch%bdead(recc) = cpatch%bdead(recc) * rnplant + cpatch%bdead(donc) * dnplant
           cpatch%dbh(recc)   = bd2dbh(cpatch%pft(recc), cpatch%bdead(recc))
 
-         maxh = 0.5
-         cohortloop: do ico=1,cpatch%ncohorts
-            !----- Alias for current PFT. ----------------------------------------------------!
-            ipft = cpatch%pft(ico)
-            !---------------------------------------------------------------------------------!
-
-            !---------- Loop over cohorts to find the maximum height for trees ---------------!
-            if (cpatch%hite(ico) > maxh .and. .not. is_liana(ipft)) then
-               maxh = cpatch%hite(ico)
-            end if
-         end do cohortloop
+!         maxh = 0.5
+!         cohortloop: do ico=1,cpatch%ncohorts
+!            !----- Alias for current PFT. ----------------------------------------------------!
+!            ipft = cpatch%pft(ico)
+!            !---------------------------------------------------------------------------------!
+!
+!            !---------- Loop over cohorts to find the maximum height for trees ---------------!
+!            if (cpatch%hite(ico) > maxh .and. .not. is_liana(ipft)) then
+!               maxh = cpatch%hite(ico)
+!            end if
+!         end do cohortloop
           !--------------------------------------------------------------------------------!
           ! For lianas we cannot assign the height resulting from the allometric eq.       !
           ! because since the bdead -> dbh is the sum of the two cohorts this could lead   !
@@ -1191,14 +1433,17 @@ module fuse_fiss_utils
           ! tallest tree height as the liana height and we turn on the at_the_top flag     !
           !--------------------------------------------------------------------------------!
           if (cpatch%tracking_co(recc) > 0) then
-            if (dbh2h(cpatch%pft(recc),cpatch%dbh(recc)) >= cpatch%hite(cpatch%tracking_co(recc))) then
-               cpatch%hite(recc) = cpatch%hite(cpatch%tracking_co(recc))
+          ! There should actually be just one value but this is an easier way of getting the index
+          cpatch%hite(recc) = cpatch%hite(cpatch%tracking_co(recc)) + 0.5
+
+!            if (dbh2h(cpatch%pft(recc),cpatch%dbh(recc)) >= cpatch%hite(cpatch%tracking_co(recc))) then
+ !              cpatch%hite(recc) = cpatch%hite(cpatch%tracking_co(recc))
              else
                cpatch%hite(recc) = dbh2h(cpatch%pft(recc),cpatch%dbh(recc))
             end if
-          else
-            cpatch%hite(recc) = min(dbh2h(cpatch%pft(recc),  cpatch%dbh(recc)), maxh)
-          end if
+  !        else
+   !         cpatch%hite(recc) = min(dbh2h(cpatch%pft(recc),  cpatch%dbh(recc)), maxh)
+    !      end if
           !--------------------------------------------------------------------------------!
       else
           !----- Trees, or old grass scheme.  Use bdead then find DBH and height. ---------!
@@ -1434,9 +1679,9 @@ module fuse_fiss_utils
       !                                                                                    !
       !  mf   =  ln (Ad+Ar) - ln(Nd+Nr) = ln[Nd*exp(md) + Nr*exp(mr)] - ln[Nd+Nr]          !
       !                                                                                    !
-      !             / Nd*exp(md) + Nr*exp(mr) \                                            !
-      !  mf   =  ln |-------------------------|                                            !
-      !             \        Nd + Nr          /                                            !
+      !              / Nd*exp(md) + Nr*exp(mr) \                                           !
+      !  mf   =  ln |---------------------------|                                          !
+      !              \        Nd + Nr          /                                           !
       !------------------------------------------------------------------------------------!
       do imty=1,n_mort
          exp_mort_donc = exp(max(lnexp_min,min(lnexp_max,cpatch%mort_rate(imty,donc))))
@@ -6036,6 +6281,9 @@ module fuse_fiss_utils
          nullify(temppatch)
          allocate(temppatch)
          call allocate_patchtype(temppatch,ndc + nrc )
+!                  call tracking_sanity_check(csite%patch(recp),70)
+!                  call tracking_sanity_check(csite%patch(donp),71)
+
          !----- Copy the recipient and donor cohorts to the temporary patch. --------------!
          call copy_patchtype(csite%patch(recp),temppatch,1,nrc,1,nrc)
          call copy_patchtype(csite%patch(donp),temppatch,1,ndc,nrc+1,nrc+ndc)
@@ -6044,11 +6292,13 @@ module fuse_fiss_utils
          call allocate_patchtype(csite%patch(recp),ndc+nrc)
          !----- Copy the temporary patch back to the recipient patch. ---------------------!
          call copy_patchtype(temppatch,csite%patch(recp),1,nrc+ndc,1,nrc+ndc)
+!         call tracking_sanity_check(temppatch,72)
          !----- Get rid of the temporary patch --------------------------------------------!
          call deallocate_patchtype(temppatch)
          deallocate(temppatch)
          !----- Sort cohorts in the new patch ---------------------------------------------!
          cpatch => csite%patch(recp)
+!         call tracking_sanity_check(cpatch,8)
          call sort_cohorts(cpatch)
          !---------------------------------------------------------------------------------!
          !    We just combined two patches, so we may be able to fuse some cohorts and/or  !
@@ -6060,6 +6310,7 @@ module fuse_fiss_utils
             call split_cohorts(cpatch,green_leaf_factor)
          end if
          !---------------------------------------------------------------------------------!
+!         call tracking_sanity_check(cpatch,9)
       end if
 
       !------------------------------------------------------------------------------------!
@@ -6299,6 +6550,126 @@ subroutine new_patch_sfc_props(csite,ipa,mzg,mzs,ntext_soil)
 end subroutine new_patch_sfc_props
 !==========================================================================================!
 !==========================================================================================!
+
+
+subroutine tracking_sanity_check (cpatch,place)
+   use ed_state_vars , only : patchtype  ! ! structure
+   use pft_coms, only: is_liana
+
+      type(patchtype)   , target      :: cpatch
+      integer           , intent(in)  :: place
+
+      integer                         :: ico
+      integer                         :: ipft
+      integer                         :: tracked_tree
+      logical                         :: is_ok
+
+      is_ok = .true.
+
+
+if (cpatch%ncohorts <= 1) return
+
+do ico=1,cpatch%ncohorts
+
+    ipft = cpatch%pft(ico)
+
+    if(is_liana(ipft) .and. cpatch%hite(ico) == 35.0) then
+        print *, "Lianas reached the top"
+        is_ok = .false.
+        exit
+    end if
+
+    if(cpatch%tracking_co(ico) < 0) then
+        print *, "Wrong tracking_co index"
+        is_ok = .false.
+        exit
+    end if
+
+    if (is_liana(ipft) .and. cpatch%tracking_co(ico) == ico) then
+        print *, "Self tracking"
+        is_ok = .false.
+        exit
+    end if
+
+    if(is_liana(ipft) .and. cpatch%tracking_co(ico) > 0) then
+        if (cpatch%hite(ico) > cpatch%hite(cpatch%tracking_co(ico)) + 0.5) then
+            print *, "Looks like liana ",ico, "is much taller than the tracked tree:", cpatch%tracking_co(ico)
+            is_ok = .false.
+            exit
+        end if
+    end if
+
+    ! Not sure why but is_liana creates problems here
+    if (is_liana(ipft) .and. cpatch%tracking_co(ico) > 0) then
+        if(cpatch%pft(cpatch%tracking_co(ico)) == 17 ) then
+            print *, "Liana tracking liana"
+            is_ok = .false.
+            exit
+        end if
+    end if
+
+    if(.not. is_liana(ipft) .and. cpatch%tracking_co(ico) /= count(is_liana(cpatch%pft) .and. cpatch%tracking_co == ico)) then
+        print *, "Mismatch between the number of tracked trees and the tracking lianas"
+        is_ok = .false.
+        exit
+    end if
+
+    if (is_liana(ipft) .and. cpatch%hite(ico) >= maxval(cpatch%hite, .not. is_liana(cpatch%pft)) + 0.2 .and. cpatch%tracking_co(ico) == 0) then
+        print *, "Looks like the tallest cohort is a free standing liana, that's suspicious"
+        is_ok = .false.
+        exit
+    end if
+
+end do
+
+if(.not. is_ok) then
+    print *, "!!!! Error !!!!"
+    print *, "Location:", place
+    write(*,'(a,1x,<cpatch%ncohorts>(1x,i2,2x))') "PFT:  ", cpatch%pft
+    write(*,'(a,1x,<cpatch%ncohorts>(f4.1,1x))') "HITE: ", cpatch%hite
+    write(*,'(a,1x,<cpatch%ncohorts>(f4.1,1x))') "DBH:  ", cpatch%dbh
+    write(*,'(a,1x,<cpatch%ncohorts>(1x,i2,2x))') "TRACK:", cpatch%tracking_co
+!else
+!    print *, "All good until", place
+end if
+
+end subroutine tracking_sanity_check
+
+subroutine grid_check(cgrid, place)
+
+   use ed_state_vars,   only : edtype                    & ! structure
+                             , polygontype               & ! structure
+                             , sitetype                  & ! structure
+                             , patchtype                 ! ! structure
+   !----- Arguments. -------------------------------------------------------------------!
+   type(edtype)                    , target     :: cgrid
+   !----- Local variables. -------------------------------------------------------------!
+   type(polygontype)               , pointer    :: cpoly
+   type(sitetype)                  , pointer    :: csite
+   type(patchtype)                 , pointer    :: cpatch
+   integer                                      :: ipy
+   integer                                      :: isi
+   integer                                      :: ipa
+   integer                                      :: place
+   !------------------------------------------------------------------------------------!
+
+
+   polyloop: do ipy = 1,cgrid%npolygons
+   cpoly => cgrid%polygon(ipy)
+
+      siteloop: do isi = 1,cpoly%nsites
+         csite => cpoly%site(isi)
+
+         patchloop: do ipa=1,csite%npatches
+            cpatch => csite%patch(ipa)
+
+            call tracking_sanity_check(cpatch, place)
+
+         end do patchloop
+      end do siteloop
+   end do polyloop
+
+end subroutine grid_check
 
 
 end module fuse_fiss_utils

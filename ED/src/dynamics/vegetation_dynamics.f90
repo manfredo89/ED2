@@ -18,11 +18,12 @@ subroutine vegetation_dynamics(new_month,new_year)
    use ed_misc_coms     , only : current_time               & ! intent(in)
                                , dtlsm                      ! ! intent(in)
    use disturbance_utils, only : apply_disturbances         & ! subroutine
-                               , liana_height_reshuffle     & ! subroutine
+!                               , liana_height_reshuffle     & ! subroutine
                                , site_disturbance_rates     ! ! subroutine
    use fuse_fiss_utils  , only : fuse_patches               & ! subroutine
                                , terminate_patches          & ! subroutine
-                               , rescale_patches            ! ! subroutine
+                               , rescale_patches!            & ! subroutine
+                               !, grid_check                 ! ! subroutine
    use ed_state_vars    , only : edgrid_g                   & ! intent(inout)
                                , edtype                     & ! variable type
                                , polygontype                & ! variable type!
@@ -80,7 +81,7 @@ subroutine vegetation_dynamics(new_month,new_year)
       call phenology_driver(cgrid,doy,current_time%month, dtlsm_o_day)
       call dbalive_dt(cgrid,one_o_year)
       !------------------------------------------------------------------------------------!
-
+!call grid_check(cgrid, 40)
 
       !------------------------------------------------------------------------------------!
       !     The following block corresponds to the monthly time-step:                      !
@@ -89,21 +90,27 @@ subroutine vegetation_dynamics(new_month,new_year)
 
          !----- Update the mean workload counter. -----------------------------------------!
          call update_workload(cgrid)
+!call grid_check(cgrid, 41)
 
          !----- Update the growth of the structural biomass. ------------------------------!
          call structural_growth(cgrid, current_time%month)
+!call grid_check(cgrid, 42)
 
          !----- Solve the reproduction rates. ---------------------------------------------!
          call reproduction(cgrid,current_time%month)
+!call grid_check(cgrid, 43)
 
          !----- Update the fire disturbance rates. ----------------------------------------!
          call fire_frequency(cgrid)
+!call grid_check(cgrid, 44)
 
          !----- This is actually the yearly time-step, apply the disturbances. ------------!
          if (new_year) then
             !----- Update the disturbance rates. ------------------------------------------!
             call site_disturbance_rates(current_time%year, cgrid)
+!call grid_check(cgrid, 45)
             call apply_disturbances(cgrid)
+!call grid_check(cgrid, 46)
             !call liana_height_reshuffle(cgrid)
             !------------------------------------------------------------------------------!
          end if
@@ -113,6 +120,7 @@ subroutine vegetation_dynamics(new_month,new_year)
 
       !------  update dmean and mmean values for NPP allocation terms ---------------------!
       call normalize_ed_todayNPP_vars(cgrid)
+!call grid_check(cgrid, 47)
       
       !------------------------------------------------------------------------------------!
       !     This should be done every day, but after the longer-scale steps.  We update    !
@@ -122,6 +130,7 @@ subroutine vegetation_dynamics(new_month,new_year)
       call zero_ed_today_vars(cgrid)
       !------------------------------------------------------------------------------------!
 
+!call grid_check(cgrid, 48)
 
       !------------------------------------------------------------------------------------!
       !      Patch dynamics.                                                               !
@@ -158,6 +167,7 @@ subroutine vegetation_dynamics(new_month,new_year)
       !----- Print the carbon and nitrogen budget. ----------------------------------------!
       call print_C_and_N_budgets(cgrid)
       !------------------------------------------------------------------------------------!
+!call grid_check(cgrid, 49)
 
    end do
 

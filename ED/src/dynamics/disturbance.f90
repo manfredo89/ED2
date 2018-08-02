@@ -61,7 +61,9 @@ module disturbance_utils
                               , tiny_num                  & ! intent(in)
                               , huge_num                  ! ! intent(in)
       use budget_utils , only : update_budget             ! ! sub-routine
-      use fuse_fiss_utils, only : new_patch_sfc_props
+      use fuse_fiss_utils, only : new_patch_sfc_props!     & ! intent(in)
+                             !, grid_check &
+!      , tracking_sanity_check
       implicit none
       !----- Arguments. -------------------------------------------------------------------!
       type(edtype)                    , target      :: cgrid
@@ -144,6 +146,7 @@ module disturbance_utils
       !------------------------------------------------------------------------------------!
 
 
+!call grid_check(cgrid, 50)
 
       !------------------------------------------------------------------------------------!
       !     Loop over polygons and sites.                                                  !
@@ -217,6 +220,7 @@ module disturbance_utils
             !------------------------------------------------------------------------------!
             call find_harvest_area(cpoly,isi,onsp,harvestable_agb,pot_area_harv)
             !------------------------------------------------------------------------------!
+!call grid_check(cgrid, 51)
 
 
             !---------------------------------------------------------------------------!
@@ -236,6 +240,7 @@ module disturbance_utils
             call deallocate_sitetype(tsite)
             !---------------------------------------------------------------------------!
 
+!call grid_check(cgrid, 52)
 
             !----- Allocate and initialise a disturbance mask vector. ------------------!
             allocate(disturb_mask(onsp + n_dist_types))
@@ -263,12 +268,13 @@ module disturbance_utils
             resetdist: do ipa=1,onsp
                cpatch => csite%patch(ipa)
                do ico=1,cpatch%ncohorts
-                  cpatch%mort_rate(5,ico) = 0.0
+                  cpatch%mort_rate(6,ico) = 0.0
                end do
             end do resetdist
             !------------------------------------------------------------------------------!
 
 
+!call grid_check(cgrid, 53)
 
             !------------------------------------------------------------------------------!
             !      Loop over new_lu, the new land use type, and find the contribution      !
@@ -390,6 +396,7 @@ module disturbance_utils
 
 
 
+!call grid_check(cgrid, 54)
 
             !------------------------------------------------------------------------------!
             !     Loop over the new LU patches, and check whether any of them would        !
@@ -448,6 +455,7 @@ module disturbance_utils
                !---------------------------------------------------------------------------!
             end do old_lu_l2nd
             !------------------------------------------------------------------------------!
+!call grid_check(cgrid, 55)
 
 
             !------------------------------------------------------------------------------!
@@ -481,6 +489,7 @@ module disturbance_utils
                      csite%area      (onsp+new_lu) = act_area_gain(new_lu)
                      !---------------------------------------------------------------------!
 
+!call grid_check(cgrid, 60)
 
                      !---------------------------------------------------------------------!
                      !     Initialize to zero the new trasitioned patches.                 !
@@ -489,6 +498,7 @@ module disturbance_utils
                                                     ,onsp+new_lu,cpoly%lsl(isi))
                      !---------------------------------------------------------------------!
 
+!call grid_check(cgrid, 61)
 
                   !------------------------------------------------------------------------!
                   !    Now go through patches, adding its contribution to the new          !
@@ -498,6 +508,7 @@ module disturbance_utils
                      !----- Point to the current patch. -----------------------------------!
                      cpatch => csite%patch(ipa)
                      !---------------------------------------------------------------------!
+!                  call tracking_sanity_check(cpatch,10)
 
 
                      !---------------------------------------------------------------------!
@@ -576,6 +587,7 @@ module disturbance_utils
                      !---------------------------------------------------------------------!
 
 
+!call grid_check(cgrid, 62)
 
                      !---------------------------------------------------------------------!
                      !    If the patch is going to be disturbed, add the area and          !
@@ -599,28 +611,28 @@ module disturbance_utils
                                                   ,dist_path,mindbh_harvest)
                         !------------------------------------------------------------------!
 
+!call grid_check(cgrid, 63)
 
 
                         !------------------------------------------------------------------!
-                        !     Add area and survivors to the new patches.  Here again we    !
-                        ! must check whether this is a conventional or a  big leaf         !
-                        ! simulation.                                                      !
+                        !     Add area and survivors to the new patches.                   !
                         !------------------------------------------------------------------!
-                           !---------------------------------------------------------------!
-                           !     Size-and-age structure.                                   !
-                           !---------------------------------------------------------------!
                            area_fac = act_area_loss(ipa,new_lu) / csite%area(onsp+new_lu)
                            call increment_patch_vars(csite,onsp+new_lu,ipa,area_fac)
+!call grid_check(cgrid, 64)
                            call insert_survivors(csite,onsp+new_lu,ipa,new_lu,area_fac     &
                                                 ,dist_path,mindbh_harvest)
+!call grid_check(cgrid, 65)
                            call accum_dist_litt(csite,onsp+new_lu,ipa,new_lu,area_fac      &
                                                ,dist_path,mindbh_harvest)
+!call grid_check(cgrid, 66)
                            !---------------------------------------------------------------!
                      end if
                      !---------------------------------------------------------------------!
                   end do old_lu_l3rd
                   !------------------------------------------------------------------------!
 
+!call grid_check(cgrid, 56)
 
 
                   !------------------------------------------------------------------------!
@@ -657,6 +669,7 @@ module disturbance_utils
                   end select
                   !------------------------------------------------------------------------!
 
+!call grid_check(cgrid, 57)
 
 
                   !------------------------------------------------------------------------!
@@ -664,14 +677,15 @@ module disturbance_utils
                   ! -and-age structure.                                                    !
                   !------------------------------------------------------------------------!
                   qpatch => csite%patch(onsp+new_lu)
+!                  call tracking_sanity_check(qpatch,16)
                   if (qpatch%ncohorts > 0 .and. maxcohort >= 0) then
-                     call fuse_cohorts(csite,onsp+new_lu                                   &
-                                      ,cpoly%lsl(isi),.false.)
+                     call fuse_cohorts(csite,onsp+new_lu,cpoly%lsl(isi),.false.)
                      call terminate_cohorts(csite,onsp+new_lu,elim_nplant,elim_lai)
                      call split_cohorts(qpatch, cpoly%green_leaf_factor(:,isi))
                   end if
                   !------------------------------------------------------------------------!
 
+!call grid_check(cgrid, 58)
 
 
 
@@ -789,6 +803,9 @@ module disturbance_utils
                   end select
                end do prune_loop
             end if
+
+!call grid_check(cgrid, 59)
+
 
             !------------------------------------------------------------------------------!
             !      Reallocate the current site to fit the original patches, except         !
@@ -2372,8 +2389,6 @@ module disturbance_utils
 
 
 
-
-
    !=======================================================================================!
    !=======================================================================================!
    !     This subroutine will populate the disturbed patch with the cohorts that were      !
@@ -2385,6 +2400,8 @@ module disturbance_utils
                               , patchtype    ! ! structure
       use ed_max_dims  , only : n_pft        ! ! intent(in)
       use mortality    , only : survivorship ! ! function
+      use pft_coms     , only : is_liana
+!      use fuse_fiss_utils, only : tracking_sanity_check
 
       implicit none
       !----- Arguments. -------------------------------------------------------------------!
@@ -2399,12 +2416,16 @@ module disturbance_utils
       type(patchtype)                 , pointer     :: cpatch
       type(patchtype)                 , pointer     :: npatch
       type(patchtype)                 , pointer     :: tpatch
+      type(patchtype)                 , pointer     :: tpatch2
       logical        , dimension(:)   , allocatable :: mask
       integer                                       :: ico
       integer                                       :: nco
       integer                                       :: addco
+      integer                                       :: old_tracked_tree
       real                                          :: n_survivors
       real                                          :: survival_fac
+      integer        , dimension(:), allocatable    :: new_pos  ! New position for tracking
+      integer        , dimension(:), allocatable    :: old_pos  ! New position for tracking
       !------------------------------------------------------------------------------------!
 
       !------------------------------------------------------------------------------------!
@@ -2417,12 +2438,21 @@ module disturbance_utils
       nullify(tpatch)
       allocate(tpatch)
 
+      ! I need to modify cpatch in the following lines before the copy_mask. So I need to
+      ! keep a cc here to then copy back at the end of the SR
+      nullify(tpatch2)
+      allocate(tpatch2)
+      call allocate_patchtype(tpatch2,cpatch%ncohorts)
+      call copy_patchtype(cpatch,tpatch2,1,cpatch%ncohorts,1,cpatch%ncohorts)
+
+
       !----- Mask: flag to decide whether the cohort survived or not. ---------------------!
       if (cpatch%ncohorts > 0) then
          allocate(mask(cpatch%ncohorts))
          mask(:) = .false.
 
          survivalloop: do ico = 1,cpatch%ncohorts
+            !MDP This calculations are mostly overhead
             survival_fac = survivorship(new_lu,dist_path,mindbh_harvest,cpatch,ico)        &
                          * area_fac
             n_survivors  = cpatch%nplant(ico) * survival_fac
@@ -2431,6 +2461,20 @@ module disturbance_utils
             mask(ico) = n_survivors > 0.0
             !------------------------------------------------------------------------------!
          end do survivalloop
+
+         ! I am killing the lianas that were attached to the tree cohort that did not survive.
+         ! I am not sure how much this is reasonable but... What else to do?
+         lianasloop: do ico = 1,cpatch%ncohorts
+             if (.not. mask(ico)) then
+                 if (.not. is_liana(cpatch%pft(ico))) then
+                     where(cpatch%tracking_co == ico .and. is_liana(cpatch%pft)) mask = .false.
+                 else
+                     if (cpatch%tracking_co(ico) > 0 ) &
+                     cpatch%tracking_co(cpatch%tracking_co(ico)) = cpatch%tracking_co(cpatch%tracking_co(ico)) - 1
+                 end if
+             end if
+         end do lianasloop
+
          addco = count(mask)
       else
          addco = 0
@@ -2447,20 +2491,28 @@ module disturbance_utils
       !------------------------------------------------------------------------------------!
       if (npatch%ncohorts > 0) then
          nco = npatch%ncohorts
-         call allocate_patchtype(tpatch,addco + npatch%ncohorts)
-         call copy_patchtype(npatch,tpatch,1,npatch%ncohorts,1,npatch%ncohorts)
+         call allocate_patchtype(tpatch,addco + nco)
+         call copy_patchtype(npatch,tpatch,1,nco,1,nco)
          call deallocate_patchtype(npatch)
       else
          nco = 0
          call allocate_patchtype(tpatch,addco)
       end if
       !------------------------------------------------------------------------------------!
+!      print *, "NCOHORTS=",npatch%ncohorts
+!      print *, "NCO=", nco
+!      print *, "ADDCO=", addco
+!      print *, "MASK=", mask
 
+      allocate(new_pos(cpatch%ncohorts + nco))
+      allocate(old_pos(cpatch%ncohorts + nco))
+
+      new_pos = -1
+      old_pos = -1
 
       cohortloop: do ico = 1,cpatch%ncohorts
 
-         survival_fac = survivorship(new_lu,dist_path,mindbh_harvest,cpatch,ico)           &
-                      * area_fac
+         survival_fac = survivorship(new_lu,dist_path,mindbh_harvest,cpatch,ico) * area_fac
          n_survivors  = cpatch%nplant(ico) * survival_fac
 
          !----- If mask is true, at least some of this cohort survived. -------------------!
@@ -2475,19 +2527,81 @@ module disturbance_utils
             !------------------------------------------------------------------------------!
 
             !----- Make mortality rate due to disturbance zero to avoid double counting. --!
-            tpatch%mort_rate(5,nco) = 0.0
+            tpatch%mort_rate(6,nco) = 0.0
             !------------------------------------------------------------------------------!
+
+            !-------------------- Keep track of the lianas --------------------------------!
+            new_pos(ico) = nco
+            old_pos(nco) = ico
+            !------------------------------------------------------------------------------!
+
          end if
          !---------------------------------------------------------------------------------!
       end do cohortloop
       !------------------------------------------------------------------------------------!
+!print *, ""
+!print *, "NCO:", nco
+!print *, "OLD_POS:", old_pos
+!print *, "NEW_POS:", new_pos
+!    write(*,'(a,1x,<cpatch%ncohorts>(1x,i2,2x))') "cPFT:  ", cpatch%pft
+!    write(*,'(a,1x,<cpatch%ncohorts>(f4.1,1x))') "cHITE: ", cpatch%hite
+!    write(*,'(a,1x,<cpatch%ncohorts>(f4.1,1x))') "cDBH:  ", cpatch%dbh
+!    write(*,'(a,1x,<cpatch%ncohorts>(1x,i2,2x))') "cTRACK:", cpatch%tracking_co
+!    print*, ""
+!
+!        write(*,'(a,1x,<tpatch%ncohorts>(1x,i2,2x))') "tPFT:  ", tpatch%pft
+!    write(*,'(a,1x,<tpatch%ncohorts>(f4.1,1x))') "tHITE: ", tpatch%hite
+!    write(*,'(a,1x,<tpatch%ncohorts>(f4.1,1x))') "tDBH:  ", tpatch%dbh
+!    write(*,'(a,1x,<tpatch%ncohorts>(1x,i2,2x))') "tTRACK:", tpatch%tracking_co
+
+!print *, ""
+!do ico = npatch%ncohorts + 1, npatch%ncohorts + addco
+!tpatch%tracking_co(ico) = 0
+!end do
+
+!
+!
+!
+!        I WONDER IF I CAN AVOID ALL THIS SHIT THAT FOLLOWS BY USING COPY_PATCHTYPE_MASK INSTEAD OF COPY_PATCHTYPE
+!
+!
+!
+      do ico = npatch%ncohorts + 1, npatch%ncohorts + addco
+          if (is_liana(tpatch%pft(ico))) then
+              old_tracked_tree = cpatch%tracking_co(old_pos(ico))
+              if (old_tracked_tree > 0) then
+                  tpatch%tracking_co(ico) = new_pos(old_tracked_tree)
+              else
+                  tpatch%tracking_co(ico) = 0
+              end if
+          else
+              tpatch%tracking_co(ico) = count(is_liana(cpatch%pft) .and. cpatch%tracking_co == old_pos(ico))
+          end if
+      end do
+!        print *, ""
+!        print *, "                 POST                  "
+!        write(*,'(a,1x,<tpatch%ncohorts>(1x,i2,2x))') "tPFT:  ", tpatch%pft
+!    write(*,'(a,1x,<tpatch%ncohorts>(f4.1,1x))') "tHITE: ", tpatch%hite
+!    write(*,'(a,1x,<tpatch%ncohorts>(f4.1,1x))') "tDBH:  ", tpatch%dbh
+!    write(*,'(a,1x,<tpatch%ncohorts>(1x,i2,2x))') "tTRACK:", tpatch%tracking_co
+!
+!      call tracking_sanity_check(tpatch,0)
 
       !----- Copy the temporary patch into the newpatch. ----------------------------------!
       call allocate_patchtype(npatch,tpatch%ncohorts)
       call copy_patchtype(tpatch,npatch,1,tpatch%ncohorts,1,tpatch%ncohorts)
       call deallocate_patchtype(tpatch)
 
+      !----- Copy the temporary patch into the newpatch. ----------------------------------!
+      call copy_patchtype(tpatch2,cpatch,1,cpatch%ncohorts,1,cpatch%ncohorts)
+      call deallocate_patchtype(tpatch2)
+
+      !--- Update the cohort tracking status. I don't want any tracking in the new patch --!
+      !npatch%tracking_co = .false.
+
       deallocate(tpatch)
+      deallocate(old_pos)
+      deallocate(new_pos)
       if (allocated(mask)) deallocate(mask)
 
 
@@ -2529,7 +2643,6 @@ module disturbance_utils
       integer                          , intent(in) :: dist_path
       !----- Local variables. -------------------------------------------------------------!
       type(patchtype)                  , pointer    :: cpatch
-      type(patchtype)                  , pointer    :: npatch
       integer                                       :: ico
       integer                                       :: ipft
       real                                          :: loss_fraction
@@ -2552,7 +2665,6 @@ module disturbance_utils
       ! npatch => new patch.                                                               !
       !------------------------------------------------------------------------------------!
       cpatch => csite%patch(cp)
-      npatch => csite%patch(np)
 
       do ico = 1,cpatch%ncohorts
          ipft = cpatch%pft(ico)
@@ -2798,7 +2910,8 @@ module disturbance_utils
       use ed_max_dims,     only : n_pft                    ! ! intent(in)
       use consts_coms,     only : pio4                     ! ! intent(in)
       use budget_utils,    only : update_budget            ! ! sub-routine
-      use fuse_fiss_utils, only : sort_cohorts             ! ! sub-routine
+      use fuse_fiss_utils, only : sort_cohorts!             &
+                                !, tracking_sanity_check    ! ! sub-routine
       use update_derived_props_module, only : update_patch_derived_props !
 
       implicit none
@@ -2865,7 +2978,8 @@ module disturbance_utils
             cpatch%bleaf(ico)     = bleaf_max * cpatch%elongf(ico)
             cpatch%bdead(ico)     = dbh2bd(cpatch%dbh(ico), ipft)
             cpatch%bsapwooda(ico) = bleaf_max * qsw(ipft) * cpatch%hite(ico)
-
+            cpatch%balive(ico)    = cpatch%bleaf(ico) + cpatch%broot(ico)                   &
+                                  + cpatch%bsapwooda(ico) + cpatch%bsapwoodb(ico)
 
             !----- Updating LAI, WAI, and CAI. --------------------------------------!
             call area_indices(cpatch, ico)
@@ -2912,6 +3026,7 @@ module disturbance_utils
 
 
       !--- Sort the cohorts so that the new cohort is at the correct height bin. ---!
+!      call tracking_sanity_check(cpatch,100)
       call sort_cohorts(cpatch)
       !-----------------------------------------------------------------------------!
 
@@ -2936,69 +3051,69 @@ end subroutine prune_lianas
 
 
 
-subroutine liana_height_reshuffle(cgrid)
-
-   use fuse_fiss_utils, only : sort_cohorts             ! ! sub-routine
-   use allometry,       only : dbh2h                    ! ! sub-routine
-   use pft_coms,        only : is_liana                 ! ! intent(in)
-   use ed_state_vars,   only : edtype                    & ! structure
-                             , polygontype               & ! structure
-                             , sitetype                  & ! structure
-                             , patchtype                 ! ! structure
-   !----- Arguments. -------------------------------------------------------------------!
-   type(edtype)                    , target     :: cgrid
-   !----- Local variables. -------------------------------------------------------------!
-   type(polygontype)               , pointer    :: cpoly
-   type(sitetype)                  , pointer    :: csite
-   type(patchtype)                 , pointer    :: cpatch
-   integer                                      :: ipy
-   integer                                      :: isi
-   integer                                      :: ipa
-   integer                                      :: ico
-   integer                                      :: ipft
-   integer                                      :: potential_host
-   integer                                      :: n_lianas
-   !------------------------------------------------------------------------------------!
-
-
-   polyloop: do ipy = 1,cgrid%npolygons
-   cpoly => cgrid%polygon(ipy)
-
-      siteloop: do isi = 1,cpoly%nsites
-         csite => cpoly%site(isi)
-
-         patchloop: do ipa=1,csite%npatches
-            cpatch => csite%patch(ipa)
-
-            call sort_cohorts(cpatch, .true.)
-
-            n_lianas = count(is_liana(cpatch%pft))
-
-            cohortloop: do ico = 1,cpatch%ncohorts
-
-               !----- Assigning an alias for PFT type. --------------------------!
-               ipft    = cpatch%pft(ico)
-               !-----------------------------------------------------------------!
-
-               if (is_liana(ipft) .and. cpatch%tracking_co(ico) > 0) then
-
-                  potential_host = min(ico - cpatch%ncohorts + n_lianas,      &
-                     cpatch%ncohorts - n_lianas)
-
-                  if (dbh2h(ipft,cpatch%dbh(ico)) >= cpatch%hite(potential_host)) then
-
-                     cpatch%tracking_co(ico) = potential_host
-                     cpatch%hite(ico)        = cpatch%hite(potential_host)
-
-                  end if
-               end if
-            end do cohortloop
-            call sort_cohorts(cpatch)
-         end do patchloop
-      end do siteloop
-   end do polyloop
-
-end subroutine liana_height_reshuffle
+!subroutine liana_height_reshuffle(cgrid)
+!
+!   use fuse_fiss_utils, only : sort_cohorts             ! ! sub-routine
+!   use allometry,       only : dbh2h                    ! ! sub-routine
+!   use pft_coms,        only : is_liana                 ! ! intent(in)
+!   use ed_state_vars,   only : edtype                    & ! structure
+!                             , polygontype               & ! structure
+!                             , sitetype                  & ! structure
+!                             , patchtype                 ! ! structure
+!   !----- Arguments. -------------------------------------------------------------------!
+!   type(edtype)                    , target     :: cgrid
+!   !----- Local variables. -------------------------------------------------------------!
+!   type(polygontype)               , pointer    :: cpoly
+!   type(sitetype)                  , pointer    :: csite
+!   type(patchtype)                 , pointer    :: cpatch
+!   integer                                      :: ipy
+!   integer                                      :: isi
+!   integer                                      :: ipa
+!   integer                                      :: ico
+!   integer                                      :: ipft
+!   integer                                      :: potential_host
+!   integer                                      :: n_lianas
+!   !------------------------------------------------------------------------------------!
+!
+!
+!   polyloop: do ipy = 1,cgrid%npolygons
+!   cpoly => cgrid%polygon(ipy)
+!
+!      siteloop: do isi = 1,cpoly%nsites
+!         csite => cpoly%site(isi)
+!
+!         patchloop: do ipa=1,csite%npatches
+!            cpatch => csite%patch(ipa)
+!
+!            call sort_cohorts(cpatch, .true.)
+!
+!            n_lianas = count(is_liana(cpatch%pft))
+!
+!            cohortloop: do ico = 1,cpatch%ncohorts
+!
+!               !----- Assigning an alias for PFT type. --------------------------!
+!               ipft    = cpatch%pft(ico)
+!               !-----------------------------------------------------------------!
+!
+!               if (is_liana(ipft) .and. cpatch%tracking_co(ico) > 0) then
+!
+!                  potential_host = min(ico - cpatch%ncohorts + n_lianas,      &
+!                     cpatch%ncohorts - n_lianas)
+!
+!                  if (dbh2h(ipft,cpatch%dbh(ico)) >= cpatch%hite(potential_host)) then
+!
+!                     cpatch%tracking_co(ico) = potential_host
+!                     cpatch%hite(ico)        = cpatch%hite(potential_host)
+!
+!                  end if
+!               end if
+!            end do cohortloop
+!            call sort_cohorts(cpatch)
+!         end do patchloop
+!      end do siteloop
+!   end do polyloop
+!
+!end subroutine liana_height_reshuffle
 
 end module disturbance_utils
 !==========================================================================================!

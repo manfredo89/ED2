@@ -217,7 +217,7 @@ subroutine copy_met_2_rk4site(mzg,                                            &
                               qpcpg,                                          &
                               dpcpg,                                          &
                               prss,                                           &
-                              rshort,                                        &
+                              rshort,                                         &
                               rlong,                                          &
                               par_beam,                                       &
                               par_diffuse,                                    &

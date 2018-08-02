@@ -1508,8 +1508,6 @@ module canopy_struct_dynamics
       real(kind=8)   :: htop         ! Height of the topmost layer              [        m]
       real(kind=8)   :: zetatop      ! Dimensionless height at the topmost lyr. [      ---]
       real(kind=8)   :: d0ohgt       ! d0/height                                [      ---]
-      real(kind=8)   :: exp_nn       !
-      real(kind=8)   :: factor       !
       real(kind=8)   :: z0ohgt       ! z0/height                                [      ---]
       real(kind=8)   :: ladcohort    ! Leaf Area Density of this cohort         [    m2/m3]
       real(kind=8)   :: extinct_half ! Wind extinction coefficient at half lyr  [      ---]
@@ -2063,7 +2061,9 @@ module canopy_struct_dynamics
                !---------------------------------------------------------------------------!
                !     Add the LAD for the full layers.                                      !
                !---------------------------------------------------------------------------!
-               canstr(ibuff)%lad8(kafull:kzfull) = canstr(ibuff)%lad8(kafull:kzfull) + ladcohort
+               do k = kafull,kzfull
+                  canstr(ibuff)%lad8(k) = canstr(ibuff)%lad8(k) + ladcohort
+               end do
                !---------------------------------------------------------------------------!
 
 
@@ -2105,8 +2105,8 @@ module canopy_struct_dynamics
                !---------------------------------------------------------------------------!
                !     Find the heights, and compute the LAD of this cohort.                 !
                !---------------------------------------------------------------------------!
-               htopcrown   = dble(cpatch%hite(ico))
-               hbotcrown   = dble(h2crownbh(cpatch%hite(ico),ipft))
+               htopcrown = dble(cpatch%hite(ico))
+               hbotcrown = dble(h2crownbh(cpatch%hite(ico),ipft))
                if (dry_grasses) then
                   !------------------------------------------------------------------------!
                   !     Dry grasses only.  Create a pseudo TAI so it won't be a            !
@@ -2134,8 +2134,9 @@ module canopy_struct_dynamics
                !---------------------------------------------------------------------------!
                !     Add the LAD for the full layers.                                      !
                !---------------------------------------------------------------------------!
-               canstr(ibuff)%lad8(kafull:kzfull) = canstr(ibuff)%lad8(kafull:kzfull)    &
-                                                   + ladcohort
+               do k = kafull,kzfull
+                  canstr(ibuff)%lad8(k) = canstr(ibuff)%lad8(k) + ladcohort
+               end do
                !---------------------------------------------------------------------------!
 
 
@@ -2187,9 +2188,12 @@ module canopy_struct_dynamics
                ! Their cdeff is cdrag / pshelter, here we fix pshelter = 1 and dump the    !
                ! ratio to cdrag.                                                           !
                !---------------------------------------------------------------------------!
-               c3_lad = max(lnexp_min8,min(lnexp_max8,cdrag38 * canstr(ibuff)%lad8(k)))
+               c3_lad       = &
+                     max(lnexp_min8,min(lnexp_max8,cdrag38 * canstr(ibuff)%lad8(k)))
                canstr(ibuff)%cdrag8   (k) = cdrag18 + cdrag28 / (1.d0 + exp(c3_lad))
-               lyrhalf = 5.d-1 * canstr(ibuff)%lad8(k) * canstr(ibuff)%cdrag8(k) * dzcan8(k)
+               canstr(ibuff)%pshelter8(k) = 1.d0
+               lyrhalf      = 5.d-1 * canstr(ibuff)%lad8(k) * canstr(ibuff)%cdrag8(k) /    &
+                     canstr(ibuff)%pshelter8(k) * dzcan8(k)
                canstr(ibuff)%cumldrag8(k) = ldga_bk + lyrhalf
                ldga_bk      = ldga_bk + 2.d0 * lyrhalf
                !---------------------------------------------------------------------------!
@@ -2245,20 +2249,12 @@ module canopy_struct_dynamics
          ! because it may be an extremely sparse cohort that has little impact on the      !
          ! drag.                                                                           !
          !---------------------------------------------------------------------------------!
-!         d0ohgt = 1.d0
-!         do k=1,zcan
-!            d0ohgt = d0ohgt - dzcan8(k) / htop                                             &
-!                            * exp(-2.d0 * nn *(1.d0 - canstr(ibuff)%cumldrag8(k) /         &
-!                            canstr(ibuff)%cumldrag8(zcan)))
-!         end do
-
-         exp_nn = exp(-2.d0 * nn / canstr(ibuff)%cumldrag8(zcan))
-         factor = exp_nn ** canstr(ibuff)%cumldrag8(zcan) / htop
-         d0ohgt = 1 / factor
+         d0ohgt = 1.d0
          do k=1,zcan
-            d0ohgt = d0ohgt - dzcan8(k) * exp_nn ** (- canstr(ibuff)%cumldrag8(k))
+            d0ohgt = d0ohgt - dzcan8(k) / htop                                             &
+                            * exp(-2.d0 * nn *(1.d0 - canstr(ibuff)%cumldrag8(k) /         &
+                            canstr(ibuff)%cumldrag8(zcan)))
          end do
-         d0ohgt = d0ohgt * factor
          z0ohgt = (1.d0 - d0ohgt) * min(1.d0,exp(- vonk8 / ustarouh + infunc_8))
          !---------------------------------------------------------------------------------!
 
@@ -4274,7 +4270,7 @@ module canopy_struct_dynamics
       ! heterogeneous, we find the volume and use the cubic root as the characteristic     !
       ! diameter.                                                                          !
       !------------------------------------------------------------------------------------!
-      w_diam = 5.d-2! * cbrt8(dble(dbh2vol(height,dbh,ipft)))
+      w_diam = 1.d-2 * cbrt8(dble(dbh2vol(height,dbh,ipft)))
       !------------------------------------------------------------------------------------!
 
 

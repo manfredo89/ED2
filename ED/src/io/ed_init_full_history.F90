@@ -4262,6 +4262,8 @@ subroutine fillh_patch(cpatch,paco_index,ncohorts_global)
                      ,'FIRST_CENSUS              ',dsetrank,iparallel,.true. ,foundvar)
    call hdf_getslab_i(cpatch%new_recruit_flag                                              &
                      ,'NEW_RECRUIT_FLAG          ',dsetrank,iparallel,.true. ,foundvar)
+   call hdf_getslab_i(cpatch%tracking_co                                                   &
+                     ,'TRACKING_CO               ',dsetrank,iparallel,.true. ,foundvar)
    !---------------------------------------------------------------------------------------!
    !---------------------------------------------------------------------------------------!
    !---------------------------------------------------------------------------------------!

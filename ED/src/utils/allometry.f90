@@ -104,7 +104,7 @@ contains
       integer, intent(in) :: ipft
       !------------------------------------------------------------------------------------!
 
-         if (is_grass(ipft) .and. igrass==1) then
+         if (is_grass(ipft) .and. igrass == 1) then
             dbh2bd = 0.0
          else if (dbh <= dbh_crit(ipft)) then
             dbh2bd = b1Bs_small(ipft) / C2B * dbh ** b2Bs_small(ipft)
@@ -190,7 +190,7 @@ contains
       ! DBH that give lianas the same (~) Bl_max as late successionals                     !
       !------------------------------------------------------------------------------------!
       if (is_liana(ipft)) then
-         ldbh = 26.0
+         ldbh = 42.0
       else
          ldbh = dbh_crit(ipft)
       end if

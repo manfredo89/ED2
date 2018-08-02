@@ -126,7 +126,7 @@ module rk4_driver
             !$OMP wcurr_loss2atm,ecurr_loss2atm,            &
             !$OMP co2curr_loss2atm,                         &
             !$OMP wcurr_loss2drainage,ecurr_loss2drainage,  &
-            !$OMP wcurr_loss2runoff,ecurr_loss2runoff,nsteps )
+            !$OMP wcurr_loss2runoff,ecurr_loss2runoff,nsteps,ibuff )
 
             patchloop: do ipa = 1,csite%npatches
                cpatch => csite%patch(ipa)
