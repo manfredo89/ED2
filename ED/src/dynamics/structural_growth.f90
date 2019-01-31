@@ -222,8 +222,7 @@ contains
                   !---------------------------------------------------------------------------!
                   cpatch%bseeds(ico) = f_bseeds * cpatch%bstorage(ico)
 
-                  cpatch%today_NPPseeds(ico) = f_bseeds * cpatch%bstorage(ico)                &
-                     * cpatch%nplant(ico)
+                  cpatch%today_NPPseeds(ico) = cpatch%bseeds(ico) * cpatch%nplant(ico)
                   !---------------------------------------------------------------------------!
 
                   !---------------------------------------------------------------------------!
@@ -499,7 +498,6 @@ contains
          , r_fract      & ! intent(in)
          , st_fract     & ! intent(in)
          , dbh_crit     & ! intent(in)
-         , dbh_adult    & ! intent(in)
          , hgt_max      & ! intent(in)
          , is_grass     & ! intent(in)
          , is_liana     ! ! intent(in)
@@ -645,29 +643,29 @@ contains
         else if (is_liana(ipft) .and. cpatch%tracking_co(ico) <= 0) then
 
 
-                bd_target = dbh2bd(h2dbh(cpatch%hite(potential_host),ipft),ipft)
-                delta_bd = bd_target - bdead
+             bd_target = dbh2bd(h2dbh(cpatch%hite(potential_host),ipft),ipft)
+             delta_bd = bd_target - bdead
 
-                !---------------------------------------------------------------------------!
-                ! If bstorage is 0 or lianas have already reached their bd_target don't     !
-                ! grow otherwise invest what you need (or everything if it's not enough) to !
-                ! reach bd_target.                                                          !
-                ! For seeds first check if you have reached repro_min_h. If that's the case !
-                ! then check that you have enough left to invest r_fract in reproduction.   !
-                ! If that's the case invest r_fract in reproduction and the rest will stay  !
-                ! in storage. If that's not the case invest everything in reproduction.     !
-                ! Finally if you haven't reached repro_min_h leave everything in storage.   !
-                !---------------------------------------------------------------------------!
-                f_bdead   = merge(0.0, min(delta_bd / bstorage, 1.0),                       &
-                    bstorage * delta_bd <= 0.0)
-                f_bseeds  = merge(0.0, merge(r_fract(ipft), 1.0 - f_bdead,                  &
-                    r_fract(ipft) < 1.0 - f_bdead), hite <= repro_min_h(ipft))
-            else
+             !---------------------------------------------------------------------------!
+             ! If bstorage is 0 or lianas have already reached their bd_target don't     !
+             ! grow otherwise invest what you need (or everything if it's not enough) to !
+             ! reach bd_target.                                                          !
+             ! For seeds first check if you have reached repro_min_h. If that's the case !
+             ! then check that you have enough left to invest r_fract in reproduction.   !
+             ! If that's the case invest r_fract in reproduction and the rest will stay  !
+             ! in storage. If that's not the case invest everything in reproduction.     !
+             ! Finally if you haven't reached repro_min_h leave everything in storage.   !
+             !---------------------------------------------------------------------------!
+             f_bdead   = merge(0.0, min(delta_bd / bstorage, 1.0),                       &
+                 bstorage * delta_bd <= 0.0)
+             f_bseeds  = merge(0.0, merge(r_fract(ipft), 1.0 - f_bdead,                  &
+                 r_fract(ipft) < 1.0 - f_bdead), hite <= repro_min_h(ipft))
+         else
 
-                f_bseeds = merge(0.0, r_fract(ipft), hite <= repro_min_h(ipft))
-                f_bdead  = 1.0 - st_fract(ipft) - f_bseeds
+             f_bseeds = merge(0.0, r_fract(ipft), hite <= repro_min_h(ipft))
+             f_bdead  = 1.0 - st_fract(ipft) - f_bseeds
 
-            end if
+         end if
     else  !-- Plant should not allocate carbon to seeds or grow new biomass. ------------!
         f_bdead  = 0.0
         f_bseeds = 0.0
@@ -706,6 +704,7 @@ contains
       use ed_state_vars , only : patchtype           ! ! structure
       use pft_coms      , only : is_grass            & ! function
          , is_liana                                  & ! function
+         , delta_h                                   & ! function
          , dbh_adult
       use allometry     , only : bd2dbh              & ! function
          , dbh2h               & ! function
@@ -775,7 +774,7 @@ contains
       else if(is_liana(ipft) .and. cpatch%tracking_co(ico) > 0) then
          !------------------------------- Lianas ---------------------------------------------!
          cpatch%dbh(ico)  = bd2dbh(ipft, cpatch%bdead(ico))
-         cpatch%hite(ico) = cpatch%hite(cpatch%tracking_co(ico))
+         cpatch%hite(ico) = cpatch%hite(cpatch%tracking_co(ico)) + delta_h
       else
          !---- Trees, old grasses and free standing lianas get dbh from bdead. ---------------!
          cpatch%dbh(ico)  = bd2dbh(ipft, cpatch%bdead(ico))

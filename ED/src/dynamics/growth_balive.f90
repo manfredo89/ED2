@@ -427,7 +427,7 @@ module growth_balive
           !Increased maintenance for tree (the number 2 is there because this is on top of
           ! the baseline maintenance, the one calculated after the else a few lines down)
           cpatch%leaf_maintenance(ico) = leaf_turnover_rate(ipft) * cpatch%bleaf(ico) *     &
-              (2 - bleaf_f) * tfact
+              (1 + bleaf_f) * tfact
 
               ! Loop to assign the increased maintenance to lianas
               if (tot_L_bleaf > tiny(1.0)) then

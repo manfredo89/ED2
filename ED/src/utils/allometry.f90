@@ -512,6 +512,7 @@ contains
    subroutine area_indices(cpatch, ico)
       use ed_state_vars, only : patchtype     ! ! Structure
       use pft_coms     , only : dbh_crit        & ! intent(in)
+                              , is_liana        & ! intent(in)
                               , b1WAI           & ! intent(in)
                               , b2WAI           ! ! intent(in)
       use rk4_coms     , only : ibranch_thermo  ! ! intent(in)
@@ -528,6 +529,7 @@ contains
       real                    :: sla
       real                    :: hite
       real                    :: dbh
+      real                    :: CA_host ! Crown area of host tree (for lianas only)
       integer                 :: ipft
       !------------------------------------------------------------------------------------!
       
@@ -542,8 +544,15 @@ contains
       cpatch%lai(ico) = bleaf * nplant * sla
 
       !----- Find the crown area. ---------------------------------------------------------!
+      if (is_liana(ipft) .and. cpatch%tracking_co(ico) > 0) then
+         ! For liana
+         CA_host = dbh2ca(cpatch%dbh(cpatch%tracking_co(ico)), cpatch%hite(cpatch%tracking_co(ico)), &
+            cpatch%sla(cpatch%tracking_co(ico)), cpatch%pft(cpatch%tracking_co(ico)))
+         cpatch%crown_area(ico) = min(1.0, cpatch%nplant(cpatch%tracking_co(ico)) * CA_host, &
+            nplant * dbh2ca(dbh,hite,sla,ipft))
+      else
       cpatch%crown_area(ico) = min(1.0, nplant * dbh2ca(dbh,hite,sla,ipft))
-
+      end if
       !------------------------------------------------------------------------------------!
       !     Here we check whether we need to compute the branch, stem, and effective       !
       ! branch area indices.  These are only needed when branch thermodynamics is used,    !

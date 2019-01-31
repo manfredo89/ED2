@@ -2352,6 +2352,7 @@ subroutine init_pft_alloc_params()
       , sla_scale             & ! intent(out)
       , sla_inter             & ! intent(out)
       , sla_slope             & ! intent(out)
+      , delta_h               & ! intent(out)
       , sapwood_ratio         ! ! intent(out)
    use allometry    , only : h2dbh                 & ! function
       , dbh2bd                & ! function
@@ -2456,6 +2457,11 @@ subroutine init_pft_alloc_params()
    sla_scale =  0.1 * C2B
    sla_inter =  2.4
    sla_slope = -0.46
+
+   !---------------------------------------------------------------------------------------!
+   !                           Liana height notch [m]                                      !
+   !---------------------------------------------------------------------------------------!
+   delta_h = 0.2
 
    !----- [KIM] - new tropical parameters. ------------------------------------------------!
    SLA( 1) = 22.7 !--value from Mike Dietze: mean: 22.7, median 19.1, 95% CI: 5.7, 78.6
@@ -2674,9 +2680,9 @@ subroutine init_pft_alloc_params()
    !---------------------------------------------------------------------------------------!
    ! For lianas dbh_adult is chosen so as to be the intersection between the Putz          !
    ! allometry without intercept and the early successional Bleaf equation for IALLOM = 3  !
-   ! That is:         0.0856*(x)^2 = ...   ---> x=2.9                                      !
+   ! That is:         0.0856*(x)^2 = ...   ---> x=1.9                                      !
    !---------------------------------------------------------------------------------------!
-   dbh_adult(17) = 2.9
+   dbh_adult(17) = 3.3
 
    !---------------------------------------------------------------------------------------!
    !    This is the typical DBH that all big leaf plants will have.  Because the big-leaf  !
@@ -2910,8 +2916,8 @@ subroutine init_pft_alloc_params()
    !------------------------- Liana leaf Biomass (Putz, 1983) -----------------------------!
    b1Bl_small(17) = b1Bl_small(2)
    b2Bl_small(17) = b2Bl_small(2)
-   b1Bl_large(17) = 0.0856
-   b2Bl_large(17) = 2.0
+   b1Bl_large(17) = 0.0643
+   b2Bl_large(17) = 1.6105
    !---------------------------------------------------------------------------------------!
 
    !---------------------------------------------------------------------------------------!
@@ -3364,10 +3370,10 @@ subroutine init_pft_repro_params()
    implicit none
 
    r_fract(1:16)           = 0.3
-   r_fract(17)             = 0.85
+   r_fract(17)             = 0.81
 
    st_fract(1:16)          = 0.0
-   st_fract(17)            = 0.1
+   st_fract(17)            = 0.0
 
    nonlocal_dispersal(1:5)   =  1.000 ! 1.000
    nonlocal_dispersal(6:7)   =  0.766 ! 0.766
@@ -3376,14 +3382,14 @@ subroutine init_pft_repro_params()
    nonlocal_dispersal(10)    =  0.325 ! 0.325
    nonlocal_dispersal(11)    =  0.074 ! 0.074
    nonlocal_dispersal(12:16) =  1.000 ! 1.000
-   nonlocal_dispersal(17)    =  0.5
+   nonlocal_dispersal(17)    =  1.000
 
    repro_min_h(1)          =  0.0
    repro_min_h(2:4)        = 18.0
    repro_min_h(5)          =  0.0
    repro_min_h(6:11)       = 18.0
    repro_min_h(12:16)      =  0.0
-   repro_min_h(17)         =  9.0
+   repro_min_h(17)         =  3.3
 
    return
 end subroutine init_pft_repro_params
