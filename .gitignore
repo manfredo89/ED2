@@ -165,3 +165,4 @@ ED/build/CodeCoverage
 ED/build/CODE_COVERAGE.HTML
 ED/build/codecov.txt
 ED/build/covered.txt
+/Debug/

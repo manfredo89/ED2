@@ -1,0 +1,226 @@
+<?xml version="1.0"?>
+<!DOCTYPE config SYSTEM "ed_event.dtd">
+<eventlist>
+	
+	<event>
+		
+		<year> 2011 </year>
+		<doy>  60  </doy>
+		<cutting>
+			<pft>  17 </pft>
+		</cutting>
+		
+	</event>
+	
+	<event>
+		
+		<year> 2011 </year>
+		<doy>  91  </doy>
+		<cutting>
+	        <pft> 17 </pft>
+		</cutting>
+		
+	</event>
+	
+	<event>
+		
+		<year> 2011 </year>
+		<doy>  121  </doy>
+		<cutting>
+	  <pft>     17     </pft>
+  </cutting>
+		
+	</event>
+	
+	<event>
+		
+		<year> 2011 </year>
+		<doy>  183  </doy>
+		<cutting>
+	  <pft>     17     </pft>
+  </cutting>
+		
+	</event>
+	
+	<event>
+		
+		<year> 2011 </year>
+		<doy>  245  </doy>
+		<cutting>
+	  <pft>     17     </pft>
+  </cutting>
+		
+	</event>
+	
+	<event>
+		
+		<year> 2011 </year>
+		<doy>  306  </doy>
+		<cutting>
+	  <pft>     17     </pft>
+  </cutting>
+		
+	</event>
+	
+	<event>
+		
+		<year> 2012 </year>
+		<doy>  1  </doy>
+		<cutting>
+	  <pft>     17     </pft>
+  </cutting>
+		
+	</event>
+	
+	<event>
+		
+		<year> 2012 </year>
+		<doy>  92  </doy>
+		<cutting>
+	  <pft>     17     </pft>
+  </cutting>
+		
+	</event>
+	
+	<event>
+		
+		<year> 201 </year>
+		<doy>  183  </doy>
+		<cutting>
+	  <pft>     17     </pft>
+  </cutting>
+		
+	</event>
+	
+	<event>
+		
+		<year> 2012 </year>
+		<doy>  274  </doy>
+		<cutting>
+	  <pft>     17     </pft>
+  </cutting>
+		
+	</event>
+	
+	<event>
+		
+		<year> 2012 </year>
+		<doy>  1  </doy>
+		<cutting>
+	  <pft>     17     </pft>
+  </cutting>
+		
+	</event>
+	
+	<event>
+		
+		<year> 2013 </year>
+		<doy>  92  </doy>
+		<cutting>
+	  <pft>     17     </pft>
+  </cutting>
+		
+	</event>
+	
+	<event>
+		
+		<year> 2013 </year>
+		<doy>  183  </doy>
+		<cutting>
+	  <pft>     17     </pft>
+  </cutting>
+		
+	</event>
+	
+	<event>
+		
+		<year> 2013 </year>
+		<doy>  274  </doy>
+		<cutting>
+	  <pft>     17     </pft>
+  </cutting>
+		
+	</event>
+	
+	<event>
+		
+		<year> 2014 </year>
+		<doy>  1  </doy>
+		<cutting>
+	  <pft>     17     </pft>
+  </cutting>
+		
+	</event>
+	
+	<event>
+		
+		<year> 2014 </year>
+		<doy>  92  </doy>
+		<cutting>
+	  <pft>     17</pft>
+  </cutting>
+		
+	</event>
+	
+	<event>
+		
+		<year> 2014 </year>
+		<doy>  183  </doy>
+		<cutting>
+	  <pft>     17     </pft>
+  </cutting>
+		
+	</event>
+	
+	<event>
+		
+		<year> 2014 </year>
+		<doy>  274  </doy>
+		<cutting>
+	  <pft>     17     </pft>
+  </cutting>
+		
+	</event>
+	
+	<event>
+		
+		<year> 2015 </year>
+		<doy>  1  </doy>
+		<cutting>
+	  <pft>     17     </pft>
+  </cutting>
+		
+	</event>
+	
+	<event>
+		
+		<year> 2015 </year>
+		<doy>  92  </doy>
+		<cutting>
+	  <pft>     17     </pft>
+  </cutting>
+		
+	</event>
+	
+	<event>
+		
+		<year> 2015 </year>
+		<doy>  183  </doy>
+		<cutting>
+	  <pft>     17     </pft>
+  </cutting>
+		
+	</event>
+	
+	<event>
+		
+		<year> 2015 </year>
+		<doy>  274  </doy>
+		<cutting>
+	  <pft>     17     </pft>
+  </cutting>
+		
+	</event>
+	
+	
+</eventlist>
