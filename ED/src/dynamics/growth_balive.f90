@@ -434,12 +434,12 @@ module growth_balive
                   do i=1,cpatch%ncohorts
                       if (is_liana(cpatch%pft(i)) .and. cpatch%tracking_co(i) == ico) then
 
-                          ! Bleaf fraction of this specific liana
-                          bleaf_f_l = (cpatch%nplant(i) * cpatch%bleaf(i)) / tot_L_bleaf
+                 
+                  
                           ! Increased maintenance of this specific liana
                           cpatch%leaf_maintenance(i) = cpatch%leaf_maintenance(i) +          &
                           cpatch%bleaf(i) * leaf_turnover_rate(cpatch%pft(i)) *              &
-                          bleaf_f * bleaf_f_l * tfact
+                          bleaf_f * tfact
                       end if
                   end do
               end if

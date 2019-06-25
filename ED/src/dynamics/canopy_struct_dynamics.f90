@@ -2105,8 +2105,8 @@ module canopy_struct_dynamics
                !---------------------------------------------------------------------------!
                !     Find the heights, and compute the LAD of this cohort.                 !
                !---------------------------------------------------------------------------!
-               htopcrown   = dble(cpatch%hite(ico))
-               hbotcrown   = dble(h2crownbh(cpatch%hite(ico),ipft))
+               htopcrown = dble(cpatch%hite(ico))
+               hbotcrown = dble(h2crownbh(cpatch%hite(ico),ipft))
                if (dry_grasses) then
                   !------------------------------------------------------------------------!
                   !     Dry grasses only.  Create a pseudo TAI so it won't be a            !
@@ -2246,12 +2246,6 @@ module canopy_struct_dynamics
          ! drag.                                                                           !
          !---------------------------------------------------------------------------------!
 !         d0ohgt = 1.d0
-!         do k=1,zcan
-!            d0ohgt = d0ohgt - dzcan8(k) / htop                                             &
-!                            * exp(-2.d0 * nn *(1.d0 - canstr(ibuff)%cumldrag8(k) /         &
-!                            canstr(ibuff)%cumldrag8(zcan)))
-!         end do
-
          exp_nn = exp(-2.d0 * nn / canstr(ibuff)%cumldrag8(zcan))
          factor = exp_nn ** canstr(ibuff)%cumldrag8(zcan) / htop
          d0ohgt = 1 / factor

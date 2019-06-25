@@ -1104,7 +1104,7 @@ module fuse_fiss_utils
 
       if (tobesplit > 0) then
 
-         ! MDP Instead of doing thic convoluted thing (copying cpatch to temppatch, deallocate
+         ! MDP Instead of doing this convoluted thing (copying cpatch to temppatch, deallocate
          ! cpatch and reallocate it with ncohorts_new, why not directly create a new patch with
          ! ncohorts_new and copy cpatch to that one
          !----- Allocate the temppatch. ---------------------------------------------------!
